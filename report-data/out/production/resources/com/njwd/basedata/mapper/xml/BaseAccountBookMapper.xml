@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.basedata.mapper.BaseAccountBookMapper">
+    <select id="findBaseAccountBook" resultType="com.njwd.entity.basedata.vo.BaseAccountBookVo">
+        select
+        bab.account_book_id,
+        bab.ente_id,
+        bab.company_id,
+        bab.currency_id,
+        bab.subject_id,
+        bab.account_book_code,
+        bab.account_book_name,
+        bs.brand_id,
+        bs.region_id,
+        bs.shop_id,
+        bs.shop_type_id
+        from base_account_book bab
+        left join BASE_COMPANY bc on bc.company_id=bab.company_id
+        left join base_shop bs on bs.shop_id=bc.shop_id
+        where  bab.ente_id = #{enteId}
+    </select>
+</mapper>

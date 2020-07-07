@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.kettlejob.mapper.JoyHrBrushRequireMapper">
+
+    <!-- 查询最后更新时间 -->
+    <select id="findLastUpdateTime" resultType="java.lang.String">
+        select max(last_update_time) last_update_time from hr_brush_require
+        where app_id = #{appId}
+          and ente_id = #{enteId}
+    </select>
+
+    <!-- 批量新增或更新数据 -->
+    <insert id="insertOrUpdateBatch">
+        insert into hr_brush_require (
+        brush_reuqire_id,
+        third_user_id,
+        attend_date,
+        start_time_1,
+        end_time_1,
+        start_time_2,
+        end_time_2,
+        start_time_3,
+        end_time_3,
+        status,
+        ente_id,
+        app_id,
+        create_time,
+        last_update_time
+        )
+        values
+        <foreach collection="sqlParam.dataList" item="item" index="index" separator=",">
+            (
+            #{item.brushReuqireId},
+            #{item.thirdUserId},
+            #{item.attendDate},
+            #{item.StartTime1},
+            #{item.EndTime1},
+            #{item.StartTime2},
+            #{item.EndTime2},
+            #{item.StartTime3},
+            #{item.EndTime3},
+            #{item.status},
+            #{sqlParam.enteId},
+            #{sqlParam.appId},
+            #{sqlParam.createTime},
+            #{sqlParam.lastUpdateTime}
+            )
+        </foreach>
+        on duplicate key update
+        attend_date     = values(attend_date),
+        start_time_1    = values(start_time_1),
+        end_time_1      = values(end_time_1),
+        start_time_2    = values(start_time_2),
+        end_time_2      = values(end_time_2),
+        start_time_3    = values(start_time_3),
+        end_time_3      = values(end_time_3),
+        status          = values(status),
+        update_time     = #{sqlParam.updateTime},
+        last_update_time= #{sqlParam.lastUpdateTime}
+    </insert>
+
+    <!-- 批量更新补卡数据用户信息 -->
+    <update id="updateBrushRequireUserBatch">
+        update hr_brush_require br
+        left join base_user_rela ur on br.third_user_id = ur.third_user_id and br.app_id = ur.app_id and br.ente_id = ur.ente_id
+        <set>
+            br.user_id = ur.user_id
+        </set>
+        <where>
+            br.app_id = #{appId}
+            and br.ente_id = #{enteId}
+        </where>
+
+    </update>
+
+</mapper>

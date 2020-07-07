@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.RealTimeProfitReportTableMapper">
+
+    <delete id="deleteByParam" parameterType="com.njwd.entity.reportdata.dto.RealTimeProfitDto">
+        delete from middle_realtime_profit
+        where 1=1
+        <if test="beginDate != null">
+            and create_date >= #{beginDate}
+        </if>
+    </delete>
+
+    <insert id="addBatch" parameterType="com.njwd.entity.basedata.vo.BaseShopVo">
+        insert into middle_realtime_profit(
+        shop_id,
+        create_date,
+        item_type,
+        amount
+        )
+        values
+        <foreach collection="list" item="p" separator=",">
+            (
+            #{p.shopId},
+            #{p.itemDate},
+            #{p.itemCode},
+            #{p.amount}
+            )
+        </foreach>
+    </insert>
+
+    <select id="getGrossMargin" parameterType="com.njwd.entity.reportdata.dto.querydto.FinQueryDto" resultType="com.njwd.entity.reportdata.vo.RealTimeProfitVo">
+    select t.item_type itemCode,sum(amount) currentMoney from middle_realtime_profit t  where 1=1
+    <if test="beginDate != null and endDate != null ">
+        and  t.create_date between #{beginDate} and #{endDate}
+    </if>
+     group by t.item_type
+
+    </select>
+
+
+</mapper>

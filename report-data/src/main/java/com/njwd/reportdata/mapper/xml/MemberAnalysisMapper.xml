@@ -1,0 +1,570 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.MemberAnalysisMapper">
+    <resultMap id="RepCrmPrepaidConsumeMap" type="com.njwd.entity.reportdata.RepCrmTurnover">
+        <result column="shop_id" property="shopId" />
+        <result column="shop_name" property="shopName" />
+        <result column="brand_id" property="brandId" />
+        <result column="brand_name" property="brandName" />
+        <result column="region_id" property="regionId" />
+        <result column="region_name" property="regionName" />
+        <result column="shop_type_id" property="shopTypeId" />
+        <result column="shop_type_name" property="shopTypeName" />
+        <result column="actual_money" property="actualMoney" />
+        <result column="total_prepaid_money" property="totalPrepaidMoney" />
+        <result column="prepaid_money" property="prepaidMoney" />
+        <result column="largess_money" property="largessMoney" />
+        <result column="total_consume_money" property="totalConsumeMoney" />
+        <result column="consume_money" property="consumeMoney" />
+        <result column="consume_largess_money" property="consumeLargessMoney" />
+        <result column="revoke_total_prepaid_money" property="revokeTotalPrepaidMoney" />
+        <result column="revoke_prepaid_money" property="revokePrepaidMoney" />
+        <result column="revoke_largess_money" property="revokeLargessMoney" />
+        <result column="revoke_total_consume_money" property="revokeTotalConsumeMoney" />
+        <result column="revoke_consume_money" property="revokeConsumeMoney" />
+        <result column="revoke_consume_prepaid_money" property="revokeConsumePrepaidMoney" />
+        <result column="revoke_consume_largess_money" property="revokeConsumeLargessMoney" />
+        <result column="account_date" property="accountDate" />
+    </resultMap>
+
+    <select id="findCardConsumeStatistics" resultType="com.njwd.entity.reportdata.vo.MemberPrepaidConsumeVo" parameterType="com.njwd.entity.reportdata.dto.MemberPrepaidConsumeStatiDto" >
+        select p.pay_type_name payTypeName,transaction_type_code transactionTypeCode,count(1) payCount,sum(c.consume_money) payMoney
+        from crm_consume c ,base_transaction_type t,base_pay_type p,base_shop s,base_shop_type st
+        where
+         c.transaction_type_id=t.transaction_type_id  and t.transaction_type_code in ('consume','revoke_consume') and
+         p.pay_type_id=c.pay_type_id and p.ente_id=c.ente_id
+        and consume_time>=#{prepaidConsumeDto.beginDate}
+        <![CDATA[ and consume_time <= #{prepaidConsumeDto.endDate} ]]>
+        and c.shop_id=s.shop_id and s.shop_type_id=st.shop_type_id
+        <if test="prepaidConsumeDto.shopTypeIdList != null and prepaidConsumeDto.shopTypeIdList.size() > 0 ">
+            and st.shop_type_id in
+            <foreach collection="prepaidConsumeDto.shopTypeIdList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        and c.shop_id in
+        <foreach collection="prepaidConsumeDto.shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+        group by c.pay_type_id,p.pay_type_name,transaction_type_code;
+    </select>
+
+    <select id="findCardPrepaidStatistics" resultType="com.njwd.entity.reportdata.vo.MemberPrepaidConsumeVo" parameterType="com.njwd.entity.reportdata.dto.MemberPrepaidConsumeStatiDto" >
+        select p.pay_type_name payTypeName,transaction_type_code transactionTypeCode,count(1) payCount,sum(c.prepaid_money) payMoney
+        from crm_prepaid c ,crm_prepaid_pay_type ct,base_transaction_type t,base_pay_type p,base_shop s,base_shop_type st
+        where c.prepaid_id=ct.prepaid_id and c.shop_id=ct.shop_id and c.ente_id=ct.ente_id and c.app_id=ct.app_id and
+        c.transaction_type_id=t.transaction_type_id  and t.transaction_type_code in ('prepaid','revoke_prepaid') and
+        p.pay_type_id=ct.pay_type_id and p.ente_id=c.ente_id
+        and c.shop_id=s.shop_id and s.shop_type_id=st.shop_type_id
+        <if test="prepaidConsumeDto.shopTypeIdList != null and prepaidConsumeDto.shopTypeIdList.size() > 0 ">
+            and st.shop_type_id in
+            <foreach collection="prepaidConsumeDto.shopTypeIdList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        and prepaid_time>=#{prepaidConsumeDto.beginDate}
+        <![CDATA[ and prepaid_time <= #{prepaidConsumeDto.endDate} ]]>
+        and c.shop_id in
+        <foreach collection="prepaidConsumeDto.shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+        group by ct.pay_type_id,p.pay_type_name,transaction_type_code;
+    </select>
+    <select id="findShopList" resultType="com.njwd.entity.reportdata.vo.MemberConsumeStatiVo" parameterType="com.njwd.entity.reportdata.dto.MemberConsumeStatiDto" >
+        select s.shop_id shopId,s.shop_name shopName,b.brand_name brandName,r.region_name regionName
+        ,(
+          select sum(c.money_actual) actualMoney from pos_cash c where s.shop_id=c.shop_id and
+          c.account_date>=#{consumeStatiDto.beginDate} <![CDATA[ and account_date<=#{consumeStatiDto.endDate} ]]>
+          and c.shop_id in
+          <foreach collection="consumeStatiDto.shopIdList" item="shopId" separator="," open="(" close=")">
+              #{shopId}
+          </foreach>
+        ) moneyActual from base_shop s
+        left join base_brand b on s.brand_id=b.brand_id
+        left join base_region r on s.region_id=r.region_id
+        where  s.shop_id in
+        <foreach collection="consumeStatiDto.shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+    </select>
+
+    <select id="findConsumeStatiByShopIds" resultType="map" parameterType="com.njwd.entity.reportdata.dto.MemberConsumeStatiDto" >
+        select shop_id shopId, (totalMoney-revokeTotalMoney) totalMoney,
+        (consumeMoney-revokeConsumeMoney) consumeMoney,
+        (consumePrepaidMoney-revokeConsumePrepaidMoney) consumePrepaidMoney,
+        (consumeLargessMoney-revokeConsumeLargessMoney) consumeLargessMoney
+        from (
+            select c.shop_id,
+            sum(case when t.transaction_type_code='consume' then coalesce(c.total_money,0) else 0 end) totalMoney,
+            sum(case when t.transaction_type_code='revoke_consume' then coalesce(c.total_money,0) else 0 end) revokeTotalMoney,
+            sum(case when t.transaction_type_code='consume' then coalesce(c.consume_money,0) else 0 end) consumeMoney,
+            sum(case when t.transaction_type_code='revoke_consume' then coalesce(c.consume_money,0) else 0 end) revokeConsumeMoney,
+            sum(case when t.transaction_type_code='consume' then coalesce(c.consume_prepaid_money,0) else 0 end) consumePrepaidMoney,
+            sum(case when t.transaction_type_code='revoke_consume' then coalesce(c.consume_prepaid_money,0) else 0 end) revokeConsumePrepaidMoney,
+            sum(case when t.transaction_type_code='consume' then coalesce(c.consume_largess_money,0) else 0 end) consumeLargessMoney,
+            sum(case when t.transaction_type_code='revoke_consume' then coalesce(c.consume_largess_money,0) else 0 end) revokeConsumeLargessMoney
+            from crm_consume c,base_transaction_type t
+            where c.transaction_type_id=t.transaction_type_id
+            and c.consume_time>=#{consumeStatiDto.beginDate} and consume_time &lt;=#{consumeStatiDto.endDate}
+            and c.shop_id in
+            <foreach collection="consumeStatiDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+            group by c.shop_id
+        ) s
+    </select>
+
+    <select id="findPrepaidStatiByShopIds" resultType="map" parameterType="com.njwd.entity.reportdata.dto.MemberConsumeStatiDto" >
+        select shop_id shopId,(sum(totalMoney)-sum(revokeTotalMoney)) totalMoney,(sum(prepaidMoney)-sum(revokePrepaidMoney)) prepaidMoney
+        ,(sum(previousPrepaidMoney)-sum(previousRevokePrepaidMoney)) previousPrepaidMoney
+        from (
+            select c.shop_id,
+            sum(case when t.transaction_type_code='prepaid' then coalesce(c.money,0) else 0 end) totalMoney,
+            sum(case when t.transaction_type_code='revoke_prepaid' then coalesce(c.money,0) else 0 end) revokeTotalMoney,
+            sum(case when t.transaction_type_code='prepaid' then coalesce(c.prepaid_money,0) else 0 end) prepaidMoney,
+            sum(case when t.transaction_type_code='revoke_prepaid' then coalesce(c.prepaid_money,0) else 0 end) revokePrepaidMoney
+            ,0 previousPrepaidMoney,0 previousRevokePrepaidMoney
+            from crm_prepaid c,base_transaction_type t
+            where c.transaction_type_id=t.transaction_type_id
+           and c.prepaid_time>=#{consumeStatiDto.beginDate}  <![CDATA[ and prepaid_time<=#{consumeStatiDto.endDate}]]>
+            and c.shop_id in
+            <foreach collection="consumeStatiDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+            group by c.shop_id
+            union all
+            select c.shop_id, 0 totalMoney,0 revokeTotalMoney,0 prepaidMoney ,0 revokePrepaidMoney,
+            sum(case when t.transaction_type_code='prepaid' then coalesce(c.prepaid_money,0) else 0 end) previousPrepaidMoney,
+            sum(case when t.transaction_type_code='revoke_prepaid' then coalesce(c.prepaid_money,0) else 0 end) previousRevokePrepaidMoney
+            from crm_prepaid c,base_transaction_type t
+            where c.transaction_type_id=t.transaction_type_id
+            and c.prepaid_time>=#{consumeStatiDto.preBeginDate}  <![CDATA[ and prepaid_time<=#{consumeStatiDto.preEndDate}]]>
+            and c.shop_id in
+            <foreach collection="consumeStatiDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+            group by c.shop_id
+        ) p GROUP BY shop_id
+    </select>
+
+    <select id="findRepPrepaidConsumeByShopIds" resultType="com.njwd.entity.reportdata.vo.RepCrmTurnoverPayTypeVo" parameterType="com.njwd.entity.reportdata.dto.MemberPrepaidConsumeStatiDto" >
+        select pay_type_id,pay_type_name,sum(consume_num) consume_num,sum(revoke_consume_num) revoke_consume_num,sum(prepaid_num) prepaid_num,sum(revoke_prepaid_num) revoke_prepaid_num,
+        sum(consume_prepaid_money) consume_prepaid_money,sum(revoke_consume_prepaid_money) revoke_consume_prepaid_money,sum(prepaid_money) prepaid_money,sum(revoke_prepaid_money) revoke_prepaid_money
+        ,sum(consume_actual_money) consume_actual_money,sum(revoke_consume_actual_money) revoke_consume_actual_money
+        from rep_crm_turnover_pay_type t
+        where account_date>=#{prepaidConsumeDto.beginDate} and account_date &lt;=#{prepaidConsumeDto.endDate}
+        and shop_type_id in
+        <foreach collection="prepaidConsumeDto.shopTypeIdList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and shop_id in
+        <foreach collection="prepaidConsumeDto.shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+        GROUP BY pay_type_id,pay_type_name
+    </select>
+
+       <select id="findRepConsumeStatiByShopIds" resultType="com.njwd.entity.reportdata.vo.MemberConsumeStatiVo" parameterType="com.njwd.entity.reportdata.dto.MemberConsumeStatiDto" >
+           select 'shop' "type",shop_id typeId,shop_id shopId,shop_name shopName,brand_id brandId,brand_name brandName,region_id regionId,region_name regionName,
+           sum(total_consume_money-revoke_total_consume_money) memberConsumeMoney,
+           sum(consume_money-revoke_consume_money) consumeMoney,
+           sum(consume_prepaid_money-revoke_consume_prepaid_money) consumePrepaidMoney,
+           sum(consume_largess_money-revoke_consume_largess_money) consumeLargessMoney
+           ,coalesce((select sum((coalesce(pc.amount,0)+coalesce(pc.money_over_charge,0))) from rep_pos_desk pc where pc.shop_id=c.shop_id
+           and pc.account_date>=TO_DATE (#{consumeStatiDto.beginDate},'yyyy-mm-dd')  and pc.account_date &lt;=TO_DATE (#{consumeStatiDto.endDate},'yyyy-mm-dd') ),0) actual_money
+           from rep_crm_turnover c
+           where account_date>=TO_DATE (#{consumeStatiDto.beginDate},'yyyy-mm-dd') and account_date &lt;=TO_DATE (#{consumeStatiDto.endDate},'yyyy-mm-dd')
+           and c.shop_type_id in
+           <foreach collection="consumeStatiDto.shopTypeIdList" index="index" item="item" open="(" separator="," close=")">
+               #{item}
+           </foreach>
+           and c.shop_id in
+           <foreach collection="consumeStatiDto.shopIdList" item="shopId" separator="," open="(" close=")">
+               #{shopId}
+           </foreach>
+           group by c.shop_id,shop_name,brand_id,brand_name,region_id,region_name
+       </select>
+
+       <select id="findRepConsumeStatiMoneyByShopIds" resultType="com.njwd.entity.reportdata.vo.MemberConsumeStatiVo" parameterType="com.njwd.entity.reportdata.dto.MemberConsumeStatiDto" >
+           select "type",typeId,shop_id,brand_id,region_id,sum(total_prepaid_money) currTotalPrepaidMoney,sum(prepaid_money-revoke_prepaid_money) currentPrepaidMoney,
+           sum(pre_prepaid_money-revoke_pre_prepaid_money) previousPrepaidMoney from
+           (
+               select 'shop' "type",shop_id typeId,shop_id,brand_id,region_id,
+               <!--(sum(coalesce(t.total_prepaid_money,0))-sum(coalesce(t.revoke_total_prepaid_money,0))) total_prepaid_money-->
+                sum(coalesce(t.total_prepaid_money,0)) total_prepaid_money,
+               <!--(sum(coalesce(t.prepaid_money,0))-sum(coalesce(t.revoke_prepaid_money,0))) prepaid_money-->
+                sum(coalesce(t.prepaid_money,0)) prepaid_money,sum(coalesce(t.revoke_prepaid_money,0)) revoke_prepaid_money
+                ,0 pre_prepaid_money,0 revoke_pre_prepaid_money
+               from rep_crm_turnover t
+               where t.account_date>=TO_DATE (#{consumeStatiDto.beginDate},'yyyy-mm-dd') and t.account_date &lt;=TO_DATE (#{consumeStatiDto.endDate},'yyyy-mm-dd')
+               <if test="consumeStatiDto.shopTypeIdList != null and consumeStatiDto.shopTypeIdList.size() > 0 ">
+                   and t.shop_type_id in
+                   <foreach collection="consumeStatiDto.shopTypeIdList" index="index" item="item" open="(" separator="," close=")">
+                       #{item}
+                   </foreach>
+               </if>
+               and t.shop_id in
+               <foreach collection="consumeStatiDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                   #{shopId}
+               </foreach>
+               group by type, shop_id,brand_id,region_id
+               union ALL
+               select 'shop' "type",shop_id typeId,shop_id,brand_id,region_id,
+               0 total_prepaid_money,0	 prepaid_money,0 revoke_prepaid_money,
+               <!--(sum(coalesce(t.prepaid_money,0))-sum(coalesce(t.revoke_prepaid_money,0))) pre_prepaid_money-->
+               sum(coalesce(t.prepaid_money,0)) pre_prepaid_money,sum(coalesce(t.revoke_prepaid_money,0)) revoke_pre_prepaid_money
+               from rep_crm_turnover t
+               where t.account_date>=TO_DATE (#{consumeStatiDto.preBeginDate},'yyyy-mm-dd') and t.account_date &lt;=TO_DATE (#{consumeStatiDto.preEndDate},'yyyy-mm-dd')
+               <if test="consumeStatiDto.shopTypeIdList != null and consumeStatiDto.shopTypeIdList.size() > 0 ">
+                   and t.shop_type_id in
+                   <foreach collection="consumeStatiDto.shopTypeIdList" index="index" item="item" open="(" separator="," close=")">
+                       #{item}
+                   </foreach>
+               </if>
+               and t.shop_id in
+               <foreach collection="consumeStatiDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                   #{shopId}
+               </foreach>
+               group by type,shop_id,brand_id,region_id
+           ) c group by "type",typeId,shop_id,brand_id,region_id
+       </select>
+    <!--获取会员期末数量-->
+    <select id="findMemberNumAnalysisReport" resultType="memberNumAnalysisVo" parameterType="memberNumAnalysisDto" >
+        select count(*) as memberNum,cm.shop_id,cm.ente_id,
+        COALESCE(bs.shop_name,'总部商户') as shop_name,
+        COALESCE(bs.region_id,'zongbu') as region_id,
+        COALESCE(bs.region_name,'总部商户') as region_name,
+        COALESCE(bs.brand_id,'zongbu') as brand_id,
+        COALESCE(bs.brand_name ,'总部商户') as brand_name
+        from crm_member cm
+        left join base_shop bs on cm.shop_id= bs.shop_id
+        where
+        cm.register_time &lt;=#{endDate}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and cm.shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and  shopTypeIdList.size() > 0 ">
+            and bs.shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        GROUP BY cm.shop_id,bs.shop_name,cm.ente_id,bs.region_id,bs.region_name,bs.brand_id,bs.brand_name;
+    </select>
+    <!--获取会员期间增量数-->
+    <select id="findMemberNumAddReport" resultType="memberNumAnalysisVo" parameterType="memberNumAnalysisDto" >
+        select count(*) as memberAddNum,cm.shop_id
+        from crm_member cm
+        left join base_shop bs on cm.shop_id= bs.shop_id
+        where
+        cm.register_time>=#{beginDate} and cm.register_time &lt;=#{endDate}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and cm.shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and  shopTypeIdList.size() > 0 ">
+            and bs.shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        GROUP BY cm.shop_id;
+    </select>
+    <!--获取会员期间减少数-->
+    <select id="findMemberNumLowerReport" resultType="memberNumAnalysisVo" parameterType="memberNumAnalysisDto" >
+        select count(*) as memberLowerNum,cm.shop_id
+        from crm_member cm
+        left join base_shop bs on cm.shop_id= bs.shop_id
+        where
+        cm.un_register_time>=#{beginDate} and cm.un_register_time &lt;=#{endDate}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and cm.shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and  shopTypeIdList.size() > 0 ">
+            and bs.shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        GROUP BY cm.shop_id;
+    </select>
+    <!--会员画像 -->
+    <select id="findMemberPortraitByShopIds" resultType="com.njwd.entity.reportdata.vo.MemberPortraitVo" parameterType="com.njwd.entity.reportdata.dto.MemberPortraitDto" >
+        select cm.member_id,cd.card_id,cd.card_no,bs.brand_name,bs.region_name,bs.shop_id,bs.shop_name,COALESCE(cm.member_name,'未知') member_name,cm.birthday
+        ,(case when cm.sex='1' then '男' when cm.sex='2' then '女' else '未知' end) sex
+        <!--,sum(COALESCE(t.consume_money,0)) totalConsumeMoney,sum(COALESCE(t.coupon_use_num,0)) couponUseNum
+        ,sum(COALESCE(t.coupon_use_money,0)) couponUseMoney ,sum(coalesce(t.consume_num,0)) consumeFrequency-->
+        from base_shop bs,crm_member cm,crm_card cd
+        <!--left join (
+            select ca.card_id,ca.app_id,ca.ente_id,count(c.consume_id) consume_num,sum(c.total_money) consume_money
+            ,sum(COALESCE(cc.num,0)) coupon_use_num,sum(COALESCE(cc.total_discount_money,0)) coupon_use_money
+            ,(select substr(consume_time, 11,14)  from crm_consume c where  c.card_id=ca.card_id and c.ente_id=ca.ente_id
+            and c.consume_time>=#{queryDto.beginDate} and c.consume_time&lt;=#{queryDto.endDate} order by consume_time asc limit 1) minPeriod
+            ,(select substr(consume_time, 11,14)  from crm_consume c where  c.card_id=ca.card_id and c.ente_id=ca.ente_id
+            and c.consume_time>=#{queryDto.beginDate} and c.consume_time&lt;=#{queryDto.endDate} order by consume_time desc limit 1) maxPeriod
+            from crm_card ca,crm_consume c
+            left join crm_consume_coupon cc on c.consume_id=cc.consume_id  and c.ente_id=cc.ente_id
+            where c.card_id=ca.card_id and c.ente_id=ca.ente_id
+            and c.consume_time>=#{queryDto.beginDate} and c.consume_time&lt;=#{queryDto.endDate}
+            group by ca.card_id,ca.app_id,ca.ente_id
+        ) t on t.card_id=cd.card_id and t.app_id=cd.app_id and t.ente_id=cd.ente_id-->
+        where cd.shop_id= bs.shop_id and cm.member_id=cd.member_id and cm.ente_id=cd.ente_id
+        <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() > 0 ">
+            and cd.shop_id in
+            <foreach collection="queryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size() > 0 ">
+            and bs.shop_type_id in
+            <foreach collection="queryDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        group by cm.member_id,cd.card_id,cd.card_no,bs.brand_name,bs.region_name,bs.shop_id,bs.shop_name,cm.member_name,cm.birthday,sex
+        <!--order by sum(COALESCE(t.consume_money,0)) desc-->
+    </select>
+
+    <!--会员画像导出 -->
+    <select id="findMemberPortraitForExport" resultType="com.njwd.entity.reportdata.vo.MemberPortraitVo" parameterType="com.njwd.entity.reportdata.dto.querydto.ExcelExportDto" >
+        select cm.member_id,bs.brand_name,bs.region_name,bs.shop_id,bs.shop_name,COALESCE(cm.member_name,'未知') member_name,cm.birthday
+        ,(case when cm.sex='1' then '男' when cm.sex='2' then '女' else '未知' end) sex
+        ,sum(COALESCE(t.consume_money,0)) total_consume_money,sum(COALESCE(t.coupon_use_num,0)) coupon_use_num
+        ,sum(COALESCE(t.coupon_use_money,0)) coupon_use_money ,sum(coalesce(t.consume_num,0)) consume_frequency
+        from base_shop bs,crm_member cm,crm_card cd
+        left join (
+        select ca.card_id,ca.app_id,ca.ente_id,count(c.consume_id) consume_num,sum(c.total_money) consume_money
+        ,sum(COALESCE(cc.num,0)) coupon_use_num,sum(COALESCE(cc.total_discount_money,0)) coupon_use_money
+        ,(select substr(consume_time, 11,14)  from crm_consume c where  c.card_id=ca.card_id and c.ente_id=ca.ente_id
+        and c.consume_time>=#{queryDto.beginDate} and c.consume_time&lt;=#{queryDto.endDate} order by consume_time asc limit 1) minPeriod
+        ,(select substr(consume_time, 11,14)  from crm_consume c where  c.card_id=ca.card_id and c.ente_id=ca.ente_id
+        and c.consume_time>=#{queryDto.beginDate} and c.consume_time&lt;=#{queryDto.endDate} order by consume_time desc limit 1) maxPeriod
+        from crm_card ca,crm_consume c
+        left join crm_consume_coupon cc on c.consume_id=cc.consume_id  and c.ente_id=cc.ente_id
+        where c.card_id=ca.card_id and c.ente_id=ca.ente_id
+        and c.consume_time>=#{queryDto.beginDate} and c.consume_time&lt;=#{queryDto.endDate}
+        group by ca.card_id,ca.app_id,ca.ente_id
+        ) t on t.card_id=cd.card_id and t.app_id=cd.app_id and t.ente_id=cd.ente_id
+        where cd.shop_id= bs.shop_id and cm.member_id=cd.member_id and cm.ente_id=cd.ente_id
+        <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() > 0 ">
+            and cd.shop_id in
+            <foreach collection="queryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size() > 0 ">
+            and bs.shop_type_id in
+            <foreach collection="queryDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        group by cm.member_id,bs.brand_name,bs.region_name,bs.shop_id,bs.shop_name,cm.member_name,cm.birthday,sex
+        order by sum(COALESCE(t.consume_money,0)) desc
+    </select>
+
+    <!--会员卡分析 期初充值消费 查询-->
+    <select id="findEarlyCardPrepaidConsume" parameterType="com.njwd.entity.reportdata.dto.MembershipCardAnalysisDto"
+            resultType="com.njwd.entity.reportdata.vo.CardPrepaidConsumeStatisticalVo">
+        select
+        shop_id shopId,
+        case when sum(total_prepaid_money - consume_money)>0 then sum(total_prepaid_money - consume_money) ELSE 0 end totalPrepaidMoney
+        ,
+        case when sum(prepaid_money - consume_prepaid_money)>0 then sum(prepaid_money - consume_prepaid_money) ELSE 0 end prepaidMoney
+        from rep_crm_turnover_pay_type
+        where  ente_id = #{queryDto.enteId}
+        <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="queryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size() > 0 ">
+            and shop_type_id in
+            <foreach collection="queryDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        and account_date &lt; #{queryDto.beginDate}
+        group by shopId
+    </select>
+
+    <!--会员卡分析 本期充值消费 查询-->
+    <select id="findIncreaseCardPrepaidConsume" parameterType="com.njwd.entity.reportdata.dto.MembershipCardAnalysisDto"
+            resultType="com.njwd.entity.reportdata.vo.CardPrepaidConsumeStatisticalVo">
+        select
+         shop_id shopId,
+        sum(total_prepaid_money - revoke_total_prepaid_money) totalPrepaidMoney,
+        sum(prepaid_money - revoke_prepaid_money) prepaidMoney,
+        sum(consume_money - revoke_consume_money) consumeMoney,
+        sum(consume_prepaid_money - revoke_consume_prepaid_money) consumePrepaidMoney
+        from rep_crm_turnover_pay_type
+        where  ente_id = #{queryDto.enteId}
+        <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="queryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size() > 0 ">
+            and shop_type_id in
+            <foreach collection="queryDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        and account_date between #{queryDto.beginDate} and #{queryDto.endDate}
+        group by shopId
+    </select>
+    <!--查询年龄阶段-->
+    <select id="findAgeStageList" resultType="map">
+        select age_stage_id ageStageId,min_age minAge,max_age maxAge,age_stage_name ageStageName from crm_age_stage
+    </select>
+
+    <!-- 根据会员查询消费时间段信息-->
+    <select id="findConsumePeriodListByCardId" resultType="com.njwd.entity.reportdata.vo.MemberPortraitVo" parameterType="com.njwd.entity.reportdata.dto.MemberPortraitDto">
+        select
+        card_id,app_id,ente_id,
+        min(consume_time) ||'~'|| max(consume_time) consumePeriod
+        from
+        crm_consume c
+        where
+        c.card_id in
+        <foreach collection="queryDto.cardIdList" item="cardId" separator="," open="(" close=")">
+            #{cardId}
+        </foreach>
+        and c.consume_time>=#{queryDto.beginDate} and c.consume_time&lt;=#{queryDto.endDate}
+        and c.ente_id = #{queryDto.enteId}
+        group by card_id,app_id,ente_id
+    </select>
+    <!-- 根据会员查询消费信息-->
+    <select id="findConsumeListByCardId" resultType="com.njwd.entity.reportdata.vo.MemberPortraitVo" parameterType="com.njwd.entity.reportdata.dto.MemberPortraitDto">
+        select c.card_id,c.app_id,c.ente_id,count(c.consume_id) consumeFrequency,sum(c.total_money) totalConsumeMoney
+        ,sum(COALESCE(cc.num,0)) couponUseNum,sum(COALESCE(cc.total_discount_money,0)) couponUseMoney
+        from crm_consume c
+        left join crm_consume_coupon cc on c.consume_id=cc.consume_id and c.app_id=cc.app_id and c.ente_id=cc.ente_id
+        where c.consume_time>=#{queryDto.beginDate} and c.consume_time&lt;=#{queryDto.endDate}
+        and c.card_id in
+        <foreach collection="cardIdList" item="cardId" separator="," open="(" close=")">
+            #{cardId}
+        </foreach>
+        and c.ente_id = #{queryDto.enteId}
+        group by c.card_id,c.app_id,c.ente_id
+
+    </select>
+
+    <!-- 查询会员数量统计表 -->
+    <select id="findMemberCountList" resultType="MemberNumAnalysisVo">
+        select
+        s.ente_id,
+        b.brand_id,
+        b.brand_code,
+        b.brand_name,
+        r.region_id,
+        r.region_code,
+        r.region_name,
+        s.shop_id,
+        s.shop_no,
+        s.shop_name,
+        s.member_num,
+        s.last_year_num,
+        s.prior_num,
+        s.member_num - s.prior_num member_add_num
+        from (
+        select
+        s.ente_id,
+        s.brand_id,
+        s.region_id,
+        s.shop_id,
+        s.shop_no,
+        s.shop_name,
+        sum(case when m.register_time &lt; #{param.endDate} then 1 else 0 end) member_num,
+        sum(case when m.register_time &lt; #{param.lastYearDate} then 1 else 0 end) last_year_num,
+        sum(case when m.register_time &lt; #{param.priorDate} then 1 else 0 end) prior_num
+        from base_shop s
+        left join crm_member m on s.shop_id = m.shop_id
+        <where>
+            and s.ente_id = #{param.enteId}
+            <if test="param.shopIdList != null and param.shopIdList.size() > 0 ">
+                and s.shop_id in
+                <foreach collection="param.shopIdList" item="shopId" separator="," open="(" close=")">
+                    #{shopId}
+                </foreach>
+            </if>
+            <if test="param.shopTypeIdList != null and param.shopTypeIdList.size() > 0 ">
+                and s.shop_type_id in
+                <foreach collection="param.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                    #{shopTypeId}
+                </foreach>
+            </if>
+        </where>
+        group by s.shop_id
+        ) s
+        left join base_brand b on s.brand_id = b.brand_id
+        left join base_region r on s.region_id = r.region_id
+        order by b.brand_code,r.region_code,s.shop_no
+    </select>
+
+    <!-- 查询开会会员数量统计表 -->
+    <select id="findCardMemberCountList" resultType="MemberNumAnalysisVo">
+        select
+        s.ente_id,
+        b.brand_id,
+        b.brand_code,
+        b.brand_name,
+        r.region_id,
+        r.region_code,
+        r.region_name,
+        s.shop_id,
+        s.shop_no,
+        s.shop_name,
+        s.member_num,
+        s.last_year_num,
+        s.prior_num,
+        s.member_num - s.prior_num member_add_num
+        from (((
+        select
+        s.ente_id,
+        s.brand_id,
+        s.region_id,
+        s.shop_id,
+        s.shop_no,
+        s.shop_name,
+        sum(case when c.activate_time &lt; #{param.endDate} then 1 else 0 end) member_num,
+        sum(case when c.activate_time &lt; #{param.lastYearDate} then 1 else 0 end) last_year_num,
+        sum(case when c.activate_time &lt; #{param.priorDate} then 1 else 0 end) prior_num
+        from base_shop s
+        left join crm_card c on s.shop_id = c.shop_id
+        <where>
+            and s.ente_id = #{param.enteId}
+            and c.card_type_id not in (
+            select model_id from wd_dict where model_name = 'crm_card_grade'
+            and ente_id = #{param.enteId}
+            )
+            <if test="param.shopIdList != null and param.shopIdList.size() > 0 ">
+                and s.shop_id in
+                <foreach collection="param.shopIdList" item="shopId" separator="," open="(" close=")">
+                    #{shopId}
+                </foreach>
+            </if>
+            <if test="param.shopTypeIdList != null and param.shopTypeIdList.size() > 0 ">
+                and s.shop_type_id in
+                <foreach collection="param.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                    #{shopTypeId}
+                </foreach>
+            </if>
+        </where>
+        group by s.shop_id
+        ) s
+        left join base_brand b on s.brand_id = b.brand_id)
+        left join base_region r on s.region_id = r.region_id)
+        order by b.brand_code,r.region_code,s.shop_no
+    </select>
+
+</mapper>

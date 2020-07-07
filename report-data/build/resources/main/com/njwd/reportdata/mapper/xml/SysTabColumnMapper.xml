@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportdata.mapper.SysTabColumnMapper">
+    <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.vo.SysTabColumnVo">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="menu_code" jdbcType="VARCHAR" property="menuCode"/>
+        <result column="report_name" jdbcType="VARCHAR" property="reportName"/>
+        <result column="column_name" jdbcType="VARCHAR" property="columnName"/>
+        <result column="column_remark" jdbcType="VARCHAR" property="columnRemark"/>
+        <result column="convert_type" jdbcType="VARCHAR" property="convertType"/>
+        <result column="is_show" jdbcType="TINYINT" property="isShow"/>
+        <result column="sort_num" jdbcType="TINYINT" property="sortNum"/>
+        <result column="is_sort" jdbcType="TINYINT" property="isSort"/>
+        <result column="is_enable" jdbcType="TINYINT" property="isEnable"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="creator_id" jdbcType="BIGINT" property="creatorId"/>
+        <result column="creator_name" jdbcType="VARCHAR" property="creatorName"/>
+        <result column="level" jdbcType="TINYINT" property="level"/>
+        <result column="code" jdbcType="VARCHAR" property="code"/>
+        <result column="up_code" jdbcType="VARCHAR" property="upCode"/>
+        <result column="data_type" jdbcType="TINYINT" property="dataType"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    id, menu_code, report_name, `column_name`,
+    column_remark,convert_type, is_show, sort_num, is_sort, is_enable, create_time, creator_id,
+    creator_name,level,code,up_code,data_type
+  </sql>
+
+    <select id="findSysTabColumnList" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from wd_sys_tab_column
+        where
+        is_enable=1
+        and menu_code=#{menuCode}
+        order by sort_num
+    </select>
+    <select id="findSysTabColumnById" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from wd_sys_tab_column
+        where
+        id=#{id}
+        and is_enable=1
+        order by sort_num
+    </select>
+
+    <!--  报表配置项 列表  -->
+    <select id="findSysTabColumnSet" resultMap="BaseResultMap">
+        select
+            menu_code,
+            report_name
+        from wd_sys_tab_column
+        order by menu_code
+    </select>
+</mapper>

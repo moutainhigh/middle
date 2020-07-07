@@ -1,0 +1,168 @@
+# server配置
+server:
+  port: 8195
+  tomcat:
+    uri-encoding: UTF-8
+  servlet:
+    context-path: /kettlejob
+
+# spring配置
+spring:
+  profiles:
+    active: dev
+  application:
+    name: kettle-job
+  cloud:
+    nacos:
+      config:
+        server-addr: 116.62.148.189:8848
+        file-extension: yaml
+      #        namespace:
+      discovery:
+        server-addr: 116.62.148.189:8848
+        enabled: true
+        namespace: reportData
+
+  # 数据库配置
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://njwd.tpddns.cn:3308/middle_db?useUnicode=true&characterEncoding=utf-8&autoReconnect=true&autoReconnectForPools=true&failOverReadOnly=false&useSSL=false&allowMultiQueries=true&serverTimezone=Asia/Shanghai&tinyInt1isBit=false
+    username: admin
+    password: admin1245!@$%
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 8
+    tomcat:
+      initialSize: 5
+      minIdle: 5
+      maxActive: 20
+      maxWait: 60000
+      timeBetweenEvictionRunsMillis: 60000
+      minEvictableIdleTimeMillis: 300000
+      validationQuery: SELECT 1 FROM DUAL
+      testWhileIdle: true
+      testOnBorrow: false
+      testOnReturn: false
+  redis:
+    database: 2
+    host: 10.16.1.160
+    port: 6379
+    password: sys1234
+    # 使用连接池
+    jedis:
+      pool:
+        max-active: 1024
+        max-idle: 200
+        min-idle: 0
+  rabbitmq:
+    host: 10.16.1.160
+    port: 5672
+    username: guest
+    password: guest
+    publisher-confirms: true    #  消息发送到交换机确认机制,是否确认回调
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    timezone: GMT+8
+    serialization:
+      # false:不使用 true:使用 时间戳
+      write-dates-as-timestamps: true
+
+
+logging:
+  config: classpath:logback.xml
+
+mybatis-plus:
+  mapper-locations:  classpath*:/com/njwd/**/mapper/xml/*.xml
+  typeAliasesPackage: com.njwd.*.entity
+  global-config:
+    db-config:
+      id-type: uuid
+      field-strategy: not_null
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+  type-handlers-package: com.njwd.handler
+
+#自定义常量
+constant:
+  file:
+    #服务端excel的保存路径,模版在该路径下,上传的excle文件在对应文件夹下
+    excelRootPath: /home/middle_end/excel_upload/
+
+#kettle文件库
+kettle:
+  script:
+    path: D:\test\kettle
+    propertiesFilePath: D:\kettle\krt
+
+#微生活会员地址
+aceWill:
+  server: https://api.acewill.net/
+  url:
+    shop_list: /shop/list
+    consume_list: /consume/list
+    prepaid_list: /charge/list
+    grade_list: /grade/rule
+    pay_type_list: /deal/getallpaytype
+#巡店访问地址
+cruiseShop:
+  server: https://xundian.alphabets.cn
+  url:
+    token: /api/data/account/token
+    item_list: /api/data/form/list
+    item_score: /api/data/report/list
+    shop_list: /api/group/tree
+
+#乐才访问地址
+joyhr:
+  server: http://api.joyhr.com
+  url:
+    depart_list: /api/Depart/GetItemsByDate
+    depart_all: /api/Depart/GetItems
+    employee_list: /api/employee/GetItemsByPage
+    post_list: /api/Post/GetItems
+    leave_list: /api/KeHu_JiuDingXuan/GetEmployeeLeaveInfo
+    leave_type_all: /api/KeHu_JiuDingXuan/GetLeaveTypeInfo
+    overtime_list: /api/KeHu_JiuDingXuan/GetEmployeeOvertimeInfo
+    overtime_type_all: /api/KeHu_JiuDingXuan/GetOvertimeTypeInfo
+    brush_require_list: /api/KeHu_JiuDingXuan/GetEmployeeBrushrequireInfo
+    travel_list: /api/KeHu_JiuDingXuan/GetEmployeeBusiTravelInfo
+    out_list: /api/KeHu_JiuDingXuan/GetEmployeeBusinessOfficialInfo
+    regular_define_list: /api/KeHu_JiuDingXuan/GetRegularDefineInfo
+    attend_regular_list: /api/KeHu_JiuDingXuan/GetAttendRegularInfo
+    attend_result_list: /api/KeHu_JiuDingXuan/GetAttendResultDetailInfo
+    salary_list: /api/SalaryInfos/SalarySummary
+    org_change_list: /api/KeHu_JiuDingXuan/GetEmployeeChange
+
+#调度线程池大小
+schedule:
+  param:
+    poolsize: 10
+    role: role1
+
+#hystrix的超时时间
+hystrix:
+  command:
+    default:
+      execution:
+        timeout:
+          enabled: true
+        isolation:
+          thread:
+            timeoutInMilliseconds: 30000
+#ribbon的超时时间
+ribbon:
+  ReadTimeout: 30000
+  ConnectTimeout: 30000
+
+#openfire地址
+#openfire:
+#  server: 192.168.1.215
+#  domainName: njwdopenfire
+#  port: 5222
+#  #配置用发送消息的账号信息
+#  loginAccount: admin
+#  loginPassword: admin
+
+

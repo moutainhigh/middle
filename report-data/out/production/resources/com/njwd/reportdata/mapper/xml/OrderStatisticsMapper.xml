@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.OrderStatisticsMapper">
+
+    <select id="findAbnormalOrderList" resultType="com.njwd.entity.reportdata.vo.AbnormalOrderVo">
+        SELECT
+             bs.brand_id,
+             bs.brand_name,
+             bs.region_id,
+             bs.region_name,
+             bs.shop_id,
+             bs.shop_name,
+             sum(case
+             when (bs.city=#{queryDto.city,jdbcType=VARCHAR} and (pc.money_consume+pc.money_over_charge)/people_num>#{queryDto.value,jdbcType=NUMERIC}) or
+             (bs.city!=#{queryDto.city,jdbcType=VARCHAR} and (pc.money_consume+pc.money_over_charge)/people_num>#{queryDto.valueTwo,jdbcType=NUMERIC})
+             then 1 else 0 end) abnormalCount
+        FROM pos_order po
+	        left join pos_cash pc
+	        on pc.order_id=po.order_id
+	        and pc.shop_id=po.shop_id
+	        and pc.ente_id=po.ente_id
+	        and pc.account_date between #{queryDto.beginDate,jdbcType=DATE} AND #{queryDto.endDate,jdbcType=DATE}
+	        left join base_shop bs
+	        on bs.shop_id=po.shop_id
+	        and bs.ente_id=po.ente_id
+        WHERE
+	        po.ente_id = #{queryDto.enteId,jdbcType=VARCHAR}
+	        AND po.order_date between #{queryDto.beginDate,jdbcType=DATE} AND #{queryDto.endDate,jdbcType=DATE}
+            <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() != 0">
+                AND bs.shop_id IN
+                <foreach collection="queryDto.shopIdList" item="shopId" open="(" close=")" separator=",">
+                    #{shopId}
+                </foreach>
+            </if>
+            <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size() > 0">
+                AND bs.shop_type_id in
+                <foreach collection="queryDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                    #{shopTypeId}
+                </foreach>
+            </if>
+            <if test="queryDto.orderTypeIdList != null and queryDto.orderTypeIdList.size() > 0">
+                AND po.channel_id in
+                <foreach collection="queryDto.orderTypeIdList" item="orderTypeId" separator="," open="(" close=")">
+                    #{orderTypeId}
+                </foreach>
+            </if>
+	        and people_num>0
+	        GROUP BY
+	            bs.brand_id,
+	            bs.brand_name,
+                bs.region_id,
+                bs.region_name,
+                bs.shop_id,
+                bs.shop_name
+    </select>
+    <select id="findTotalOrderList" resultType="com.njwd.entity.reportdata.vo.AbnormalOrderVo">
+         SELECT
+             brand_id,
+             brand_name,
+             region_id,
+             region_name,
+             shop_id,
+             shop_name,
+             sum(desk_count) orderCount
+        FROM  rep_pos_desk po
+        WHERE
+	          ente_id = #{queryDto.enteId,jdbcType=VARCHAR}
+             AND  account_date between #{queryDto.beginDate,jdbcType=DATE} AND #{queryDto.endDate,jdbcType=DATE}
+            <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() != 0">
+                AND shop_id IN
+                <foreach collection="queryDto.shopIdList" item="shopId" open="(" close=")" separator=",">
+                    #{shopId}
+                </foreach>
+            </if>
+            <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size() > 0">
+                AND shop_type_id in
+                <foreach collection="queryDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                    #{shopTypeId}
+                </foreach>
+            </if>
+            <if test="queryDto.orderTypeIdList != null and queryDto.orderTypeIdList.size() > 0">
+                AND po.channel_id in
+                <foreach collection="queryDto.orderTypeIdList" item="orderTypeId" separator="," open="(" close=")">
+                    #{orderTypeId}
+                </foreach>
+            </if>
+             and (amount+money_over_charge)>0
+	    GROUP BY
+             brand_id,
+             brand_name,
+             region_id,
+             region_name,
+             shop_id,
+             shop_name
+    </select>
+    <select id="findOrderDetailList" resultType="com.njwd.entity.reportdata.vo.OrderDetailVo">
+        SELECT
+                bs.shop_name,
+				po.order_code,
+				pc.money_consume+pc.money_over_charge consume,
+				people_num,
+				case when people_num>0 then (pc.money_consume+pc.money_over_charge)/people_num
+				 else 0
+				 end  avgConsume,
+				sum(pof.food_num) as food_num,
+        case
+            when (bs.city=#{queryDto.city,jdbcType=VARCHAR} and  people_num>0
+            and (pc.money_consume+pc.money_over_charge)/people_num>#{queryDto.value,jdbcType=NUMERIC})
+            or (bs.city!=#{queryDto.city,jdbcType=VARCHAR} and people_num>0
+            and (pc.money_consume+pc.money_over_charge)/people_num>#{queryDto.valueTwo,jdbcType=NUMERIC}) then '是'
+            else '否'
+        end isAbnormal
+    FROM
+        pos_order po
+		left join pos_order_food pof
+		on pof.order_id=po.order_id
+    and pof.shop_id=po.shop_id
+		and pof.ente_id=po.ente_id
+    and pof.account_date between #{queryDto.beginDate,jdbcType=DATE} AND #{queryDto.endDate,jdbcType=DATE}
+		and EXISTS(SELECT 1 FROM base_food bf WHERE pof.food_id = bf.food_id AND bf.food_name = #{queryDto.foodName,jdbcType=VARCHAR} )
+    left join pos_cash pc
+    on pc.order_id=po.order_id
+    and pc.shop_id=po.shop_id
+	  and pc.ente_id=po.ente_id
+    and pc.account_date between #{queryDto.beginDate,jdbcType=DATE} AND #{queryDto.endDate,jdbcType=DATE}
+    left join base_shop bs
+    on bs.shop_id=po.shop_id
+	  and bs.ente_id=po.ente_id
+    where
+        po.ente_id = #{queryDto.enteId,jdbcType=VARCHAR}
+        AND po.order_date between #{queryDto.beginDate,jdbcType=DATE} AND #{queryDto.endDate,jdbcType=DATE}
+        <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() != 0">
+            AND bs.shop_id IN
+            <foreach collection="queryDto.shopIdList" item="shopId" open="(" close=")" separator=",">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size() > 0">
+            AND bs.shop_type_id in
+            <foreach collection="queryDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        <if test="queryDto.orderTypeIdList != null and queryDto.orderTypeIdList.size() > 0">
+            AND po.channel_id in
+            <foreach collection="queryDto.orderTypeIdList" item="orderTypeId" separator="," open="(" close=")">
+                #{orderTypeId}
+            </foreach>
+        </if>
+         <if test="queryDto.abnormalFlag != null and queryDto.abnormalFlag != ''">
+            and ((bs.city=#{queryDto.city,jdbcType=VARCHAR} and  people_num>0
+             and (pc.money_consume+pc.money_over_charge)/people_num>#{queryDto.value,jdbcType=NUMERIC})
+             or (bs.city!=#{queryDto.city,jdbcType=VARCHAR} and people_num>0
+             and (pc.money_consume+pc.money_over_charge)/people_num>#{queryDto.valueTwo,jdbcType=NUMERIC}))
+         </if>
+          and (pc.money_consume+pc.money_over_charge)>0
+        GROUP BY
+        bs.shop_name,
+        po.order_code,
+        pc.money_consume,
+        bs.city,
+        people_num,
+        pc.money_over_charge
+    </select>
+</mapper>

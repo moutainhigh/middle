@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.DictMapper">
+
+    <resultMap id="BaseResultMap" type="com.njwd.entity.basedata.vo.BaseShopVo">
+    </resultMap>
+
+    <!-- 查询字典表结果集合 -->
+    <select id="findDictList" resultType="com.njwd.entity.reportdata.vo.DictVo">
+        SELECT
+            d.dict_id,
+            d.model_name,
+            d.model_id,
+            d.ente_id,
+            d.model_value,
+            d.remark
+        FROM
+            wd_dict d
+        WHERE
+            d.model_name = #{param.modelName}
+        ORDER BY
+            d.dict_id
+    </select>
+
+
+</mapper>

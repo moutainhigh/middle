@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.kettlejob.mapper.CrmMemberMapper">
+    <!-- 查询会员信息是否存在 -->
+    <select id="findCrmMemberCount" resultType="java.lang.Integer">
+        select COUNT(1) from crm_member m
+        where m.member_id = #{param.memberId}
+    </select>
+
+    <!-- 新增会员信息 -->
+    <insert id="insertCrmMember">
+        insert into crm_member (
+            member_id,
+            member_name,
+            birthday,
+            sex,
+            member_type_id,
+            mobile,
+            email,
+            address,
+            cid,
+            openid,
+            register_time,
+            un_register_time,
+            shop_id,
+            third_shop_id,
+            ente_id,
+            app_id,
+            create_time
+        )
+        values
+        (
+            #{param.memberId},
+            #{param.memberName},
+            #{param.birthday},
+            #{param.sex},
+            #{param.memberTypeId},
+            #{param.mobile},
+            #{param.email},
+            #{param.address},
+            #{param.cid},
+            #{param.openid},
+            #{param.registerTime},
+            #{param.unRegisterTime},
+            #{param.shopId},
+            #{param.thirdShopId},
+            #{param.enteId},
+            #{param.appId},
+            now()
+        )
+    </insert>
+
+    <!-- 更新会员信息 -->
+    <update id="updateCrmMember">
+        update crm_member
+        set
+        update_time = now()
+        <if test="param.memberName != null">
+            ,member_name = #{param.memberName}
+        </if>
+        <if test="param.birthday != null">
+            ,birthday = #{param.birthday}
+        </if>
+        <if test="param.sex != null">
+            ,sex = #{param.sex}
+        </if>
+        <if test="param.memberTypeId != null">
+            ,member_type_id = #{param.memberTypeId}
+        </if>
+        <if test="param.mobile != null">
+            ,mobile = #{param.mobile}
+        </if>
+        <if test="param.email != null">
+            ,email = #{param.email}
+        </if>
+        <if test="param.address != null">
+            ,address = #{param.address}
+        </if>
+        <if test="param.cid != null">
+            ,cid = #{param.cid}
+        </if>
+        <if test="param.openid != null">
+            ,openid = #{param.openid}
+        </if>
+        <if test="param.registerTime != null">
+            ,register_time = #{param.registerTime}
+        </if>
+        <if test="param.unRegisterTime != null">
+            ,un_register_time = #{param.unRegisterTime}
+        </if>
+        <if test="param.thirdShopId != null">
+            ,third_shop_id = #{param.thirdShopId}
+        </if>
+        where member_id = #{param.memberId}
+        and ente_id = #{param.enteId}
+        and app_id = #{param.appId}
+    </update>
+
+</mapper>

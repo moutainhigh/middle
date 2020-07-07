@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportdata.mapper.FoodStyleAnalysisMapper">
+
+    <select id="findCompanyByShop" resultType="com.njwd.entity.reportdata.vo.scm.CompanyVo">
+        select company_id, shop_id
+        from base_company
+        <where>
+            <if test="shopIds!=null and shopIds.size()>0">
+                and shop_id in
+                <foreach collection="shopIds" item="shopId" open="(" close=")" separator=",">
+                    #{shopId,jdbcType=VARCHAR}
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="findFoodGrossProfit" resultType="RepPosDetailFoodVo">
+        select
+        d.food_style_id,
+        d.food_style_name,
+        d.food_no,
+        d.food_name,
+        d.unit_name,
+        d.shop_id,
+        sum(d.food_amount)/sum(d.food_num) as foodAvgPrice,
+        sum(d.food_num) as foodNum
+        from
+        rep_pos_detail_food d
+        <where>
+            and d.ente_id = #{queryDto.enteId}
+            and d.account_date between #{queryDto.beginDate} and #{queryDto.endDate}
+            and d.food_num &gt;0
+            <if test="queryDto.shopIdList !=null and queryDto.shopIdList.size()>0">
+                and d.shop_id in
+                <foreach collection="queryDto.shopIdList" item="shopItem" separator="," open="(" close=")">
+                    #{shopItem}
+                </foreach>
+            </if>
+            <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size()>0">
+                and d.shop_type_id in
+                <foreach collection="queryDto.shopTypeIdList" item="shopTypeIdItem" close=")" open="(" separator=",">
+                    #{shopTypeIdItem}
+                </foreach>
+            </if>
+            <if test="queryDto.foodStyleName!=null and queryDto.foodStyleName!=''">
+                and d.food_style_name not like CONCAT(#{queryDto.foodStyleName},'%')
+            </if>
+            <!--            <if test="queryDto.foods!=null and queryDto.foods.size()!=0">-->
+            <!--                and-->
+            <!--                (-->
+            <!--                <foreach collection="queryDto.foods" index="index" item="food" separator="or">-->
+            <!--                    (d.food_no=#{food.foodNo,jdbcType=VARCHAR} and d.food_name =#{food.foodName,jdbcType=VARCHAR})-->
+            <!--                </foreach>-->
+            <!--                )-->
+            <!--            </if>-->
+        </where>
+        group by d.food_style_id,
+        d.food_style_name,
+        d.food_no,
+        d.food_name,
+        d.unit_name,
+        d.shop_id
+    </select>
+
+
+    <!---->
+    <select id="getPriceBySubMaterials" resultType="com.njwd.entity.reportdata.vo.scm.SubMaterialPriceVo">
+        select material_number, e.shop_id ,cost_price as price
+        from scm_center_price e
+        <where>
+            <if test="scmQuery.shopIdList!=null and scmQuery.shopIdList.size() != 0">
+                and e.shop_id in
+                <foreach collection="scmQuery.shopIdList" item="shopId" separator="," open="(" close=")">
+                    #{shopId,jdbcType=VARCHAR}
+                </foreach>
+            </if>
+            <if test="scmQuery.endDate!=null">
+                and e.query_date =#{scmQuery.endDate,jdbcType=TIMESTAMP}
+            </if>
+        </where>
+
+    </select>
+
+
+    <select id="getPriceBySubMaterialsBak" resultType="com.njwd.entity.reportdata.vo.scm.SubMaterialPriceVo">
+        select material_number,e.shop_id,price
+        from scm_material_price e
+        <where>
+            and ente_id =#{scmQuery.enteId,jdbcType=VARCHAR}
+            <if test="scmQuery.shopIdList!=null and scmQuery.shopIdList.size() != 0">
+                and e.shop_id in
+                <foreach collection="scmQuery.shopIdList" item="shopId" separator="," open="(" close=")">
+                    #{shopId,jdbcType=VARCHAR}
+                </foreach>
+            </if>
+            <if test="scmQuery.endDate!=null">
+                and e.query_date =#{scmQuery.endDate,jdbcType=TIMESTAMP}
+            </if>
+            <!--只找发货单位是央厨的-->
+            <if test="scmQuery.centerCode != null and scmQuery.centerCode != ''">
+                and e.stock_org_id = #{scmQuery.centerCode,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="getPriceBySubMaterialsByCenter" resultType="com.njwd.entity.reportdata.vo.scm.SubMaterialPriceVo">
+        select material_number,e.stock_org_id as shopId,avg(price) as price
+        from scm_material_price e
+        <where>
+            and ente_id =#{scmQuery.enteId,jdbcType=VARCHAR}
+            <if test="scmQuery.centerCode!=null and scmQuery.centerCode !=''">
+                and e.stock_org_id = #{scmQuery.centerCode,jdbcType=VARCHAR}
+            </if>
+            <if test="scmQuery.shopIdList!=null and scmQuery.shopIdList.size() != 0">
+                and e.shop_id in
+                <foreach collection="scmQuery.shopIdList" item="shopId" separator="," open="(" close=")">
+                    #{shopId,jdbcType=VARCHAR}
+                </foreach>
+            </if>
+            <!--
+            <if test="scmQuery.materialNumbers!=null and scmQuery.materialNumbers.size()!=0">
+                and e.material_number in
+                <foreach collection="scmQuery.materialNumbers" item="meterial" open="(" close=")" separator=",">
+                    #{meterial}
+                </foreach>
+            </if>
+            -->
+            <if test="scmQuery.endDate!=null">
+                and e.query_date =#{scmQuery.endDate,jdbcType=TIMESTAMP}
+            </if>
+            group by material_number,e.stock_org_id
+        </where>
+
+
+        <!--
+        select material_number, e.company_id as shopId ,cost_price as price
+        from scm_center_price e
+        <where>
+            <if test="scmQuery.centerCode!=null and scmQuery.centerCode !=''">
+                and e.company_id = #{scmQuery.centerCode,jdbcType=VARCHAR}
+            </if>
+            <if test="scmQuery.materialNumbers!=null and scmQuery.materialNumbers.size()!=0">
+                and e.material_number in
+                <foreach collection="scmQuery.materialNumbers" item="meterial" open="(" close=")" separator=",">
+                    #{meterial}
+                </foreach>
+            </if>
+            <if test="scmQuery.endDate!=null">
+                and e.query_date =#{scmQuery.endDate,jdbcType=TIMESTAMP}
+            </if>
+        </where>
+
+        -->
+
+    </select>
+
+
+    <select id="getPriceBySubMaterialsOld" resultType="com.njwd.entity.reportdata.vo.scm.SubMaterialPriceVo">
+        select max(e.modifydate),avg(e.price) as price,
+        e.material_id as subMaterialId,
+        <choose>
+            <when test="scmQuery.centerCode != null and scmQuery.centerCode != ''">
+                e.stock_org_id as shopId
+            </when>
+            <otherwise>
+                e.shop_id as shopId
+            </otherwise>
+        </choose>
+        from scm_outstock_entry e
+        <where>
+            <if test="scmQuery.shopIdList!=null and scmQuery.shopIdList.size() != 0">
+                and e.shop_id in
+                <foreach collection="scmQuery.shopIdList" item="shopId" separator="," open="(" close=")">
+                    #{shopId,jdbcType=VARCHAR}
+                </foreach>
+            </if>
+            <if test="scmQuery.centerCode!=null and scmQuery.centerCode !=''">
+                and e.stock_org_id = #{scmQuery.centerCode,jdbcType=VARCHAR}
+            </if>
+            <if test="scmQuery.subMaterialIds != null and scmQuery.subMaterialIds.size() != 0">
+                and e.material_id in
+                <foreach collection="scmQuery.subMaterialIds" item="subId" separator="," open="(" close=")">
+                    #{subId,jdbcType=VARCHAR}
+                </foreach>
+            </if>
+            <if test="scmQuery.endDate!=null">
+                and e.createdate &lt;= #{scmQuery.endDate,jdbcType=TIMESTAMP}
+            </if>
+        </where>
+        group by e.material_id,
+        <choose>
+            <when test="scmQuery.centerCode != null and scmQuery.centerCode != ''">
+                e.stock_org_id
+            </when>
+            <otherwise>
+                e.shop_id
+            </otherwise>
+        </choose>
+    </select>
+
+
+    <select id="getGrossWeight" resultType="com.njwd.entity.reportdata.vo.scm.GrossWeightVo">
+        select distinct b.food_no as foodNo,
+        b.food_name as foodName,
+        c.material_number as materialNumber,
+        <choose>
+            <when test="simple.centerCode != null and simple.centerCode != ''">
+                c.company_id as shopId,
+            </when>
+            <otherwise>
+                c.shop_id as shopId,
+            </otherwise>
+        </choose>
+        b.material_id as materialId,
+        c.material_id as subMaterialId,
+        c.numerator/c.denominator/c.yield as grossWeight
+        from base_bom_child c
+        left join base_bom b
+        on b.bom_id = c.bom_id
+        <where>
+            <if test="simple.orgIds!=null and simple.orgIds.size()>0">
+                and c.shop_id in
+                <foreach collection="simple.orgIds" item="orgId" separator="," open="(" close=")">
+                    #{orgId ,jdbcType=VARCHAR}
+                </foreach>
+            </if>
+            <if test="simple.centerCode!=null and simple.centerCode!=''">
+                and c.company_id = #{simple.centerCode,jdbcType=VARCHAR}
+            </if>
+            <if test="simple.isCenter != null and simple.isCenter==true">
+                <if test="simple.foods!=null and simple.foods.size()>0">
+                    and
+                    (
+                    <foreach collection="simple.foods" index="index" item="food" separator="or">
+                        (b.food_no=#{food.foodNo,jdbcType=VARCHAR} and b.food_name =#{food.foodName,jdbcType=VARCHAR})
+                    </foreach>
+                    )
+                </if>
+            </if>
+
+            and c.denominator!=0
+            and c.yield!=0
+        </where>
+
+    </select>
+
+    <select id="findDict" resultType="com.njwd.entity.reportdata.vo.DictVo">
+        select model_name ,model_id from wd_dict
+        where ente_id = #{enteId}
+        and model_name = #{modelName,jdbcType=VARCHAR}
+    </select>
+
+</mapper>

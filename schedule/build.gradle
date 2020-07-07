@@ -1,0 +1,25 @@
+buildscript {
+    ext {
+        springBootVersion = '2.1.2.RELEASE'
+    }
+    repositories {
+        mavenLocal()
+        maven { url "http://183.207.183.130:19100/repository/maven-public/" }
+        mavenCentral()
+//      maven { url "http://192.168.1.160:8081/repository/maven-public/" }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+apply plugin: 'maven'
+
+
+
+dependencies {
+    compile project(':common')
+    compile rootProject.ext.dependencies['javaee-web-api']
+    compile rootProject.ext.dependencies['spring-boot-starter-thymeleaf']
+    compile rootProject.ext.dependencies['spring-boot-starter-data-jpa']
+}
+

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.platform.mapper.DegreeMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.platform.vo.DegreeVo">
+    <id column="degree_id" jdbcType="BIGINT" property="degreeId" />
+    <result column="goods_id" jdbcType="BIGINT" property="goodsId" />
+    <result column="goods_name" jdbcType="VARCHAR" property="goodsName" />
+    <result column="clicks" jdbcType="BIGINT" property="clicks" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    degree_id, goods_id, goods_name, clicks
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from wd_degree
+    where degree_id = #{degreeId,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from wd_degree
+    where degree_id = #{degreeId,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" keyColumn="degree_id" keyProperty="degreeId" parameterType="com.njwd.entity.platform.dto.DegreeDto" useGeneratedKeys="true">
+    insert into wd_degree (goods_id, goods_name, clicks
+      )
+    values (#{goodsId,jdbcType=BIGINT}, #{goodsName,jdbcType=VARCHAR}, #{clicks,jdbcType=BIGINT}
+      )
+  </insert>
+
+  <!--新增点击量条目-->
+  <insert id="insertDegree" keyColumn="degree_id" keyProperty="degreeId" parameterType="com.njwd.entity.platform.dto.DegreeDto" useGeneratedKeys="true">
+    insert into wd_degree
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="goodsId != null">
+        goods_id,
+      </if>
+      <if test="goodsName != null">
+        goods_name,
+      </if>
+      <if test="clicks != null">
+        clicks,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="goodsId != null">
+        #{goodsId,jdbcType=BIGINT},
+      </if>
+      <if test="goodsName != null">
+        #{goodsName,jdbcType=VARCHAR},
+      </if>
+      <if test="clicks != null">
+        #{clicks,jdbcType=BIGINT},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.platform.dto.DegreeDto">
+    update wd_degree
+    <set>
+      <if test="goodsId != null">
+        goods_id = #{goodsId,jdbcType=BIGINT},
+      </if>
+      <if test="goodsName != null">
+        goods_name = #{goodsName,jdbcType=VARCHAR},
+      </if>
+      <if test="clicks != null">
+        clicks = #{clicks,jdbcType=BIGINT},
+      </if>
+    </set>
+    where degree_id = #{degreeId,jdbcType=BIGINT}
+  </update>
+
+  <!--修改递增点击量-->
+  <update id="updateDegree" parameterType="com.njwd.entity.platform.dto.DegreeDto">
+    update wd_degree
+    set
+      clicks = clicks+1
+    where goods_id = #{goodsId}
+  </update>
+
+  <!--按条件查询关注度(这里即为查询点击量)-->
+  <select id="selectDegree" parameterType="com.njwd.entity.platform.dto.DegreeDto" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from wd_degree
+    where goods_id = #{goodsId}
+  </select>
+
+</mapper>

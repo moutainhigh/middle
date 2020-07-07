@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.mapper.CrmPrepaidCouponMapper">
+
+    <!--新增-->
+    <insert id="addCrmPrepaidCoupon" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidCouponDto" >
+        insert into crm_prepaid_coupon(
+            prepaid_coupon_id,prepaid_id,coupon_id,coupon_name,card_no,give_time,
+            money,num,total_money,app_id,ente_id,create_time,update_time
+        )values
+        <foreach collection="list" item="crmPrepaidCouponDto" separator=",">
+            (
+                #{crmPrepaidCouponDto.prepaidCouponId}
+                ,#{crmPrepaidCouponDto.cardPrepaidId}
+                ,#{crmPrepaidCouponDto.couponId}
+                ,#{crmPrepaidCouponDto.couponName}
+                ,#{crmPrepaidCouponDto.cardNo}
+                ,#{crmPrepaidCouponDto.giveTime}
+                ,#{crmPrepaidCouponDto.money}
+                ,#{crmPrepaidCouponDto.num}
+                ,#{crmPrepaidCouponDto.totalMoney}
+                ,#{crmPrepaidCouponDto.appId}
+                ,#{crmPrepaidCouponDto.enteId}
+                ,#{crmPrepaidCouponDto.createTime}
+                ,#{crmPrepaidCouponDto.updateTime}
+            )
+        </foreach>
+    </insert>
+
+    <select id="findCrmPrepaidCouponBatch" resultType="com.njwd.entity.kettlejob.vo.CrmPrepaidCouponVo" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidCouponDto">
+        select  prepaid_coupon_id,prepaid_id,coupon_id,coupon_name,card_no,give_time,
+          money,num,total_money,app_id,ente_id,create_time,update_time
+        from crm_prepaid_coupon
+        where prepaid_id in
+        <foreach collection="crmPrepaidCouponDto.prepaidIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and app_id=#{crmPrepaidCouponDto.appId}
+        and ente_id=#{crmPrepaidCouponDto.enteId}
+    </select>
+
+
+    <update id="updateCrmPrepaidCoupon" parameterType="java.util.List">
+        <foreach collection="list" item="crmPrepaidCouponDto" index="index" separator=";">
+            update crm_prepaid_coupon
+            set
+            prepaid_id=#{crmPrepaidCouponDto.prepaidId}
+            ,coupon_id=#{crmPrepaidCouponDto.couponId}
+            ,coupon_name=#{crmPrepaidCouponDto.couponName}
+            ,card_no=#{crmPrepaidCouponDto.cardNo}
+            ,give_time=#{crmPrepaidCouponDto.giveTime}
+            ,money=#{crmPrepaidCouponDto.money}
+            ,num=#{crmPrepaidCouponDto.num}
+            ,total_money=#{crmPrepaidCouponDto.totalMoney}
+            ,update_time=#{crmPrepaidCouponDto.updateTime}
+            where
+            prepaid_coupon_id=#{crmPrepaidCouponDto.prepaidCouponId}
+        </foreach>
+    </update>
+
+    <update id="updateCleanPrepaidCoupon" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto">
+        UPDATE crm_prepaid_coupon p
+        LEFT JOIN base_shop_rela s ON p.third_shop_id = s.third_shop_id and p.app_id=s.app_id and p.ente_id=s.ente_id
+        SET p.shop_id = s.shop_id
+        where (p.shop_id is null or p.shop_id='' or p.shop_id='-1')
+        and p.give_time>=#{prepaidDto.prepaidTime}
+        and  p.app_id = #{prepaidDto.appId} and p.ente_id =#{prepaidDto.enteId}
+    </update>
+
+    <select id="findUnCleanPrepaidCouponNum" resultType="Integer" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto">
+        select count(1) from crm_prepaid_coupon c
+        where (c.shop_id is null or c.shop_id='') and  app_id=#{prepaidDto.appId} and ente_id=#{prepaidDto.enteId}
+    </select>
+
+
+</mapper>

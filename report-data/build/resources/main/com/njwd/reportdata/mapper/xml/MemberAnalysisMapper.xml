@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.MemberAnalysisMapper">
+
+
+    <select id="findCardConsumeStatistics" resultType="com.njwd.entity.reportdata.vo.MemberPrepaidConsumeVo" parameterType="com.njwd.entity.reportdata.dto.MemberPrepaidConsumeStatiDto" >
+        select p.pay_type_name payTypeName,transaction_type_code transactionTypeCode,count(1) payCount,sum(c.consume_money) payMoney
+        from crm_consume c ,base_transaction_type t,base_pay_type p,base_shop s,base_shop_type st
+        where
+         c.transaction_type_id=t.transaction_type_id  and t.transaction_type_code in ('consume','revoke_consume') and
+         p.pay_type_id=c.pay_type_id and p.ente_id=c.ente_id
+        and consume_time>=#{prepaidConsumeDto.beginDate}
+        <![CDATA[ and consume_time <= #{prepaidConsumeDto.endDate} ]]>
+        and c.shop_id=s.shop_id and s.shop_type_id=st.shop_type_id
+        <if test="prepaidConsumeDto.shopTypeIdList != null and prepaidConsumeDto.shopTypeIdList.size() > 0 ">
+            and st.shop_type_id in
+            <foreach collection="prepaidConsumeDto.shopTypeIdList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        and c.shop_id in
+        <foreach collection="prepaidConsumeDto.shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+        group by c.pay_type_id,transaction_type_code;
+    </select>
+
+    <select id="findCardPrepaidStatistics" resultType="com.njwd.entity.reportdata.vo.MemberPrepaidConsumeVo" parameterType="com.njwd.entity.reportdata.dto.MemberPrepaidConsumeStatiDto" >
+        select p.pay_type_name payTypeName,transaction_type_code transactionTypeCode,count(1) payCount,sum(c.prepaid_money) payMoney
+        from crm_prepaid c ,crm_prepaid_pay_type ct,base_transaction_type t,base_pay_type p,base_shop s,base_shop_type st
+        where c.prepaid_id=ct.prepaid_id and c.shop_id=ct.shop_id and c.ente_id=ct.ente_id and c.app_id=ct.app_id and
+        c.transaction_type_id=t.transaction_type_id  and t.transaction_type_code in ('prepaid','revoke_prepaid') and
+        p.pay_type_id=ct.pay_type_id and p.ente_id=c.ente_id
+        and c.shop_id=s.shop_id and s.shop_type_id=st.shop_type_id
+        <if test="prepaidConsumeDto.shopTypeIdList != null and prepaidConsumeDto.shopTypeIdList.size() > 0 ">
+            and st.shop_type_id in
+            <foreach collection="prepaidConsumeDto.shopTypeIdList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        and prepaid_time>=#{prepaidConsumeDto.beginDate}
+        <![CDATA[ and prepaid_time <= #{prepaidConsumeDto.endDate} ]]>
+        and c.shop_id in
+        <foreach collection="prepaidConsumeDto.shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+        group by ct.pay_type_id,transaction_type_code;
+    </select>
+
+    <select id="findShopList" resultType="com.njwd.entity.reportdata.vo.MemberConsumeStatiVo" parameterType="com.njwd.entity.reportdata.dto.MemberConsumeStatiDto" >
+        select s.shop_id shopId,s.shop_name shopName,b.brand_name brandName,r.region_name regionName
+        ,(
+          select sum(c.money_actual) actualMoney from pos_cash c where s.shop_id=c.shop_id and
+          c.account_date>=#{consumeStatiDto.beginDate} <![CDATA[ and account_date<=#{consumeStatiDto.endDate} ]]>
+          and c.shop_id in
+          <foreach collection="consumeStatiDto.shopIdList" item="shopId" separator="," open="(" close=")">
+              #{shopId}
+          </foreach>
+        ) moneyActual from base_shop s
+        left join base_brand b on s.brand_id=b.brand_id
+        left join base_region r on s.region_id=r.region_id
+        where  s.shop_id in
+        <foreach collection="consumeStatiDto.shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+    </select>
+
+    <select id="findConsumeStatiByShopIds" resultType="map" parameterType="com.njwd.entity.reportdata.dto.MemberConsumeStatiDto" >
+        select shop_id shopId, (totalMoney-revokeTotalMoney) totalMoney,
+        (consumeMoney-revokeConsumeMoney) consumeMoney,
+        (consumePrepaidMoney-revokeConsumePrepaidMoney) consumePrepaidMoney,
+        (consumeLargessMoney-revokeConsumeLargessMoney) consumeLargessMoney
+        from (
+            select c.shop_id,
+            sum(case when t.transaction_type_code='consume' then ifnull(c.total_money,0) else 0 end) totalMoney,
+            sum(case when t.transaction_type_code='revoke_consume' then ifnull(c.total_money,0) else 0 end) revokeTotalMoney,
+            sum(case when t.transaction_type_code='consume' then ifnull(c.consume_money,0) else 0 end) consumeMoney,
+            sum(case when t.transaction_type_code='revoke_consume' then ifnull(c.consume_money,0) else 0 end) revokeConsumeMoney,
+            sum(case when t.transaction_type_code='consume' then ifnull(c.consume_prepaid_money,0) else 0 end) consumePrepaidMoney,
+            sum(case when t.transaction_type_code='revoke_consume' then ifnull(c.consume_prepaid_money,0) else 0 end) revokeConsumePrepaidMoney,
+            sum(case when t.transaction_type_code='consume' then ifnull(c.consume_largess_money,0) else 0 end) consumeLargessMoney,
+            sum(case when t.transaction_type_code='revoke_consume' then ifnull(c.consume_largess_money,0) else 0 end) revokeConsumeLargessMoney
+            from crm_consume c,base_transaction_type t
+            where c.transaction_type_id=t.transaction_type_id
+            and c.consume_time>=#{consumeStatiDto.beginDate} and consume_time &lt;=#{consumeStatiDto.endDate}
+            and c.shop_id in
+            <foreach collection="consumeStatiDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+            group by c.shop_id
+        ) s
+    </select>
+
+    <select id="findPrepaidStatiByShopIds" resultType="map" parameterType="com.njwd.entity.reportdata.dto.MemberConsumeStatiDto" >
+
+        select shop_id shopId,(sum(totalMoney)-sum(revokeTotalMoney)) totalMoney,(sum(prepaidMoney)-sum(revokePrepaidMoney)) prepaidMoney
+        ,(sum(previousPrepaidMoney)-sum(previousRevokePrepaidMoney)) previousPrepaidMoney
+        from (
+            select c.shop_id,
+            sum(case when t.transaction_type_code='prepaid' then ifnull(c.money,0) else 0 end) totalMoney,
+            sum(case when t.transaction_type_code='revoke_prepaid' then ifnull(c.money,0) else 0 end) revokeTotalMoney,
+            sum(case when t.transaction_type_code='prepaid' then ifnull(c.prepaid_money,0) else 0 end) prepaidMoney,
+            sum(case when t.transaction_type_code='revoke_prepaid' then ifnull(c.prepaid_money,0) else 0 end) revokePrepaidMoney
+            ,0 previousPrepaidMoney,0 previousRevokePrepaidMoney
+            from crm_prepaid c,base_transaction_type t
+            where c.transaction_type_id=t.transaction_type_id
+           and c.prepaid_time>=#{consumeStatiDto.beginDate}  <![CDATA[ and prepaid_time<=#{consumeStatiDto.endDate}]]>
+            and c.shop_id in
+            <foreach collection="consumeStatiDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+            group by c.shop_id
+            union all
+            select c.shop_id, 0 totalMoney,0 revokeTotalMoney,0 prepaidMoney ,0 revokePrepaidMoney,
+            sum(case when t.transaction_type_code='prepaid' then ifnull(c.prepaid_money,0) else 0 end) previousPrepaidMoney,
+            sum(case when t.transaction_type_code='revoke_prepaid' then ifnull(c.prepaid_money,0) else 0 end) previousRevokePrepaidMoney
+            from crm_prepaid c,base_transaction_type t
+            where c.transaction_type_id=t.transaction_type_id
+            and c.prepaid_time>=#{consumeStatiDto.preBeginDate}  <![CDATA[ and prepaid_time<=#{consumeStatiDto.preEndDate}]]>
+            and c.shop_id in
+            <foreach collection="consumeStatiDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+            group by c.shop_id
+        ) p GROUP BY shop_id
+    </select>
+
+</mapper>

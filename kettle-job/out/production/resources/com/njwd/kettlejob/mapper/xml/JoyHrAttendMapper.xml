@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.kettlejob.mapper.JoyHrAttendMapper">
+
+    <!-- 最后更新时间 -->
+    <select id="findLastDate" resultType="string">
+        select max(attend_date) attend_date
+        from hr_attend
+        where ente_id = #{enteId}
+          and app_id = #{appId}
+    </select>
+
+
+    <!-- 批量新增或更新数据 -->
+    <insert id="insertOrUpdateBatch">
+        insert into hr_attend (
+            third_user_id,
+            attend_date,
+            shift_id,
+            attend_hour,
+            ente_id,
+            app_id,
+            last_update_time
+        )
+        values
+        <foreach collection="sqlParam.dataList" item="item" index="index" separator=",">
+            (
+            #{item.thirdUserId},
+            #{item.attendDate},
+            #{item.shiftId},
+            #{item.attendHour},
+            #{sqlParam.enteId},
+            #{sqlParam.appId},
+            #{sqlParam.lastUpdateTime}
+            )
+        </foreach>
+        on duplicate key update
+        shift_id=values(shift_id),
+        attend_hour=values(attend_hour),
+        last_update_time= #{sqlParam.lastUpdateTime}
+    </insert>
+
+    <!-- 批量更新出勤数据用户信息 -->
+    <update id="updateAttendUserBatch">
+        update hr_attend a
+        left join base_user_rela ur on a.third_user_id = ur.third_user_id and a.app_id = ur.app_id and a.ente_id = ur.ente_id
+        <set>
+            a.user_id = ur.user_id
+            <if test="param.lastUpdateTime != null">
+            ,a.last_update_time = #{param.lastUpdateTime}
+            </if>
+        </set>
+        <where>
+            and a.app_id = #{param.appId}
+            and a.ente_id = #{param.enteId}
+            and (
+                a.last_update_time is null
+                <if test="param.lastUpdateTime != null">
+                or a.last_update_time &gt;= #{param.lastUpdateTime}
+                </if>
+            )
+        </where>
+    </update>
+
+</mapper>

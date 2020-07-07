@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.mapper.BaseBrandRelaMapper">
+
+    <!--新增并修改-->
+    <insert id="  " >
+        insert into base_brand_rela(
+        third_brand_id,
+        brand_code,
+        brand_name,
+        third_ente_id,
+        third_region_id,
+        third_company_id,
+        app_id,
+        ente_id
+        )values
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.thirdBrandId},
+            #{item.brandCode},
+            #{item.brandName},
+            #{item.thirdEnteId},
+            #{item.thirdRegionId},
+            #{item.thirdCompanyId},
+            #{item.appId},
+            #{item.enteId}
+            )
+        </foreach>
+        on duplicate key update
+        brand_code=values(brand_code),
+        brand_name=values(brand_name),
+        third_ente_id=values(third_ente_id),
+        third_region_id=values(third_region_id),
+        third_company_id=values(third_company_id)
+    </insert>
+
+</mapper>

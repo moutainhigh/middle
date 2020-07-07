@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.schedule.mapper.TaskRelyBaseMapper" >
+  <resultMap id="BaseResultMap" type="com.njwd.entity.schedule.TaskRelyBase" >
+    <id column="rely_base_id" property="relyBaseId" jdbcType="VARCHAR" />
+    <result column="source_task_key" property="sourceTaskKey" jdbcType="VARCHAR" />
+    <result column="target_task_key" property="targetTaskKey" jdbcType="VARCHAR" />
+    <result column="expression" property="expression" jdbcType="VARCHAR" />
+    <result column="expression_param" property="expressionParam" jdbcType="VARCHAR" />
+    <result column="rely_type" property="relyType" jdbcType="VARCHAR" />
+    <result column="max_refuse_count" property="maxRefuseCount" jdbcType="VARCHAR" />
+
+  </resultMap>
+  <sql id="Base_Column_List" >
+    rely_base_id, source_task_key, target_task_key,expression,expression_param,rely_type,max_refuse_count
+  </sql>
+
+  <select id="selectListBySource" resultType="com.njwd.entity.schedule.vo.TaskRelyBaseVo" parameterType="java.lang.String" >
+    select
+     t1.rely_base_id as relyBaseId,
+     t1.source_task_key as sourceTaskKey,
+     t1.target_task_key as targetTaskKey,
+     t1.expression as experssion,
+     t1.expression_param as expressionParam,
+     t1.rely_type as relyType,
+     t1.max_refuse_count as max_refuse_count,
+     t2.task_name as targetTaskName
+    from wd_task_rely_base t1
+    left join wd_task_base t2 on t1.target_task_key=t2.task_key
+    where source_task_key = #{sourceTaskKey,jdbcType=VARCHAR}
+  </select>
+
+  <select id="selectBySourceTargetType" resultMap="BaseResultMap" parameterType="com.njwd.entity.schedule.TaskRelyBase" >
+    select
+    <include refid="Base_Column_List" />
+    from wd_task_rely_base
+    where source_task_key=#{sourceTaskKey}
+    and target_task_key=#{targetTaskKey}
+    and rely_type=#{relyType}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from wd_task_rely_base
+    where rely_base_id = #{relyBaseId,jdbcType=VARCHAR}
+  </delete>
+
+  <insert id="insertSelective" parameterType="com.njwd.entity.schedule.TaskRelyBase" >
+    insert into wd_task_rely_base
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="relyBaseId != null" >
+        rely_base_id,
+      </if>
+      <if test="sourceTaskKey != null" >
+        source_task_key,
+      </if>
+      <if test="targetTaskKey != null" >
+        target_task_key,
+      </if>
+      <if test="expression != null" >
+        expression,
+      </if>
+      <if test="expressionParam != null" >
+        expression_param,
+      </if>
+      <if test="relyType != null" >
+        rely_type,
+      </if>
+      <if test="maxRefuseCount != null" >
+        max_refuse_count,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="relyBaseId != null" >
+        #{relyBaseId,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceTaskKey != null" >
+        #{sourceTaskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="targetTaskKey != null" >
+        #{targetTaskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="expression != null" >
+        #{expression,jdbcType=VARCHAR},
+      </if>
+      <if test="expressionParam != null" >
+        #{expressionParam,jdbcType=VARCHAR},
+      </if>
+      <if test="relyType != null" >
+        #{relyType,jdbcType=VARCHAR},
+      </if>
+      <if test="maxRefuseCount != null" >
+        #{maxRefuseCount,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.schedule.TaskRelyBase" >
+    update wd_task_rely_base
+    <set >
+      <if test="sourceTaskKey != null" >
+        source_task_key = #{sourceTaskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="targetTaskKey != null" >
+        target_task_key = #{targetTaskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="expression != null" >
+        expression = #{expression,jdbcType=VARCHAR},
+      </if>
+      <if test="expressionParam != null" >
+        expression_param = #{expressionParam,jdbcType=VARCHAR},
+      </if>
+      <if test="relyType != null" >
+        rely_type = #{relyType,jdbcType=VARCHAR},
+      </if>
+      <if test="maxRefuseCount != null" >
+        maxRefuseCount = #{maxRefuseCount,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where rely_base_id = #{relyBaseId,jdbcType=VARCHAR}
+  </update>
+</mapper>

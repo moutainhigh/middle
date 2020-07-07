@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.schedule.mapper.TaskTriggerMapper" >
+  <resultMap id="BaseResultMap" type="com.njwd.entity.schedule.TaskTrigger" >
+    <id column="trigger_id" property="triggerId" jdbcType="VARCHAR" />
+    <result column="ente_id" property="enteId" jdbcType="VARCHAR" />
+    <result column="source_task_key" property="sourceTaskKey" jdbcType="VARCHAR" />
+    <result column="target_task_key" property="targetTaskKey" jdbcType="VARCHAR" />
+    <result column="trigger_status" property="triggerStatus" jdbcType="VARCHAR" />
+    <result column="description" property="description" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    trigger_id, ente_id, source_task_key, target_task_key, trigger_status, description, 
+    create_time
+  </sql>
+
+
+  <select id="selectTargetBySourceAndStatus" resultType="String" parameterType="com.njwd.entity.schedule.TaskTrigger" >
+    select
+    distinct t1.target_task_key
+    from wd_task_trigger t1,wd_task t2
+    where t1.source_task_key=#{sourceTaskKey}
+    and t1.trigger_status=#{triggerStatus}
+    and t1.ente_id=#{enteId}
+    and t1.target_task_key=t2.task_key
+    and t1.ente_id=t2.ente_id
+    and t2.task_status != 'ERROR'
+    and t2.switch_status='ON'
+    and t2.delete_status='0'
+  </select>
+
+
+
+  <select id="selectSourceByTargetAndExcuting" resultType="String" parameterType="com.njwd.entity.schedule.TaskTrigger" >
+    select t2.task_key
+    from wd_task_trigger t1,wd_task t2
+    where t1.ente_id=#{enteId}
+    and target_task_key=#{targetTaskKey}
+    and t1.trigger_status='ON'
+    and t1.source_task_key=t2.task_key
+    and t2.ente_id=#{enteId}
+    and t2.task_status='EXCUTING'
+    and t2.switch_status='ON'
+    and t2.delete_status='0'
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from wd_task_trigger
+    where trigger_id = #{triggerId,jdbcType=VARCHAR}
+  </delete>
+
+  <insert id="insertSelective" parameterType="com.njwd.entity.schedule.TaskTrigger" >
+    insert into wd_task_trigger
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="triggerId != null" >
+        trigger_id,
+      </if>
+      <if test="enteId != null" >
+        ente_id,
+      </if>
+      <if test="sourceTaskKey != null" >
+        source_task_key,
+      </if>
+      <if test="targetTaskKey != null" >
+        target_task_key,
+      </if>
+      <if test="triggerStatus != null" >
+        trigger_status,
+      </if>
+      <if test="description != null" >
+        description,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="triggerId != null" >
+        #{triggerId,jdbcType=VARCHAR},
+      </if>
+      <if test="enteId != null" >
+        #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceTaskKey != null" >
+        #{sourceTaskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="targetTaskKey != null" >
+        #{targetTaskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="triggerStatus != null" >
+        #{triggerStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null" >
+        #{description,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.schedule.TaskTrigger" >
+    update wd_task_trigger
+    <set >
+      <if test="enteId != null" >
+        ente_id = #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceTaskKey != null" >
+        source_task_key = #{sourceTaskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="targetTaskKey != null" >
+        target_task_key = #{targetTaskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="triggerStatus != null" >
+        trigger_status = #{triggerStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="description != null" >
+        description = #{description,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where trigger_id = #{triggerId,jdbcType=VARCHAR}
+  </update>
+
+
+  <update id="updateStatusToOffByIds" parameterType="map" >
+        update wd_task_trigger
+        set trigger_status = 'OFF'
+        where source_task_key = #{sourceTaskKey,jdbcType=VARCHAR}
+        and ente_id=#{enteId}
+        and trigger_status='ON'
+        and target_task_key in
+        <foreach collection="targetTaskKeys" item="targetTaskKey"  open="(" separator="," close=")">
+          #{targetTaskKey}
+        </foreach>
+  </update>
+
+</mapper>

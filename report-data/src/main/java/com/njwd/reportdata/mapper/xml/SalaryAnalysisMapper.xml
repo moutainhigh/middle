@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.SalaryAnalysisMapper">
+
+    <select id="findTurnoverList"  parameterType="com.njwd.entity.reportdata.dto.SalaryAnalysisDto"
+            resultType="com.njwd.entity.reportdata.vo.WageShareAnalysisVo">
+        SELECT
+        shop_id shopId,
+        sum(case when account_date between #{queryDto.beginDate} and #{queryDto.endDate} then amount+money_over_charge else 0 end) as turnover,
+        sum(case when account_date between #{queryDto.prevBeginDate} and #{queryDto.prevEndDate} then amount+money_over_charge else 0 end) as lastPeriodTurnover,
+        sum(case when account_date between #{queryDto.lastYearBeginDate} and #{queryDto.lastYearEndDate} then amount+money_over_charge else 0 end) as lastYearTurnover
+        FROM
+        rep_pos_desk
+        WHERE
+        ente_id = #{queryDto.enteId}
+        <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="queryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size() > 0 ">
+            and shop_type_id in
+            <foreach collection="queryDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        GROUP BY
+        shop_id
+    </select>
+
+    <select id="findProfitList"  parameterType="com.njwd.entity.reportdata.dto.SalaryAnalysisDto"
+                                   resultType="com.njwd.entity.reportdata.vo.WageShareAnalysisVo">
+        SELECT
+        shop_id shopId,
+        sum(case when period_year_num >= #{queryDto.beginNum} and period_year_num &lt;= #{queryDto.endNum} then amount_balance else 0 end) as profit,
+        sum(case when period_year_num >= #{queryDto.prevBeginNum} and period_year_num &lt;= #{queryDto.prevEndNum} then amount_balance else 0 end) as lastPeriodProfit,
+        sum(case when period_year_num >= #{queryDto.lastYearBeginNum} and period_year_num &lt;= #{queryDto.lastYearEndNum} then amount_balance else 0 end) as lastYearProfit
+        FROM
+        fin_report_table
+        WHERE
+        ente_id = #{queryDto.enteId}
+        and  report_id = 2
+        and  item_name = '五、净利润'
+        <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="queryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size() > 0 ">
+            and shop_type_id in
+            <foreach collection="queryDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        GROUP BY
+        shop_id
+    </select>
+
+</mapper>

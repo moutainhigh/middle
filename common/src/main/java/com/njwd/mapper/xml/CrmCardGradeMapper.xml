@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.mapper.CrmCardGradeMapper">
+
+
+    <!--新增-->
+    <insert id="addCrmCardGrade" parameterType="com.njwd.entity.kettlejob.dto.CrmConsumeDto" >
+        insert into crm_card_grade(
+        card_grade_id,card_grade_name,app_id,ente_id,create_time,update_time
+        )values
+        <foreach collection="list" item="crmCardGradeDto" separator=",">
+            (
+            #{crmCardGradeDto.cardGradeId}
+            ,#{crmCardGradeDto.cardGradeName}
+            ,#{crmCardGradeDto.appId}
+            ,#{crmCardGradeDto.enteId}
+            ,#{crmCardGradeDto.createTime}
+            ,#{crmCardGradeDto.updateTime}
+            )
+        </foreach>
+    </insert>
+
+    <select id="findCrmCardGradeBatch" resultType="com.njwd.entity.kettlejob.vo.CrmCardGradeVo" parameterType="com.njwd.entity.kettlejob.dto.CrmCardGradeDto">
+         select card_grade_id,app_id, ente_id from crm_card_grade
+	     where app_id = #{crmCardGradeDto.appId} and ente_id=#{crmCardGradeDto.enteId}
+    </select>
+
+
+    <update id="updateCrmCardGrade" parameterType="java.util.List">
+        <foreach collection="list" item="crmCardGradeDto" index="index" separator=";">
+            update crm_card_grade
+            set
+            card_grade_name=#{crmCardGradeDto.cardGradeName}
+            ,update_time=#{crmCardGradeDto.updateTime}
+            where
+            card_grade_id=#{crmCardGradeDto.cardGradeId}
+            and app_id=#{crmCardGradeDto.appId}
+            and ente_id=#{crmCardGradeDto.enteId}
+        </foreach>
+    </update>
+</mapper>

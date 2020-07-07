@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.basedata.mapper.BaseDeskMapper">
+    <select id="findDeskCountByOrgId" parameterType="BaseDeskDto" resultType="BaseDeskVo">
+        SELECT
+        count( d.desk_id ) as deskCount,
+        d.shop_id
+        FROM
+        base_desk d
+        WHERE
+        d.IS_NOOPENTABLE = '1'
+        and d.STATUS = '0'
+        <if test="shopIdList!=null and shopIdList.size()>0">
+            and d.shop_id in
+            <foreach collection="shopIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList!=null and shopTypeIdList.size()>0">
+            and s.shop_type_id in
+            <foreach collection="shopTypeIdList" item="item" separator="," close=")" open="(">
+                #{item}
+            </foreach>
+        </if>
+        and d.ente_id = #{enteId}
+        group by d.shop_id
+    </select>
+
+    <select id="findBaseDeskCountByShopId" parameterType="BaseDeskDto" resultType="BaseDeskVo">
+        SELECT
+            count(b.desk_id ) as deskCount
+        FROM
+            base_desk b
+        where
+            b.is_noopentable = '1'
+            and b.STATUS = '0'
+        <if test="shopIdList!=null and shopIdList.size()>0">
+                and b.shop_id in
+                <foreach collection="shopIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+    </select>
+
+    <select id="findSaleByCondition"  resultType="com.njwd.entity.reportdata.vo.fin.FinRentAccountedForVo" parameterType="com.njwd.entity.reportdata.dto.querydto.FinQueryDto">
+        SELECT
+        p.ENTE_ID,
+        p.BRAND_ID,
+        p.REGION_ID,
+        p.SHOP_ID,
+        sum(p.amount) as salesVolume,
+        sum(p.money_over_charge) as  businessSurcharges,
+        sum(p.money_actual) as moneyActual
+        FROM
+        rep_pos_desk p
+        WHERE
+        ente_id =#{enteId}
+        AND account_date>= TO_DATE (#{beginTime},'yyyy-mm-dd')
+        AND account_date &lt;= TO_DATE (#{endTime},'yyyy-mm-dd')
+        <if test="shopIdList != null and shopIdList.size() != 0">
+            AND shop_id in
+            <foreach collection="shopIdList" item="shopItem" separator="," open="(" close=")" >
+                #{shopItem}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() != 0">
+            AND shop_type_id IN
+            <foreach collection="shopTypeIdList" close=")" open="(" item="shopTypeItem" separator=",">
+                #{shopTypeItem}
+            </foreach>
+        </if>
+        GROUP BY p.ENTE_ID,p.BRAND_ID,p.REGION_ID,p.SHOP_ID
+    </select>
+</mapper>

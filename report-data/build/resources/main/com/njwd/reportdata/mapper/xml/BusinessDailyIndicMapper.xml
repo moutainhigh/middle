@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.BusinessDailyIndicMapper" >
+
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.vo.BusinessDailyIndicVo">
+    <result column="daily_indic_id" property="dailyIndicId" />
+    <result column="ente_id" property="enteId" />
+    <result column="brand_id" property="brandId" />
+    <result column="brand_name" property="brandName" />
+    <result column="region_id" property="regionId" />
+    <result column="region_name" property="regionName" />
+    <result column="shop_id" property="shopId" />
+    <result column="shop_name" property="shopName" />
+    <result column="porject_id" property="projectId" />
+    <result column="porject_name" property="projectName" />
+    <result column="indicator" property="indicator" />
+    <result column="begin_date" property="beginDate" />
+    <result column="end_date" property="endDate" />
+    <result column="status" property="status" />
+    <result column="update_time" property="updateTime" />
+  </resultMap>
+
+  <sql id="BaseColumnList">
+    `daily_indic_id`,
+        `ente_id`,
+        `brand_id`,
+        `brand_name`,
+        `region_id`,
+        `region_name`,
+        `shop_id`,
+        `shop_name`,
+        `project_id`,
+        `project_name`,
+        `indicator`,
+        `begin_date`,
+        `end_date`,
+        `status`,
+        `update_time`
+  </sql>
+
+  <!--批量新增-->
+  <insert id="addIndicBatch" parameterType="com.njwd.entity.reportdata.dto.BusinessDailyIndicDto">
+    insert into business_daily_indic(
+    `daily_indic_id`,
+    `ente_id`,
+    `brand_id`,
+    `brand_name`,
+    `region_id`,
+    `region_name`,
+    `shop_id`,
+    `shop_name`,
+    `project_id`,
+    `project_name`,
+    `indicator`,
+    `begin_date`,
+    `end_date`
+    )values
+    <foreach collection="list" item="businessDailyIndicDto" separator=",">
+      (
+      #{businessDailyIndicDto.dailyIndicId},
+      #{businessDailyIndicDto.enteId},
+      #{businessDailyIndicDto.brandId},
+      #{businessDailyIndicDto.brandName},
+      #{businessDailyIndicDto.regionId},
+      #{businessDailyIndicDto.regionName},
+      #{businessDailyIndicDto.shopId},
+      #{businessDailyIndicDto.shopName},
+      #{businessDailyIndicDto.projectId},
+      #{businessDailyIndicDto.projectName},
+      #{businessDailyIndicDto.indicator},
+      #{businessDailyIndicDto.beginDate},
+      #{businessDailyIndicDto.endDate}
+      )
+    </foreach>
+  </insert>
+
+  <update id="updateIndicById" parameterType="com.njwd.entity.reportdata.dto.BusinessDailyIndicDto" >
+    UPDATE business_daily_indic
+    SET
+    daily_indic_id=#{businessDailyIndicDto.dailyIndicId}
+    <if test="businessDailyIndicDto.projectId!=null">
+    ,project_id = #{businessDailyIndicDto.projectId}
+    </if>
+    <if test="businessDailyIndicDto.projectName!=null">
+      ,project_name = #{businessDailyIndicDto.projectName}
+    </if>
+    <if test="businessDailyIndicDto.indicator!=null">
+      ,`indicator` = #{businessDailyIndicDto.indicator}
+    </if>
+    <if test="businessDailyIndicDto.beginDate!=null">
+      ,begin_date = #{businessDailyIndicDto.beginDate}
+    </if>
+    <if test="businessDailyIndicDto.endDate!=null">
+      ,end_date = #{businessDailyIndicDto.endDate}
+    </if>
+    WHERE `daily_indic_id` = #{businessDailyIndicDto.dailyIndicId}
+  </update>
+
+  <!--批量-->
+  <update id="updateIndicBatch" parameterType="com.njwd.entity.reportdata.dto.BusinessDailyIndicDto" >
+        UPDATE business_daily_indic
+        SET
+           status = #{businessDailyIndicDto.status}
+        WHERE `daily_indic_id` in
+        <foreach collection="businessDailyIndicDto.idList" item="dailyIndicId" open="(" separator="," close=")">
+           #{dailyIndicId}
+        </foreach>
+    </update>
+
+  <select id="findIndicList" resultType="com.njwd.entity.reportdata.vo.BusinessDailyIndicVo" parameterType="com.njwd.entity.reportdata.dto.BusinessDailyIndicDto">
+    select
+    `daily_indic_id`,
+    `ente_id`,
+    `brand_id`,
+    `brand_name`,
+    `region_id`,
+    `region_name`,
+    `shop_id`,
+    `shop_name`,
+    `project_id`,
+    `project_name`,
+    `indicator`,
+    `begin_date`,
+    `end_date`,
+    `status`,
+    `update_time`
+     FROM business_daily_indic
+     WHERE
+    ente_id= #{businessDailyIndicDto.enteId}
+     <if test="businessDailyIndicDto.idList!=null">
+      and daily_indic_id in
+       <foreach collection="businessDailyIndicDto.idList" item="dailyIndicId" open="(" separator="," close=")">
+         #{dailyIndicId}
+       </foreach>
+     </if>
+    <if test="businessDailyIndicDto.shopId!=null">
+      and shop_id=#{businessDailyIndicDto.shopId}
+    </if>
+    <if test="businessDailyIndicDto.brandId!=null">
+      and brand_id=#{businessDailyIndicDto.brandId}
+    </if>
+    <if test="businessDailyIndicDto.regionId!=null">
+      and region_id=#{businessDailyIndicDto.regionId}
+    </if>
+    <if test="businessDailyIndicDto.status!=null">
+      and status=#{businessDailyIndicDto.status}
+    </if>
+
+  </select>
+
+  <select id="findIndicById" resultType="com.njwd.entity.reportdata.vo.BusinessDailyIndicVo" parameterType="com.njwd.entity.reportdata.dto.BusinessDailyIndicDto">
+     select
+    `daily_indic_id`,
+        `ente_id`,
+        `brand_id`,
+        `brand_name`,
+        `region_id`,
+        `region_name`,
+        `shop_id`,
+        `shop_name`,
+        `project_id`,
+        `project_name`,
+        `indicator`,
+        `begin_date`,
+        `end_date`,
+        `status`,
+        `update_time`
+     FROM business_daily_indic
+     WHERE `daily_indic_id` = #{businessDailyIndicDto.dailyIndicId}
+  </select>
+
+
+</mapper>

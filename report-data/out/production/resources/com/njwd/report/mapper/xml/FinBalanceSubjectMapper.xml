@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.report.mapper.FinBalanceSubjectMapper">
+    <select id="findFinBalanceSubjectList" resultType="com.njwd.entity.reportdata.vo.FinBalanceSubjectVo">
+        select DISTINCT
+                fbs.app_id,
+                fbs.ente_id,
+                fbs.account_book_id,
+                fbs.account_entity_id,
+                fbs.account_subject_id,
+                fbs.period_year,
+                fbs.period_num,
+                fbs.period_year_num,
+                bas.account_subject_code,
+                bas.BALANCE_DIRECTION accountSubjectDirection,
+                max(abs(fbs.open_balance)) open_balance,
+                max(abs(fbs.close_balance)) close_balance,
+                max(fbs.open_balance) openBalanceY,
+                max(fbs.close_balance) closeBalanceY,
+                max(fbs.debit_amount) debit_amount,
+                max(fbs.credit_amount) credit_amount,
+                max(fbs.total_debit_amount) total_debit_amount,
+                max(fbs.total_credit_amount) total_credit_amount
+        from fin_balance_subject fbs
+        left join base_account_subject bas on bas.account_subject_id=fbs.account_subject_id
+        where fbs.account_book_id=#{accountBookId}
+      and fbs.ente_id=#{enteId}
+        <if test="flag == null">
+            and fbs.period_year_num>=#{periodYearNum}
+        </if>
+        <if test="flag != null">
+            and fbs.period_year_num=#{periodYearNum}
+        </if>
+        <if test="subList != null and subList.size()>0">
+            AND
+            <foreach collection="subList" index="index" item="item" open="(" separator=" OR " close=")">
+                bas.ACCOUNT_SUBJECT_CODE LIKE CONCAT(#{item}, '%')
+            </foreach>
+        </if>
+            AND fbs.currency_id = '0'
+        GROUP BY fbs.app_id,
+        fbs.ente_id,
+        fbs.account_book_id,
+        fbs.account_entity_id,
+        fbs.account_subject_id,
+        fbs.period_year,
+        fbs.period_num,
+        fbs.period_year_num,
+        bas.account_subject_code,
+        bas.BALANCE_DIRECTION
+    </select>
+    <select id="findYearFinBalanceSubjectList" resultType="com.njwd.entity.reportdata.vo.FinBalanceSubjectVo">
+        select DISTINCT
+        fbs.app_id,
+        fbs.ente_id,
+        fbs.account_book_id,
+        fbs.account_entity_id,
+        fbs.account_subject_id,
+        fbs.period_year,
+        fbs.period_num,
+        fbs.period_year_num,
+        bas.account_subject_code,
+        max(abs(fbs.open_balance)) open_balance,
+        max(abs(fbs.close_balance)) close_balance,
+        max(fbs.open_balance) openBalanceY,
+        max(fbs.close_balance) closeBalanceY,
+        max(fbs.debit_amount) debit_amount,
+        max(fbs.credit_amount) credit_amount,
+        max(fbs.total_debit_amount) total_debit_amount,
+        max(fbs.total_credit_amount) total_credit_amount
+        from fin_balance_subject fbs
+        left join base_account_subject bas on bas.account_subject_id=fbs.account_subject_id
+        where fbs.account_book_id=#{accountBookId}
+        and fbs.ente_id=#{enteId}
+        and fbs.period_year=#{periodYear}
+        and fbs.PERIOD_NUM=(select min(f.PERIOD_NUM) from fin_balance_subject f
+        where f.account_book_id=#{accountBookId}
+        and f.ente_id=#{enteId}
+        and f.period_year=#{periodYear})
+        AND fbs.currency_id = '0'
+        GROUP BY fbs.app_id,
+        fbs.ente_id,
+        fbs.account_book_id,
+        fbs.account_entity_id,
+        fbs.account_subject_id,
+        fbs.period_year,
+        fbs.period_num,
+        fbs.period_year_num,
+        bas.account_subject_code
+    </select>
+
+    <select id="findBalanceBySubjectCodes" resultType="com.njwd.entity.reportdata.vo.FinBalanceSubjectVo">
+        select
+        fbs.app_id,
+        fbs.ente_id,
+        fbs.account_book_id,
+        c.shop_id,
+        c.shop_name,
+        c.brand_id,
+        c.brand_name,
+        c.region_id,
+        c.region_name,
+        fbs.account_entity_id,
+        fbs.account_subject_id,
+        fbs.currency_id,
+        fbs.period_year,
+        fbs.period_num,
+        bas.account_subject_code,
+        bas.account_subject_name,
+        max(fbs.open_balance) open_balance,
+        max(fbs.close_balance) close_balance,
+        max(fbs.debit_amount) debit_amount,
+        max(fbs.credit_amount) credit_amount,
+        max(fbs.total_debit_amount) total_debit_amount,
+        max(fbs.total_credit_amount) total_credit_amount
+        from fin_balance_subject fbs
+        left join base_account_book b
+        on fbs.account_book_id = b.account_book_id
+        left join base_company c
+        on b.company_id = c.company_id
+        left join base_shop s
+        on c.company_id = s.company_id
+        left join base_account_subject bas
+        on fbs.account_subject_id = bas.account_subject_id
+
+        where fbs.ente_id =#{queryDto.enteId,jdbcType=VARCHAR}
+        and fbs.period_year_num=#{queryDto.yearNum,jdbcType=INTEGER}
+
+        <if test="queryDto.subjectCodeList != null and queryDto.subjectCodeList.size()>0">
+            AND
+            <foreach collection="queryDto.subjectCodeList" index="index" item="item" open="(" separator=" OR "
+                     close=")">
+                bas.account_subject_code =#{item}
+            </foreach>
+        </if>
+        <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size()>0">
+            AND
+            <foreach collection="queryDto.shopTypeIdList" index="index" item="item" open="(" separator=" OR "
+                     close=")">
+                c.shop_id =#{item}
+            </foreach>
+        </if>
+        group by fbs.app_id,
+        fbs.ente_id,
+        fbs.account_book_id,
+        c.shop_id,
+        c.shop_name,
+        c.brand_id,
+        c.brand_name,
+        c.region_id,
+        c.region_name,
+        fbs.account_entity_id,
+        fbs.account_subject_id,
+        fbs.currency_id,
+        fbs.period_year,
+        fbs.period_num,
+        bas.account_subject_code,
+        bas.account_subject_name
+    </select>
+    <select id="findShareholderInfo" resultType="com.njwd.entity.reportdata.vo.ShareholderDividendVo">
+        SELECT
+        fat.app_id,
+        fat.ente_id,
+        fat.shop_id,
+        fat.shop_name,
+        fat.brand_id,
+        fat.brand_name,
+        fat.region_id,
+        fat.region_name,
+        fat.user_name,
+        fat.percent
+        FROM
+        fin_shareholder_info fat
+        where
+         fat.ente_id =#{queryDto.enteId,jdbcType=VARCHAR}
+        and fat.query_date=#{queryDto.periodYearNum,jdbcType=INTEGER}
+        <if test="queryDto.shopIdList != null and queryDto.shopIdList.size()>0">
+            AND
+            <foreach collection="queryDto.shopIdList" index="index" item="item" open="(" separator=" OR "
+                     close=")">
+                fat.shop_id =#{item}
+            </foreach>
+        </if>
+        <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size()>0">
+            AND
+            <foreach collection="queryDto.shopTypeIdList" index="index" item="item" open="(" separator=" OR "
+                     close=")">
+                fat.shop_type_id =#{item}
+            </foreach>
+        </if>
+    </select>
+</mapper>

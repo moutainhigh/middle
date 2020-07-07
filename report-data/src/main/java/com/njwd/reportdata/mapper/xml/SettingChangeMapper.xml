@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.SettingChangeMapper" >
+
+    <!-- 查询单个 -->
+    <select id="findSettingChange" resultType="com.njwd.entity.reportdata.vo.SettingChangeVo">
+        select
+            sc.id,
+            sc.brand_id,
+            sc.region_id,
+            sc.shop_id,
+            sc.money,
+            sc.period_year_num,
+            sc.status,
+            sc.ente_id,
+            sc.create_time,
+            sc.update_time
+        from
+        wd_setting_change sc
+        <where>
+            and sc.id = #{param.id}
+            and sc.ente_id = #{param.enteId}
+        </where>
+    </select>
+
+    <!-- 查询门店异动工资列表 -->
+    <select id="findSettingChangeList" resultType="com.njwd.entity.reportdata.vo.SettingChangeVo">
+        select
+            sc.id,
+            sc.brand_id,
+            b.brand_code,
+            b.brand_name,
+            sc.region_id,
+            r.region_code,
+            r.region_name,
+            sc.shop_id,
+            ss.shop_no,
+            ss.shop_name,
+            sc.money,
+            sc.period_year_num,
+            sc.status,
+            sc.ente_id
+        from
+            wd_setting_change sc
+        left join base_brand b on sc.brand_id = b.brand_id
+        left join base_region r on sc.region_id = r.region_id
+        left join base_shop ss on sc.shop_id = ss.shop_id
+        <where>
+            AND sc.ente_id = #{param.enteId}
+            <if test="param.query != null and param.query != ''">
+                AND (
+                b.brand_name LIKE CONCAT('%',#{param.query},'%')
+                OR r.region_name LIKE CONCAT('%',#{param.query},'%')
+                OR ss.shop_name LIKE CONCAT('%',#{param.query},'%')
+                <!-- 数字 -->
+                <if test="param.queryType ==1">
+                    OR sc."money" = ${param.query}
+                </if>
+                <!-- 日期 -->
+                <if test="param.dataQuery != null">
+                OR sc.period_year_num = #{param.dataQuery}
+                </if>
+                )
+            </if>
+        </where>
+        order by sc.id desc
+    </select>
+
+    <!-- 获取对应转化值 -->
+    <select id="findConvertDataList" resultType="com.njwd.entity.reportdata.ConvertData">
+        select * from (
+            select '0' "index", brand_id convert_data,brand_name  old_data
+                from base_brand
+                where ente_id = #{enteId}
+            union all
+                select '1' "index", region_id convert_data ,region_name old_data
+                from base_region
+                where ente_id = #{enteId}
+            union all
+                select '2' "index",shop_id convert_data,shop_name old_data
+                from base_shop
+                where ente_id = #{enteId}
+            )tab
+        order by "index",convert_data
+    </select>
+
+    <!-- 查询重复数据数量 -->
+    <select id="findDuplicateDataCount" resultType="integer">
+        select count(1)
+        from wd_setting_change
+        where shop_id = #{param.shopId}
+          and period_year_num = #{param.periodYearNum}
+          and id != #{param.id}
+    </select>
+
+    <!-- 查询重复的数据 -->
+    <select id="findDuplicateDataList" resultType="java.util.HashMap">
+        select sc.shop_id "2",sc.period_year_num||'' "4"
+        from wd_setting_change sc
+        WHERE ente_id = #{enteId}
+        AND(
+        <foreach collection="valueList" index="index" item="item" separator="or">
+            (shop_id = #{item.shopId} and period_year_num = #{item.periodYearNum})
+        </foreach>
+        )
+    </select>
+
+    <!-- 更新异动工资 -->
+    <update id="updateSettingChange">
+        update wd_setting_change
+        <set>
+            money = #{param.money},
+            period_year_num = #{param.periodYearNum}
+        </set>
+        <where>
+            and id = #{param.id}
+        </where>
+    </update>
+
+    <!-- 更新异动工资状态 -->
+    <update id="updateSettingChangeStatus">
+        update wd_setting_change
+        <set>
+            status = #{param.status},
+            update_time = #{param.updateTime}
+        </set>
+        <where>
+            and id = #{param.id}
+            and ente_id = #{param.enteId}
+        </where>
+    </update>
+
+    <!-- 批量新增 -->
+    <insert id="insertDataBatch">
+        INSERT INTO wd_setting_change
+        (
+        id,
+        brand_id,
+        region_id,
+        shop_id,
+        money,
+        period_year_num,
+        status,
+        ente_id,
+        create_time
+        )
+        VALUES
+        <foreach collection="dataList" index="index" item="item" separator=",">
+            (
+            #{item.id},
+            #{item.brandId},
+            #{item.regionId},
+            #{item.shopId},
+            #{item.money},
+            #{item.periodYearNum},
+            1,
+            #{item.enteId},
+            #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

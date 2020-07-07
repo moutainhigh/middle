@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.mapper.BasePostRelaMapper">
+
+    <!--新增并修改-->
+    <insert id="insertOrUpdateBatch" >
+        insert into base_post_rela (
+        third_post_id,
+        post_code,
+        post_name,
+        third_org_id,
+        ente_id,
+        app_id,
+        create_time,
+        update_time
+        )
+        values
+        <foreach collection="sqlParam.dataList" item="item" index="index" separator=",">
+            (
+            #{item.thirdPostId},
+            #{item.postCode},
+            #{item.postName},
+            #{item.thirdOrgId},
+            #{sqlParam.enteId},
+            #{sqlParam.appId},
+            #{sqlParam.createTime},
+            #{sqlParam.updateTime}
+            )
+        </foreach>
+        on duplicate key update
+        post_code=values(post_code),
+        post_name=values(post_name),
+        third_org_id=values(third_org_id),
+        update_time=#{sqlParam.updateTime}
+    </insert>
+
+    <!-- 更新部门对应的组织信息 -->
+    <update id="updatePostOrgBacth">
+        update base_post_rela pr
+            left join base_post p on pr.post_id = p.post_id
+            left join base_brand_rela br on pr.third_org_id = br.third_brand_id and br.app_id = #{appId}
+            left join base_region_rela rr on pr.third_org_id = rr.third_region_id and rr.app_id = #{appId}
+            left join base_shop_rela sr on pr.third_org_id = sr.third_shop_id and sr.app_id = #{appId}
+            left join base_shop_dept_rela sdr on pr.third_org_id = sdr.third_shop_dept_id and sdr.app_id = #{appId}
+        set
+            pr.org_id = coalesce(br.brand_id,rr.region_id, sr.shop_id,sdr.shop_dept_id),
+            p.org_id = pr.org_id
+        where
+            pr.app_id = #{appId}
+          and pr.ente_id = #{enteId}
+    </update>
+
+</mapper>

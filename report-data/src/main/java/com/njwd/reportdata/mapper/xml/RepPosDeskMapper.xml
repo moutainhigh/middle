@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.RepPosDeskMapper" >
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.vo.StatisticsTurnoverRateVo">
+  </resultMap>
+  <select id="findDeskNumByShop" resultMap="BaseResultMap" parameterType="com.njwd.entity.reportdata.dto.querydto.BaseQueryDto" >
+    select
+    bs.ente_id enteId,
+    count(bd.desk_id) deskNum,
+    bs.shop_id shopId,
+    bs.brand_id brandId,
+    bs.region_id regionId,
+    bs.brand_name brandName,
+    bs.region_name regionName,
+    bs.shop_name shopName
+    from  base_shop bs left join base_desk bd on bd.shop_id = bs.shop_id and bd.is_noopentable = 1 and bd.status = 0
+    where  bs.ente_id = #{baseQueryDto.enteId}
+    <if test="baseQueryDto.shopIdList != null and baseQueryDto.shopIdList.size() > 0 ">
+      and bs.shop_id in
+      <foreach collection="baseQueryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+        #{shopId}
+      </foreach>
+    </if>
+    GROUP BY bs.ente_id,bs.brand_id,bs.shop_id,bs.region_id,bs.brand_name,bs.region_name,bs.shop_name
+    order by bs.brand_name,bs.region_name,bs.shop_name
+  </select>
+
+  <select id="findStationsNumByShop" resultMap="BaseResultMap" parameterType="com.njwd.entity.reportdata.dto.querydto.BaseQueryDto" >
+    SELECT
+    sum( desk_count ) stationsNum,
+    shop_id shopId
+    FROM
+    rep_pos_desk
+    WHERE
+    ente_id = #{baseQueryDto.enteId}
+    and is_noopentable = 1
+    and def1 = '1'
+    <if test="baseQueryDto.shopIdList != null and baseQueryDto.shopIdList.size() > 0 ">
+      and shop_id in
+      <foreach collection="baseQueryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+        #{shopId}
+      </foreach>
+    </if>
+    and account_date between #{baseQueryDto.beginDate} and #{baseQueryDto.endDate}
+    <if test="baseQueryDto.shopTypeIdList != null and baseQueryDto.shopTypeIdList.size() > 0 ">
+      and shop_type_id in
+      <foreach collection="baseQueryDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+        #{shopTypeId}
+      </foreach>
+    </if>
+    GROUP BY
+    shop_id
+
+    
+  </select>
+
+</mapper>

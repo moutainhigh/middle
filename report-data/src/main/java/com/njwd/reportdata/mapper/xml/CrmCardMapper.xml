@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportdata.mapper.CrmCardMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.CrmCard">
+    <!--@mbg.generated-->
+    <!--@Table crm_card-->
+    <id column="card_id" jdbcType="VARCHAR" property="cardId" />
+    <id column="app_id" jdbcType="VARCHAR" property="appId" />
+    <id column="ente_id" jdbcType="VARCHAR" property="enteId" />
+    <result column="member_id" jdbcType="VARCHAR" property="memberId" />
+    <result column="card_no" jdbcType="VARCHAR" property="cardNo" />
+    <result column="entity_card_no" jdbcType="VARCHAR" property="entityCardNo" />
+    <result column="card_type_id" jdbcType="VARCHAR" property="cardTypeId" />
+    <result column="status" jdbcType="VARCHAR" property="status" />
+    <result column="activate_time" jdbcType="DATE" property="activateTime" />
+    <result column="shop_id" jdbcType="VARCHAR" property="shopId" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    card_id, app_id, ente_id, member_id, card_no, entity_card_no, card_type_id, "status", 
+    activate_time, shop_id
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    <!--@mbg.generated-->
+    select 
+    <include refid="Base_Column_List" />
+    from crm_card
+    where card_id = #{cardId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    <!--@mbg.generated-->
+    delete from crm_card
+    where card_id = #{cardId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.njwd.entity.reportdata.CrmCard">
+    <!--@mbg.generated-->
+    insert into crm_card (card_id, app_id, ente_id, 
+      member_id, card_no, entity_card_no, 
+      card_type_id, "status", activate_time, 
+      shop_id)
+    values (#{cardId,jdbcType=VARCHAR}, #{appId,jdbcType=VARCHAR}, #{enteId,jdbcType=VARCHAR}, 
+      #{memberId,jdbcType=VARCHAR}, #{cardNo,jdbcType=VARCHAR}, #{entityCardNo,jdbcType=VARCHAR}, 
+      #{cardTypeId,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{activateTime,jdbcType=DATE}, 
+      #{shopId,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.njwd.entity.reportdata.CrmCard">
+    <!--@mbg.generated-->
+    insert into crm_card
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="cardId != null">
+        card_id,
+      </if>
+      <if test="appId != null">
+        app_id,
+      </if>
+      <if test="enteId != null">
+        ente_id,
+      </if>
+      <if test="memberId != null">
+        member_id,
+      </if>
+      <if test="cardNo != null">
+        card_no,
+      </if>
+      <if test="entityCardNo != null">
+        entity_card_no,
+      </if>
+      <if test="cardTypeId != null">
+        card_type_id,
+      </if>
+      <if test="status != null">
+        "status",
+      </if>
+      <if test="activateTime != null">
+        activate_time,
+      </if>
+      <if test="shopId != null">
+        shop_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="cardId != null">
+        #{cardId,jdbcType=VARCHAR},
+      </if>
+      <if test="appId != null">
+        #{appId,jdbcType=VARCHAR},
+      </if>
+      <if test="enteId != null">
+        #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="memberId != null">
+        #{memberId,jdbcType=VARCHAR},
+      </if>
+      <if test="cardNo != null">
+        #{cardNo,jdbcType=VARCHAR},
+      </if>
+      <if test="entityCardNo != null">
+        #{entityCardNo,jdbcType=VARCHAR},
+      </if>
+      <if test="cardTypeId != null">
+        #{cardTypeId,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="activateTime != null">
+        #{activateTime,jdbcType=DATE},
+      </if>
+      <if test="shopId != null">
+        #{shopId,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.reportdata.CrmCard">
+    <!--@mbg.generated-->
+    update crm_card
+    <set>
+      <if test="memberId != null">
+        member_id = #{memberId,jdbcType=VARCHAR},
+      </if>
+      <if test="cardNo != null">
+        card_no = #{cardNo,jdbcType=VARCHAR},
+      </if>
+      <if test="entityCardNo != null">
+        entity_card_no = #{entityCardNo,jdbcType=VARCHAR},
+      </if>
+      <if test="cardTypeId != null">
+        card_type_id = #{cardTypeId,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        "status" = #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="activateTime != null">
+        activate_time = #{activateTime,jdbcType=DATE},
+      </if>
+      <if test="shopId != null">
+        shop_id = #{shopId,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where card_id = #{cardId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.njwd.entity.reportdata.CrmCard">
+    <!--@mbg.generated-->
+    update crm_card
+    set member_id = #{memberId,jdbcType=VARCHAR},
+      card_no = #{cardNo,jdbcType=VARCHAR},
+      entity_card_no = #{entityCardNo,jdbcType=VARCHAR},
+      card_type_id = #{cardTypeId,jdbcType=VARCHAR},
+      "status" = #{status,jdbcType=VARCHAR},
+      activate_time = #{activateTime,jdbcType=DATE},
+      shop_id = #{shopId,jdbcType=VARCHAR}
+    where card_id = #{cardId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+  </update>
+
+  <select id="findEarlyCardNumGroupByShop" parameterType="com.njwd.entity.reportdata.dto.MembershipCardAnalysisDto" resultType="com.njwd.entity.reportdata.vo.CrmCardVo">
+    select
+     cc.shop_id shopId,
+    count(cc.card_id) cardNum
+    from crm_card cc,base_shop bs
+    where  cc.ente_id = #{queryDto.enteId}
+    and cc.ente_id = bs.ente_id
+    and cc.shop_id = bs.shop_id
+    <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() > 0 ">
+      and cc.shop_id in
+      <foreach collection="queryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+        #{shopId}
+      </foreach>
+    </if>
+    <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size() > 0 ">
+      and bs.shop_type_id in
+      <foreach collection="queryDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+        #{shopTypeId}
+      </foreach>
+    </if>
+    and cc.activate_time &lt; #{queryDto.beginDate}
+    group by shopId
+  </select>
+  <select id="findIncreaseCardNumGroupByShop" parameterType="com.njwd.entity.reportdata.dto.MembershipCardAnalysisDto"
+          resultType="com.njwd.entity.reportdata.vo.CrmCardVo">
+    select
+    cc.shop_id shopId,
+    count(cc.card_id) cardNum
+    from crm_card cc,base_shop bs
+    where  cc.ente_id = #{queryDto.enteId}
+    and cc.ente_id = bs.ente_id
+    and cc.shop_id = bs.shop_id
+    <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() > 0 ">
+      and cc.shop_id in
+      <foreach collection="queryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+        #{shopId}
+      </foreach>
+    </if>
+    <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size() > 0 ">
+      and bs.shop_type_id in
+      <foreach collection="queryDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+        #{shopTypeId}
+      </foreach>
+    </if>
+    and cc.activate_time between #{queryDto.beginDate} and #{queryDto.endDate}
+    group by shopId
+  </select>
+</mapper>

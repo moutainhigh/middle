@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.UserMapper">
+
+    <!-- 查询门店名称-->
+    <select id="getShopNameUser"  resultType="java.lang.String">
+        select shop_name from base_shop
+        where
+        shop_id in
+        <foreach collection="list" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+
+        order by shop_name
+    </select>
+    <!-- 查询品牌区域名称-->
+    <select id="getBrandOrRegionName" resultType="java.lang.String">
+        select brand_name as brandOrRegionName
+        from base_brand
+        where brand_id in
+        <foreach collection="brandIdList" item="brandId" separator="," open="(" close=")">
+            #{brandId}
+        </foreach>
+        union all
+        select region_name as brandOrRegionName
+        from base_region
+        where region_id in
+        <foreach collection="regionIdList" item="regionId" separator="," open="(" close=")">
+            #{regionId}
+        </foreach>
+        order by brandOrRegionName
+    </select>
+
+
+</mapper>

@@ -1,0 +1,789 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportdata.mapper.ScmInstockEntryMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.ScmInstockEntry">
+    <!--@mbg.generated-->
+    <!--@Table scm_instock_entry-->
+    <id column="app_id" jdbcType="VARCHAR" property="appId" />
+    <id column="ente_id" jdbcType="VARCHAR" property="enteId" />
+    <id column="entryid" jdbcType="VARCHAR" property="entryid" />
+    <id column="instock_id" jdbcType="VARCHAR" property="instockId" />
+    <result column="material_id" jdbcType="VARCHAR" property="materialId" />
+    <result column="unit_id" jdbcType="VARCHAR" property="unitId" />
+    <result column="mustqty" jdbcType="NUMERIC" property="mustqty" />
+    <result column="realqty" jdbcType="NUMERIC" property="realqty" />
+    <result column="stock_id" jdbcType="VARCHAR" property="stockId" />
+    <result column="stockstatusid" jdbcType="SMALLINT" property="stockstatusid" />
+    <result column="base_unit_id" jdbcType="VARCHAR" property="baseUnitId" />
+    <result column="baseunitqty" jdbcType="NUMERIC" property="baseunitqty" />
+    <result column="grossweight" jdbcType="NUMERIC" property="grossweight" />
+    <result column="netweight" jdbcType="NUMERIC" property="netweight" />
+    <result column="poorderno" jdbcType="VARCHAR" property="poorderno" />
+    <result column="contractno" jdbcType="VARCHAR" property="contractno" />
+    <result column="receive_stock_id" jdbcType="VARCHAR" property="receiveStockId" />
+    <result column="baseprice" jdbcType="NUMERIC" property="baseprice" />
+    <result column="baseapjoinqty" jdbcType="NUMERIC" property="baseapjoinqty" />
+    <result column="price" jdbcType="NUMERIC" property="price" />
+    <result column="taxprice" jdbcType="NUMERIC" property="taxprice" />
+    <result column="price_unit_id" jdbcType="VARCHAR" property="priceUnitId" />
+    <result column="priceunitqty" jdbcType="NUMERIC" property="priceunitqty" />
+    <result column="taxcombination" jdbcType="SMALLINT" property="taxcombination" />
+    <result column="taxrate" jdbcType="NUMERIC" property="taxrate" />
+    <result column="taxamount" jdbcType="NUMERIC" property="taxamount" />
+    <result column="taxamount_lc" jdbcType="NUMERIC" property="taxamountLc" />
+    <result column="pricecoefficient" jdbcType="NUMERIC" property="pricecoefficient" />
+    <result column="discountrate" jdbcType="NUMERIC" property="discountrate" />
+    <result column="discount" jdbcType="NUMERIC" property="discount" />
+    <result column="billcostapportion" jdbcType="NUMERIC" property="billcostapportion" />
+    <result column="taxnetprice" jdbcType="NUMERIC" property="taxnetprice" />
+    <result column="amount" jdbcType="NUMERIC" property="amount" />
+    <result column="amount_lc" jdbcType="NUMERIC" property="amountLc" />
+    <result column="allamount" jdbcType="NUMERIC" property="allamount" />
+    <result column="allamount_lc" jdbcType="NUMERIC" property="allamountLc" />
+    <result column="isfree" jdbcType="VARCHAR" property="isfree" />
+    <result column="baseunitprice" jdbcType="NUMERIC" property="baseunitprice" />
+    <result column="invoicedqty" jdbcType="NUMERIC" property="invoicedqty" />
+    <result column="invoicedstatus" jdbcType="VARCHAR" property="invoicedstatus" />
+    <result column="processfee" jdbcType="NUMERIC" property="processfee" />
+    <result column="materialcosts" jdbcType="NUMERIC" property="materialcosts" />
+    <result column="maxprice" jdbcType="NUMERIC" property="maxprice" />
+    <result column="minprice" jdbcType="NUMERIC" property="minprice" />
+    <result column="costprice" jdbcType="NUMERIC" property="costprice" />
+    <result column="costprice_lc" jdbcType="NUMERIC" property="costpriceLc" />
+    <result column="costamount" jdbcType="NUMERIC" property="costamount" />
+    <result column="costamount_lc" jdbcType="NUMERIC" property="costamountLc" />
+    <result column="sysprice" jdbcType="NUMERIC" property="sysprice" />
+    <result column="upprice" jdbcType="NUMERIC" property="upprice" />
+    <result column="downprice" jdbcType="NUMERIC" property="downprice" />
+    <result column="invoicedjoinqty" jdbcType="NUMERIC" property="invoicedjoinqty" />
+    <result column="pricebaseqty" jdbcType="NUMERIC" property="pricebaseqty" />
+    <result column="setprice_unit_id" jdbcType="SMALLINT" property="setpriceUnitId" />
+    <result column="remaininstockqty" jdbcType="NUMERIC" property="remaininstockqty" />
+    <result column="remaininstockbaseqty" jdbcType="NUMERIC" property="remaininstockbaseqty" />
+    <result column="remain_instock_unit_id" jdbcType="VARCHAR" property="remainInstockUnitId" />
+    <result column="apnotjoinqty" jdbcType="NUMERIC" property="apnotjoinqty" />
+    <result column="apjoinamount" jdbcType="NUMERIC" property="apjoinamount" />
+    <result column="createdate" jdbcType="TIMESTAMP" property="createdate" />
+    <result column="modifydate" jdbcType="TIMESTAMP" property="modifydate" />
+    <result column="latelypulldate" jdbcType="TIMESTAMP" property="latelypulldate" />
+    <result column="shop_id" jdbcType="VARCHAR" property="shopId" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    app_id, ente_id, entryid, instock_id, material_id, unit_id, mustqty, realqty, stock_id, 
+    stockstatusid, base_unit_id, baseunitqty, grossweight, netweight, poorderno, contractno, 
+    receive_stock_id, baseprice, baseapjoinqty, price, taxprice, price_unit_id, priceunitqty, 
+    taxcombination, taxrate, taxamount, taxamount_lc, pricecoefficient, discountrate, 
+    discount, billcostapportion, taxnetprice, amount, amount_lc, allamount, allamount_lc, 
+    isfree, baseunitprice, invoicedqty, invoicedstatus, processfee, materialcosts, maxprice, 
+    minprice, costprice, costprice_lc, costamount, costamount_lc, sysprice, upprice, 
+    downprice, invoicedjoinqty, pricebaseqty, setprice_unit_id, remaininstockqty, remaininstockbaseqty, 
+    remain_instock_unit_id, apnotjoinqty, apjoinamount, createdate, modifydate, latelypulldate, 
+    shop_id
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    <!--@mbg.generated-->
+    select 
+    <include refid="Base_Column_List" />
+    from scm_instock_entry
+    where app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+      and entryid = #{entryid,jdbcType=VARCHAR}
+      and instock_id = #{instockId,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    <!--@mbg.generated-->
+    delete from scm_instock_entry
+    where app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+      and entryid = #{entryid,jdbcType=VARCHAR}
+      and instock_id = #{instockId,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.njwd.entity.reportdata.ScmInstockEntry">
+    <!--@mbg.generated-->
+    insert into scm_instock_entry (app_id, ente_id, entryid, 
+      instock_id, material_id, unit_id, 
+      mustqty, realqty, stock_id, 
+      stockstatusid, base_unit_id, baseunitqty, 
+      grossweight, netweight, poorderno, 
+      contractno, receive_stock_id, baseprice, 
+      baseapjoinqty, price, taxprice, 
+      price_unit_id, priceunitqty, taxcombination, 
+      taxrate, taxamount, taxamount_lc, 
+      pricecoefficient, discountrate, discount, 
+      billcostapportion, taxnetprice, amount, 
+      amount_lc, allamount, allamount_lc, 
+      isfree, baseunitprice, invoicedqty, 
+      invoicedstatus, processfee, materialcosts, 
+      maxprice, minprice, costprice, 
+      costprice_lc, costamount, costamount_lc, 
+      sysprice, upprice, downprice, 
+      invoicedjoinqty, pricebaseqty, setprice_unit_id, 
+      remaininstockqty, remaininstockbaseqty, 
+      remain_instock_unit_id, apnotjoinqty, apjoinamount, 
+      createdate, modifydate, latelypulldate, 
+      shop_id)
+    values (#{appId,jdbcType=VARCHAR}, #{enteId,jdbcType=VARCHAR}, #{entryid,jdbcType=VARCHAR}, 
+      #{instockId,jdbcType=VARCHAR}, #{materialId,jdbcType=VARCHAR}, #{unitId,jdbcType=VARCHAR}, 
+      #{mustqty,jdbcType=NUMERIC}, #{realqty,jdbcType=NUMERIC}, #{stockId,jdbcType=VARCHAR}, 
+      #{stockstatusid,jdbcType=SMALLINT}, #{baseUnitId,jdbcType=VARCHAR}, #{baseunitqty,jdbcType=NUMERIC}, 
+      #{grossweight,jdbcType=NUMERIC}, #{netweight,jdbcType=NUMERIC}, #{poorderno,jdbcType=VARCHAR}, 
+      #{contractno,jdbcType=VARCHAR}, #{receiveStockId,jdbcType=VARCHAR}, #{baseprice,jdbcType=NUMERIC}, 
+      #{baseapjoinqty,jdbcType=NUMERIC}, #{price,jdbcType=NUMERIC}, #{taxprice,jdbcType=NUMERIC}, 
+      #{priceUnitId,jdbcType=VARCHAR}, #{priceunitqty,jdbcType=NUMERIC}, #{taxcombination,jdbcType=SMALLINT}, 
+      #{taxrate,jdbcType=NUMERIC}, #{taxamount,jdbcType=NUMERIC}, #{taxamountLc,jdbcType=NUMERIC}, 
+      #{pricecoefficient,jdbcType=NUMERIC}, #{discountrate,jdbcType=NUMERIC}, #{discount,jdbcType=NUMERIC}, 
+      #{billcostapportion,jdbcType=NUMERIC}, #{taxnetprice,jdbcType=NUMERIC}, #{amount,jdbcType=NUMERIC}, 
+      #{amountLc,jdbcType=NUMERIC}, #{allamount,jdbcType=NUMERIC}, #{allamountLc,jdbcType=NUMERIC}, 
+      #{isfree,jdbcType=VARCHAR}, #{baseunitprice,jdbcType=NUMERIC}, #{invoicedqty,jdbcType=NUMERIC}, 
+      #{invoicedstatus,jdbcType=VARCHAR}, #{processfee,jdbcType=NUMERIC}, #{materialcosts,jdbcType=NUMERIC}, 
+      #{maxprice,jdbcType=NUMERIC}, #{minprice,jdbcType=NUMERIC}, #{costprice,jdbcType=NUMERIC}, 
+      #{costpriceLc,jdbcType=NUMERIC}, #{costamount,jdbcType=NUMERIC}, #{costamountLc,jdbcType=NUMERIC}, 
+      #{sysprice,jdbcType=NUMERIC}, #{upprice,jdbcType=NUMERIC}, #{downprice,jdbcType=NUMERIC}, 
+      #{invoicedjoinqty,jdbcType=NUMERIC}, #{pricebaseqty,jdbcType=NUMERIC}, #{setpriceUnitId,jdbcType=SMALLINT}, 
+      #{remaininstockqty,jdbcType=NUMERIC}, #{remaininstockbaseqty,jdbcType=NUMERIC}, 
+      #{remainInstockUnitId,jdbcType=VARCHAR}, #{apnotjoinqty,jdbcType=NUMERIC}, #{apjoinamount,jdbcType=NUMERIC}, 
+      #{createdate,jdbcType=TIMESTAMP}, #{modifydate,jdbcType=TIMESTAMP}, #{latelypulldate,jdbcType=TIMESTAMP}, 
+      #{shopId,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.njwd.entity.reportdata.ScmInstockEntry">
+    <!--@mbg.generated-->
+    insert into scm_instock_entry
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="appId != null">
+        app_id,
+      </if>
+      <if test="enteId != null">
+        ente_id,
+      </if>
+      <if test="entryid != null">
+        entryid,
+      </if>
+      <if test="instockId != null">
+        instock_id,
+      </if>
+      <if test="materialId != null">
+        material_id,
+      </if>
+      <if test="unitId != null">
+        unit_id,
+      </if>
+      <if test="mustqty != null">
+        mustqty,
+      </if>
+      <if test="realqty != null">
+        realqty,
+      </if>
+      <if test="stockId != null">
+        stock_id,
+      </if>
+      <if test="stockstatusid != null">
+        stockstatusid,
+      </if>
+      <if test="baseUnitId != null">
+        base_unit_id,
+      </if>
+      <if test="baseunitqty != null">
+        baseunitqty,
+      </if>
+      <if test="grossweight != null">
+        grossweight,
+      </if>
+      <if test="netweight != null">
+        netweight,
+      </if>
+      <if test="poorderno != null">
+        poorderno,
+      </if>
+      <if test="contractno != null">
+        contractno,
+      </if>
+      <if test="receiveStockId != null">
+        receive_stock_id,
+      </if>
+      <if test="baseprice != null">
+        baseprice,
+      </if>
+      <if test="baseapjoinqty != null">
+        baseapjoinqty,
+      </if>
+      <if test="price != null">
+        price,
+      </if>
+      <if test="taxprice != null">
+        taxprice,
+      </if>
+      <if test="priceUnitId != null">
+        price_unit_id,
+      </if>
+      <if test="priceunitqty != null">
+        priceunitqty,
+      </if>
+      <if test="taxcombination != null">
+        taxcombination,
+      </if>
+      <if test="taxrate != null">
+        taxrate,
+      </if>
+      <if test="taxamount != null">
+        taxamount,
+      </if>
+      <if test="taxamountLc != null">
+        taxamount_lc,
+      </if>
+      <if test="pricecoefficient != null">
+        pricecoefficient,
+      </if>
+      <if test="discountrate != null">
+        discountrate,
+      </if>
+      <if test="discount != null">
+        discount,
+      </if>
+      <if test="billcostapportion != null">
+        billcostapportion,
+      </if>
+      <if test="taxnetprice != null">
+        taxnetprice,
+      </if>
+      <if test="amount != null">
+        amount,
+      </if>
+      <if test="amountLc != null">
+        amount_lc,
+      </if>
+      <if test="allamount != null">
+        allamount,
+      </if>
+      <if test="allamountLc != null">
+        allamount_lc,
+      </if>
+      <if test="isfree != null">
+        isfree,
+      </if>
+      <if test="baseunitprice != null">
+        baseunitprice,
+      </if>
+      <if test="invoicedqty != null">
+        invoicedqty,
+      </if>
+      <if test="invoicedstatus != null">
+        invoicedstatus,
+      </if>
+      <if test="processfee != null">
+        processfee,
+      </if>
+      <if test="materialcosts != null">
+        materialcosts,
+      </if>
+      <if test="maxprice != null">
+        maxprice,
+      </if>
+      <if test="minprice != null">
+        minprice,
+      </if>
+      <if test="costprice != null">
+        costprice,
+      </if>
+      <if test="costpriceLc != null">
+        costprice_lc,
+      </if>
+      <if test="costamount != null">
+        costamount,
+      </if>
+      <if test="costamountLc != null">
+        costamount_lc,
+      </if>
+      <if test="sysprice != null">
+        sysprice,
+      </if>
+      <if test="upprice != null">
+        upprice,
+      </if>
+      <if test="downprice != null">
+        downprice,
+      </if>
+      <if test="invoicedjoinqty != null">
+        invoicedjoinqty,
+      </if>
+      <if test="pricebaseqty != null">
+        pricebaseqty,
+      </if>
+      <if test="setpriceUnitId != null">
+        setprice_unit_id,
+      </if>
+      <if test="remaininstockqty != null">
+        remaininstockqty,
+      </if>
+      <if test="remaininstockbaseqty != null">
+        remaininstockbaseqty,
+      </if>
+      <if test="remainInstockUnitId != null">
+        remain_instock_unit_id,
+      </if>
+      <if test="apnotjoinqty != null">
+        apnotjoinqty,
+      </if>
+      <if test="apjoinamount != null">
+        apjoinamount,
+      </if>
+      <if test="createdate != null">
+        createdate,
+      </if>
+      <if test="modifydate != null">
+        modifydate,
+      </if>
+      <if test="latelypulldate != null">
+        latelypulldate,
+      </if>
+      <if test="shopId != null">
+        shop_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="appId != null">
+        #{appId,jdbcType=VARCHAR},
+      </if>
+      <if test="enteId != null">
+        #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="entryid != null">
+        #{entryid,jdbcType=VARCHAR},
+      </if>
+      <if test="instockId != null">
+        #{instockId,jdbcType=VARCHAR},
+      </if>
+      <if test="materialId != null">
+        #{materialId,jdbcType=VARCHAR},
+      </if>
+      <if test="unitId != null">
+        #{unitId,jdbcType=VARCHAR},
+      </if>
+      <if test="mustqty != null">
+        #{mustqty,jdbcType=NUMERIC},
+      </if>
+      <if test="realqty != null">
+        #{realqty,jdbcType=NUMERIC},
+      </if>
+      <if test="stockId != null">
+        #{stockId,jdbcType=VARCHAR},
+      </if>
+      <if test="stockstatusid != null">
+        #{stockstatusid,jdbcType=SMALLINT},
+      </if>
+      <if test="baseUnitId != null">
+        #{baseUnitId,jdbcType=VARCHAR},
+      </if>
+      <if test="baseunitqty != null">
+        #{baseunitqty,jdbcType=NUMERIC},
+      </if>
+      <if test="grossweight != null">
+        #{grossweight,jdbcType=NUMERIC},
+      </if>
+      <if test="netweight != null">
+        #{netweight,jdbcType=NUMERIC},
+      </if>
+      <if test="poorderno != null">
+        #{poorderno,jdbcType=VARCHAR},
+      </if>
+      <if test="contractno != null">
+        #{contractno,jdbcType=VARCHAR},
+      </if>
+      <if test="receiveStockId != null">
+        #{receiveStockId,jdbcType=VARCHAR},
+      </if>
+      <if test="baseprice != null">
+        #{baseprice,jdbcType=NUMERIC},
+      </if>
+      <if test="baseapjoinqty != null">
+        #{baseapjoinqty,jdbcType=NUMERIC},
+      </if>
+      <if test="price != null">
+        #{price,jdbcType=NUMERIC},
+      </if>
+      <if test="taxprice != null">
+        #{taxprice,jdbcType=NUMERIC},
+      </if>
+      <if test="priceUnitId != null">
+        #{priceUnitId,jdbcType=VARCHAR},
+      </if>
+      <if test="priceunitqty != null">
+        #{priceunitqty,jdbcType=NUMERIC},
+      </if>
+      <if test="taxcombination != null">
+        #{taxcombination,jdbcType=SMALLINT},
+      </if>
+      <if test="taxrate != null">
+        #{taxrate,jdbcType=NUMERIC},
+      </if>
+      <if test="taxamount != null">
+        #{taxamount,jdbcType=NUMERIC},
+      </if>
+      <if test="taxamountLc != null">
+        #{taxamountLc,jdbcType=NUMERIC},
+      </if>
+      <if test="pricecoefficient != null">
+        #{pricecoefficient,jdbcType=NUMERIC},
+      </if>
+      <if test="discountrate != null">
+        #{discountrate,jdbcType=NUMERIC},
+      </if>
+      <if test="discount != null">
+        #{discount,jdbcType=NUMERIC},
+      </if>
+      <if test="billcostapportion != null">
+        #{billcostapportion,jdbcType=NUMERIC},
+      </if>
+      <if test="taxnetprice != null">
+        #{taxnetprice,jdbcType=NUMERIC},
+      </if>
+      <if test="amount != null">
+        #{amount,jdbcType=NUMERIC},
+      </if>
+      <if test="amountLc != null">
+        #{amountLc,jdbcType=NUMERIC},
+      </if>
+      <if test="allamount != null">
+        #{allamount,jdbcType=NUMERIC},
+      </if>
+      <if test="allamountLc != null">
+        #{allamountLc,jdbcType=NUMERIC},
+      </if>
+      <if test="isfree != null">
+        #{isfree,jdbcType=VARCHAR},
+      </if>
+      <if test="baseunitprice != null">
+        #{baseunitprice,jdbcType=NUMERIC},
+      </if>
+      <if test="invoicedqty != null">
+        #{invoicedqty,jdbcType=NUMERIC},
+      </if>
+      <if test="invoicedstatus != null">
+        #{invoicedstatus,jdbcType=VARCHAR},
+      </if>
+      <if test="processfee != null">
+        #{processfee,jdbcType=NUMERIC},
+      </if>
+      <if test="materialcosts != null">
+        #{materialcosts,jdbcType=NUMERIC},
+      </if>
+      <if test="maxprice != null">
+        #{maxprice,jdbcType=NUMERIC},
+      </if>
+      <if test="minprice != null">
+        #{minprice,jdbcType=NUMERIC},
+      </if>
+      <if test="costprice != null">
+        #{costprice,jdbcType=NUMERIC},
+      </if>
+      <if test="costpriceLc != null">
+        #{costpriceLc,jdbcType=NUMERIC},
+      </if>
+      <if test="costamount != null">
+        #{costamount,jdbcType=NUMERIC},
+      </if>
+      <if test="costamountLc != null">
+        #{costamountLc,jdbcType=NUMERIC},
+      </if>
+      <if test="sysprice != null">
+        #{sysprice,jdbcType=NUMERIC},
+      </if>
+      <if test="upprice != null">
+        #{upprice,jdbcType=NUMERIC},
+      </if>
+      <if test="downprice != null">
+        #{downprice,jdbcType=NUMERIC},
+      </if>
+      <if test="invoicedjoinqty != null">
+        #{invoicedjoinqty,jdbcType=NUMERIC},
+      </if>
+      <if test="pricebaseqty != null">
+        #{pricebaseqty,jdbcType=NUMERIC},
+      </if>
+      <if test="setpriceUnitId != null">
+        #{setpriceUnitId,jdbcType=SMALLINT},
+      </if>
+      <if test="remaininstockqty != null">
+        #{remaininstockqty,jdbcType=NUMERIC},
+      </if>
+      <if test="remaininstockbaseqty != null">
+        #{remaininstockbaseqty,jdbcType=NUMERIC},
+      </if>
+      <if test="remainInstockUnitId != null">
+        #{remainInstockUnitId,jdbcType=VARCHAR},
+      </if>
+      <if test="apnotjoinqty != null">
+        #{apnotjoinqty,jdbcType=NUMERIC},
+      </if>
+      <if test="apjoinamount != null">
+        #{apjoinamount,jdbcType=NUMERIC},
+      </if>
+      <if test="createdate != null">
+        #{createdate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifydate != null">
+        #{modifydate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="latelypulldate != null">
+        #{latelypulldate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="shopId != null">
+        #{shopId,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.reportdata.ScmInstockEntry">
+    <!--@mbg.generated-->
+    update scm_instock_entry
+    <set>
+      <if test="materialId != null">
+        material_id = #{materialId,jdbcType=VARCHAR},
+      </if>
+      <if test="unitId != null">
+        unit_id = #{unitId,jdbcType=VARCHAR},
+      </if>
+      <if test="mustqty != null">
+        mustqty = #{mustqty,jdbcType=NUMERIC},
+      </if>
+      <if test="realqty != null">
+        realqty = #{realqty,jdbcType=NUMERIC},
+      </if>
+      <if test="stockId != null">
+        stock_id = #{stockId,jdbcType=VARCHAR},
+      </if>
+      <if test="stockstatusid != null">
+        stockstatusid = #{stockstatusid,jdbcType=SMALLINT},
+      </if>
+      <if test="baseUnitId != null">
+        base_unit_id = #{baseUnitId,jdbcType=VARCHAR},
+      </if>
+      <if test="baseunitqty != null">
+        baseunitqty = #{baseunitqty,jdbcType=NUMERIC},
+      </if>
+      <if test="grossweight != null">
+        grossweight = #{grossweight,jdbcType=NUMERIC},
+      </if>
+      <if test="netweight != null">
+        netweight = #{netweight,jdbcType=NUMERIC},
+      </if>
+      <if test="poorderno != null">
+        poorderno = #{poorderno,jdbcType=VARCHAR},
+      </if>
+      <if test="contractno != null">
+        contractno = #{contractno,jdbcType=VARCHAR},
+      </if>
+      <if test="receiveStockId != null">
+        receive_stock_id = #{receiveStockId,jdbcType=VARCHAR},
+      </if>
+      <if test="baseprice != null">
+        baseprice = #{baseprice,jdbcType=NUMERIC},
+      </if>
+      <if test="baseapjoinqty != null">
+        baseapjoinqty = #{baseapjoinqty,jdbcType=NUMERIC},
+      </if>
+      <if test="price != null">
+        price = #{price,jdbcType=NUMERIC},
+      </if>
+      <if test="taxprice != null">
+        taxprice = #{taxprice,jdbcType=NUMERIC},
+      </if>
+      <if test="priceUnitId != null">
+        price_unit_id = #{priceUnitId,jdbcType=VARCHAR},
+      </if>
+      <if test="priceunitqty != null">
+        priceunitqty = #{priceunitqty,jdbcType=NUMERIC},
+      </if>
+      <if test="taxcombination != null">
+        taxcombination = #{taxcombination,jdbcType=SMALLINT},
+      </if>
+      <if test="taxrate != null">
+        taxrate = #{taxrate,jdbcType=NUMERIC},
+      </if>
+      <if test="taxamount != null">
+        taxamount = #{taxamount,jdbcType=NUMERIC},
+      </if>
+      <if test="taxamountLc != null">
+        taxamount_lc = #{taxamountLc,jdbcType=NUMERIC},
+      </if>
+      <if test="pricecoefficient != null">
+        pricecoefficient = #{pricecoefficient,jdbcType=NUMERIC},
+      </if>
+      <if test="discountrate != null">
+        discountrate = #{discountrate,jdbcType=NUMERIC},
+      </if>
+      <if test="discount != null">
+        discount = #{discount,jdbcType=NUMERIC},
+      </if>
+      <if test="billcostapportion != null">
+        billcostapportion = #{billcostapportion,jdbcType=NUMERIC},
+      </if>
+      <if test="taxnetprice != null">
+        taxnetprice = #{taxnetprice,jdbcType=NUMERIC},
+      </if>
+      <if test="amount != null">
+        amount = #{amount,jdbcType=NUMERIC},
+      </if>
+      <if test="amountLc != null">
+        amount_lc = #{amountLc,jdbcType=NUMERIC},
+      </if>
+      <if test="allamount != null">
+        allamount = #{allamount,jdbcType=NUMERIC},
+      </if>
+      <if test="allamountLc != null">
+        allamount_lc = #{allamountLc,jdbcType=NUMERIC},
+      </if>
+      <if test="isfree != null">
+        isfree = #{isfree,jdbcType=VARCHAR},
+      </if>
+      <if test="baseunitprice != null">
+        baseunitprice = #{baseunitprice,jdbcType=NUMERIC},
+      </if>
+      <if test="invoicedqty != null">
+        invoicedqty = #{invoicedqty,jdbcType=NUMERIC},
+      </if>
+      <if test="invoicedstatus != null">
+        invoicedstatus = #{invoicedstatus,jdbcType=VARCHAR},
+      </if>
+      <if test="processfee != null">
+        processfee = #{processfee,jdbcType=NUMERIC},
+      </if>
+      <if test="materialcosts != null">
+        materialcosts = #{materialcosts,jdbcType=NUMERIC},
+      </if>
+      <if test="maxprice != null">
+        maxprice = #{maxprice,jdbcType=NUMERIC},
+      </if>
+      <if test="minprice != null">
+        minprice = #{minprice,jdbcType=NUMERIC},
+      </if>
+      <if test="costprice != null">
+        costprice = #{costprice,jdbcType=NUMERIC},
+      </if>
+      <if test="costpriceLc != null">
+        costprice_lc = #{costpriceLc,jdbcType=NUMERIC},
+      </if>
+      <if test="costamount != null">
+        costamount = #{costamount,jdbcType=NUMERIC},
+      </if>
+      <if test="costamountLc != null">
+        costamount_lc = #{costamountLc,jdbcType=NUMERIC},
+      </if>
+      <if test="sysprice != null">
+        sysprice = #{sysprice,jdbcType=NUMERIC},
+      </if>
+      <if test="upprice != null">
+        upprice = #{upprice,jdbcType=NUMERIC},
+      </if>
+      <if test="downprice != null">
+        downprice = #{downprice,jdbcType=NUMERIC},
+      </if>
+      <if test="invoicedjoinqty != null">
+        invoicedjoinqty = #{invoicedjoinqty,jdbcType=NUMERIC},
+      </if>
+      <if test="pricebaseqty != null">
+        pricebaseqty = #{pricebaseqty,jdbcType=NUMERIC},
+      </if>
+      <if test="setpriceUnitId != null">
+        setprice_unit_id = #{setpriceUnitId,jdbcType=SMALLINT},
+      </if>
+      <if test="remaininstockqty != null">
+        remaininstockqty = #{remaininstockqty,jdbcType=NUMERIC},
+      </if>
+      <if test="remaininstockbaseqty != null">
+        remaininstockbaseqty = #{remaininstockbaseqty,jdbcType=NUMERIC},
+      </if>
+      <if test="remainInstockUnitId != null">
+        remain_instock_unit_id = #{remainInstockUnitId,jdbcType=VARCHAR},
+      </if>
+      <if test="apnotjoinqty != null">
+        apnotjoinqty = #{apnotjoinqty,jdbcType=NUMERIC},
+      </if>
+      <if test="apjoinamount != null">
+        apjoinamount = #{apjoinamount,jdbcType=NUMERIC},
+      </if>
+      <if test="createdate != null">
+        createdate = #{createdate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="modifydate != null">
+        modifydate = #{modifydate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="latelypulldate != null">
+        latelypulldate = #{latelypulldate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="shopId != null">
+        shop_id = #{shopId,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+      and entryid = #{entryid,jdbcType=VARCHAR}
+      and instock_id = #{instockId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.njwd.entity.reportdata.ScmInstockEntry">
+    <!--@mbg.generated-->
+    update scm_instock_entry
+    set material_id = #{materialId,jdbcType=VARCHAR},
+      unit_id = #{unitId,jdbcType=VARCHAR},
+      mustqty = #{mustqty,jdbcType=NUMERIC},
+      realqty = #{realqty,jdbcType=NUMERIC},
+      stock_id = #{stockId,jdbcType=VARCHAR},
+      stockstatusid = #{stockstatusid,jdbcType=SMALLINT},
+      base_unit_id = #{baseUnitId,jdbcType=VARCHAR},
+      baseunitqty = #{baseunitqty,jdbcType=NUMERIC},
+      grossweight = #{grossweight,jdbcType=NUMERIC},
+      netweight = #{netweight,jdbcType=NUMERIC},
+      poorderno = #{poorderno,jdbcType=VARCHAR},
+      contractno = #{contractno,jdbcType=VARCHAR},
+      receive_stock_id = #{receiveStockId,jdbcType=VARCHAR},
+      baseprice = #{baseprice,jdbcType=NUMERIC},
+      baseapjoinqty = #{baseapjoinqty,jdbcType=NUMERIC},
+      price = #{price,jdbcType=NUMERIC},
+      taxprice = #{taxprice,jdbcType=NUMERIC},
+      price_unit_id = #{priceUnitId,jdbcType=VARCHAR},
+      priceunitqty = #{priceunitqty,jdbcType=NUMERIC},
+      taxcombination = #{taxcombination,jdbcType=SMALLINT},
+      taxrate = #{taxrate,jdbcType=NUMERIC},
+      taxamount = #{taxamount,jdbcType=NUMERIC},
+      taxamount_lc = #{taxamountLc,jdbcType=NUMERIC},
+      pricecoefficient = #{pricecoefficient,jdbcType=NUMERIC},
+      discountrate = #{discountrate,jdbcType=NUMERIC},
+      discount = #{discount,jdbcType=NUMERIC},
+      billcostapportion = #{billcostapportion,jdbcType=NUMERIC},
+      taxnetprice = #{taxnetprice,jdbcType=NUMERIC},
+      amount = #{amount,jdbcType=NUMERIC},
+      amount_lc = #{amountLc,jdbcType=NUMERIC},
+      allamount = #{allamount,jdbcType=NUMERIC},
+      allamount_lc = #{allamountLc,jdbcType=NUMERIC},
+      isfree = #{isfree,jdbcType=VARCHAR},
+      baseunitprice = #{baseunitprice,jdbcType=NUMERIC},
+      invoicedqty = #{invoicedqty,jdbcType=NUMERIC},
+      invoicedstatus = #{invoicedstatus,jdbcType=VARCHAR},
+      processfee = #{processfee,jdbcType=NUMERIC},
+      materialcosts = #{materialcosts,jdbcType=NUMERIC},
+      maxprice = #{maxprice,jdbcType=NUMERIC},
+      minprice = #{minprice,jdbcType=NUMERIC},
+      costprice = #{costprice,jdbcType=NUMERIC},
+      costprice_lc = #{costpriceLc,jdbcType=NUMERIC},
+      costamount = #{costamount,jdbcType=NUMERIC},
+      costamount_lc = #{costamountLc,jdbcType=NUMERIC},
+      sysprice = #{sysprice,jdbcType=NUMERIC},
+      upprice = #{upprice,jdbcType=NUMERIC},
+      downprice = #{downprice,jdbcType=NUMERIC},
+      invoicedjoinqty = #{invoicedjoinqty,jdbcType=NUMERIC},
+      pricebaseqty = #{pricebaseqty,jdbcType=NUMERIC},
+      setprice_unit_id = #{setpriceUnitId,jdbcType=SMALLINT},
+      remaininstockqty = #{remaininstockqty,jdbcType=NUMERIC},
+      remaininstockbaseqty = #{remaininstockbaseqty,jdbcType=NUMERIC},
+      remain_instock_unit_id = #{remainInstockUnitId,jdbcType=VARCHAR},
+      apnotjoinqty = #{apnotjoinqty,jdbcType=NUMERIC},
+      apjoinamount = #{apjoinamount,jdbcType=NUMERIC},
+      createdate = #{createdate,jdbcType=TIMESTAMP},
+      modifydate = #{modifydate,jdbcType=TIMESTAMP},
+      latelypulldate = #{latelypulldate,jdbcType=TIMESTAMP},
+      shop_id = #{shopId,jdbcType=VARCHAR}
+    where app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+      and entryid = #{entryid,jdbcType=VARCHAR}
+      and instock_id = #{instockId,jdbcType=VARCHAR}
+  </update>
+</mapper>

@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportdata.mapper.CrmCardTypeMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.CrmCardType">
+    <!--@mbg.generated-->
+    <!--@Table crm_card_type-->
+    <id column="card_grade_id" jdbcType="VARCHAR" property="cardGradeId" />
+    <id column="ente_id" jdbcType="VARCHAR" property="enteId" />
+    <id column="app_id" jdbcType="VARCHAR" property="appId" />
+    <result column="card_grade_name" jdbcType="VARCHAR" property="cardGradeName" />
+    <result column="once_money" jdbcType="NUMERIC" property="onceMoney" />
+    <result column="card_fee" jdbcType="NUMERIC" property="cardFee" />
+    <result column="largess_money" jdbcType="NUMERIC" property="largessMoney" />
+    <result column="is_discount" jdbcType="INTEGER" property="isDiscount" />
+    <result column="discount" jdbcType="INTEGER" property="discount" />
+    <result column="shop_id" jdbcType="VARCHAR" property="shopId" />
+    <result column="swipe_confirm" jdbcType="VARCHAR" property="swipeConfirm" />
+    <result column="enter_confirm" jdbcType="VARCHAR" property="enterConfirm" />
+    <result column="commission_type" jdbcType="INTEGER" property="commissionType" />
+    <result column="commission_money" jdbcType="NUMERIC" property="commissionMoney" />
+    <result column="commission_percent" jdbcType="NUMERIC" property="commissionPercent" />
+    <result column="is_commission" jdbcType="INTEGER" property="isCommission" />
+    <result column="consume_largess_limit_num" jdbcType="INTEGER" property="consumeLargessLimitNum" />
+    <result column="consume_largess_max_money" jdbcType="NUMERIC" property="consumeLargessMaxMoney" />
+    <result column="consume_largess_money_percent" jdbcType="NUMERIC" property="consumeLargessMoneyPercent" />
+    <result column="consume_largess_effective_date" jdbcType="INTEGER" property="consumeLargessEffectiveDate" />
+    <result column="consume_largess_is_immediately" jdbcType="INTEGER" property="consumeLargessIsImmediately" />
+    <result column="market_largess_limit_num" jdbcType="INTEGER" property="marketLargessLimitNum" />
+    <result column="market_largess_max_money" jdbcType="NUMERIC" property="marketLargessMaxMoney" />
+    <result column="market_largess_money_percent" jdbcType="NUMERIC" property="marketLargessMoneyPercent" />
+    <result column="market_largess_effective_date" jdbcType="INTEGER" property="marketLargessEffectiveDate" />
+    <result column="market_largess_is_immediately" jdbcType="INTEGER" property="marketLargessIsImmediately" />
+    <result column="is_exchange_money" jdbcType="INTEGER" property="isExchangeMoney" />
+    <result column="consume_reach_money" jdbcType="NUMERIC" property="consumeReachMoney" />
+    <result column="market_reach_money" jdbcType="NUMERIC" property="marketReachMoney" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    card_grade_id, ente_id, app_id, card_grade_name, once_money, card_fee, largess_money, 
+    is_discount, discount, shop_id, swipe_confirm, enter_confirm, commission_type, commission_money, 
+    commission_percent, is_commission, consume_largess_limit_num, consume_largess_max_money, 
+    consume_largess_money_percent, consume_largess_effective_date, consume_largess_is_immediately, 
+    market_largess_limit_num, market_largess_max_money, market_largess_money_percent, 
+    market_largess_effective_date, market_largess_is_immediately, is_exchange_money, 
+    consume_reach_money, market_reach_money
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    <!--@mbg.generated-->
+    select 
+    <include refid="Base_Column_List" />
+    from crm_card_type
+    where card_grade_id = #{cardGradeId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    <!--@mbg.generated-->
+    delete from crm_card_type
+    where card_grade_id = #{cardGradeId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.njwd.entity.reportdata.CrmCardType">
+    <!--@mbg.generated-->
+    insert into crm_card_type (card_grade_id, ente_id, app_id, 
+      card_grade_name, once_money, card_fee, 
+      largess_money, is_discount, discount, 
+      shop_id, swipe_confirm, enter_confirm, 
+      commission_type, commission_money, commission_percent, 
+      is_commission, consume_largess_limit_num, consume_largess_max_money, 
+      consume_largess_money_percent, consume_largess_effective_date, 
+      consume_largess_is_immediately, market_largess_limit_num, 
+      market_largess_max_money, market_largess_money_percent, 
+      market_largess_effective_date, market_largess_is_immediately, 
+      is_exchange_money, consume_reach_money, market_reach_money
+      )
+    values (#{cardGradeId,jdbcType=VARCHAR}, #{enteId,jdbcType=VARCHAR}, #{appId,jdbcType=VARCHAR}, 
+      #{cardGradeName,jdbcType=VARCHAR}, #{onceMoney,jdbcType=NUMERIC}, #{cardFee,jdbcType=NUMERIC}, 
+      #{largessMoney,jdbcType=NUMERIC}, #{isDiscount,jdbcType=INTEGER}, #{discount,jdbcType=INTEGER}, 
+      #{shopId,jdbcType=VARCHAR}, #{swipeConfirm,jdbcType=VARCHAR}, #{enterConfirm,jdbcType=VARCHAR}, 
+      #{commissionType,jdbcType=INTEGER}, #{commissionMoney,jdbcType=NUMERIC}, #{commissionPercent,jdbcType=NUMERIC}, 
+      #{isCommission,jdbcType=INTEGER}, #{consumeLargessLimitNum,jdbcType=INTEGER}, #{consumeLargessMaxMoney,jdbcType=NUMERIC}, 
+      #{consumeLargessMoneyPercent,jdbcType=NUMERIC}, #{consumeLargessEffectiveDate,jdbcType=INTEGER}, 
+      #{consumeLargessIsImmediately,jdbcType=INTEGER}, #{marketLargessLimitNum,jdbcType=INTEGER}, 
+      #{marketLargessMaxMoney,jdbcType=NUMERIC}, #{marketLargessMoneyPercent,jdbcType=NUMERIC}, 
+      #{marketLargessEffectiveDate,jdbcType=INTEGER}, #{marketLargessIsImmediately,jdbcType=INTEGER}, 
+      #{isExchangeMoney,jdbcType=INTEGER}, #{consumeReachMoney,jdbcType=NUMERIC}, #{marketReachMoney,jdbcType=NUMERIC}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.njwd.entity.reportdata.CrmCardType">
+    <!--@mbg.generated-->
+    insert into crm_card_type
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="cardGradeId != null">
+        card_grade_id,
+      </if>
+      <if test="enteId != null">
+        ente_id,
+      </if>
+      <if test="appId != null">
+        app_id,
+      </if>
+      <if test="cardGradeName != null">
+        card_grade_name,
+      </if>
+      <if test="onceMoney != null">
+        once_money,
+      </if>
+      <if test="cardFee != null">
+        card_fee,
+      </if>
+      <if test="largessMoney != null">
+        largess_money,
+      </if>
+      <if test="isDiscount != null">
+        is_discount,
+      </if>
+      <if test="discount != null">
+        discount,
+      </if>
+      <if test="shopId != null">
+        shop_id,
+      </if>
+      <if test="swipeConfirm != null">
+        swipe_confirm,
+      </if>
+      <if test="enterConfirm != null">
+        enter_confirm,
+      </if>
+      <if test="commissionType != null">
+        commission_type,
+      </if>
+      <if test="commissionMoney != null">
+        commission_money,
+      </if>
+      <if test="commissionPercent != null">
+        commission_percent,
+      </if>
+      <if test="isCommission != null">
+        is_commission,
+      </if>
+      <if test="consumeLargessLimitNum != null">
+        consume_largess_limit_num,
+      </if>
+      <if test="consumeLargessMaxMoney != null">
+        consume_largess_max_money,
+      </if>
+      <if test="consumeLargessMoneyPercent != null">
+        consume_largess_money_percent,
+      </if>
+      <if test="consumeLargessEffectiveDate != null">
+        consume_largess_effective_date,
+      </if>
+      <if test="consumeLargessIsImmediately != null">
+        consume_largess_is_immediately,
+      </if>
+      <if test="marketLargessLimitNum != null">
+        market_largess_limit_num,
+      </if>
+      <if test="marketLargessMaxMoney != null">
+        market_largess_max_money,
+      </if>
+      <if test="marketLargessMoneyPercent != null">
+        market_largess_money_percent,
+      </if>
+      <if test="marketLargessEffectiveDate != null">
+        market_largess_effective_date,
+      </if>
+      <if test="marketLargessIsImmediately != null">
+        market_largess_is_immediately,
+      </if>
+      <if test="isExchangeMoney != null">
+        is_exchange_money,
+      </if>
+      <if test="consumeReachMoney != null">
+        consume_reach_money,
+      </if>
+      <if test="marketReachMoney != null">
+        market_reach_money,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="cardGradeId != null">
+        #{cardGradeId,jdbcType=VARCHAR},
+      </if>
+      <if test="enteId != null">
+        #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="appId != null">
+        #{appId,jdbcType=VARCHAR},
+      </if>
+      <if test="cardGradeName != null">
+        #{cardGradeName,jdbcType=VARCHAR},
+      </if>
+      <if test="onceMoney != null">
+        #{onceMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="cardFee != null">
+        #{cardFee,jdbcType=NUMERIC},
+      </if>
+      <if test="largessMoney != null">
+        #{largessMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="isDiscount != null">
+        #{isDiscount,jdbcType=INTEGER},
+      </if>
+      <if test="discount != null">
+        #{discount,jdbcType=INTEGER},
+      </if>
+      <if test="shopId != null">
+        #{shopId,jdbcType=VARCHAR},
+      </if>
+      <if test="swipeConfirm != null">
+        #{swipeConfirm,jdbcType=VARCHAR},
+      </if>
+      <if test="enterConfirm != null">
+        #{enterConfirm,jdbcType=VARCHAR},
+      </if>
+      <if test="commissionType != null">
+        #{commissionType,jdbcType=INTEGER},
+      </if>
+      <if test="commissionMoney != null">
+        #{commissionMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="commissionPercent != null">
+        #{commissionPercent,jdbcType=NUMERIC},
+      </if>
+      <if test="isCommission != null">
+        #{isCommission,jdbcType=INTEGER},
+      </if>
+      <if test="consumeLargessLimitNum != null">
+        #{consumeLargessLimitNum,jdbcType=INTEGER},
+      </if>
+      <if test="consumeLargessMaxMoney != null">
+        #{consumeLargessMaxMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="consumeLargessMoneyPercent != null">
+        #{consumeLargessMoneyPercent,jdbcType=NUMERIC},
+      </if>
+      <if test="consumeLargessEffectiveDate != null">
+        #{consumeLargessEffectiveDate,jdbcType=INTEGER},
+      </if>
+      <if test="consumeLargessIsImmediately != null">
+        #{consumeLargessIsImmediately,jdbcType=INTEGER},
+      </if>
+      <if test="marketLargessLimitNum != null">
+        #{marketLargessLimitNum,jdbcType=INTEGER},
+      </if>
+      <if test="marketLargessMaxMoney != null">
+        #{marketLargessMaxMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="marketLargessMoneyPercent != null">
+        #{marketLargessMoneyPercent,jdbcType=NUMERIC},
+      </if>
+      <if test="marketLargessEffectiveDate != null">
+        #{marketLargessEffectiveDate,jdbcType=INTEGER},
+      </if>
+      <if test="marketLargessIsImmediately != null">
+        #{marketLargessIsImmediately,jdbcType=INTEGER},
+      </if>
+      <if test="isExchangeMoney != null">
+        #{isExchangeMoney,jdbcType=INTEGER},
+      </if>
+      <if test="consumeReachMoney != null">
+        #{consumeReachMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="marketReachMoney != null">
+        #{marketReachMoney,jdbcType=NUMERIC},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.reportdata.CrmCardType">
+    <!--@mbg.generated-->
+    update crm_card_type
+    <set>
+      <if test="cardGradeName != null">
+        card_grade_name = #{cardGradeName,jdbcType=VARCHAR},
+      </if>
+      <if test="onceMoney != null">
+        once_money = #{onceMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="cardFee != null">
+        card_fee = #{cardFee,jdbcType=NUMERIC},
+      </if>
+      <if test="largessMoney != null">
+        largess_money = #{largessMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="isDiscount != null">
+        is_discount = #{isDiscount,jdbcType=INTEGER},
+      </if>
+      <if test="discount != null">
+        discount = #{discount,jdbcType=INTEGER},
+      </if>
+      <if test="shopId != null">
+        shop_id = #{shopId,jdbcType=VARCHAR},
+      </if>
+      <if test="swipeConfirm != null">
+        swipe_confirm = #{swipeConfirm,jdbcType=VARCHAR},
+      </if>
+      <if test="enterConfirm != null">
+        enter_confirm = #{enterConfirm,jdbcType=VARCHAR},
+      </if>
+      <if test="commissionType != null">
+        commission_type = #{commissionType,jdbcType=INTEGER},
+      </if>
+      <if test="commissionMoney != null">
+        commission_money = #{commissionMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="commissionPercent != null">
+        commission_percent = #{commissionPercent,jdbcType=NUMERIC},
+      </if>
+      <if test="isCommission != null">
+        is_commission = #{isCommission,jdbcType=INTEGER},
+      </if>
+      <if test="consumeLargessLimitNum != null">
+        consume_largess_limit_num = #{consumeLargessLimitNum,jdbcType=INTEGER},
+      </if>
+      <if test="consumeLargessMaxMoney != null">
+        consume_largess_max_money = #{consumeLargessMaxMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="consumeLargessMoneyPercent != null">
+        consume_largess_money_percent = #{consumeLargessMoneyPercent,jdbcType=NUMERIC},
+      </if>
+      <if test="consumeLargessEffectiveDate != null">
+        consume_largess_effective_date = #{consumeLargessEffectiveDate,jdbcType=INTEGER},
+      </if>
+      <if test="consumeLargessIsImmediately != null">
+        consume_largess_is_immediately = #{consumeLargessIsImmediately,jdbcType=INTEGER},
+      </if>
+      <if test="marketLargessLimitNum != null">
+        market_largess_limit_num = #{marketLargessLimitNum,jdbcType=INTEGER},
+      </if>
+      <if test="marketLargessMaxMoney != null">
+        market_largess_max_money = #{marketLargessMaxMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="marketLargessMoneyPercent != null">
+        market_largess_money_percent = #{marketLargessMoneyPercent,jdbcType=NUMERIC},
+      </if>
+      <if test="marketLargessEffectiveDate != null">
+        market_largess_effective_date = #{marketLargessEffectiveDate,jdbcType=INTEGER},
+      </if>
+      <if test="marketLargessIsImmediately != null">
+        market_largess_is_immediately = #{marketLargessIsImmediately,jdbcType=INTEGER},
+      </if>
+      <if test="isExchangeMoney != null">
+        is_exchange_money = #{isExchangeMoney,jdbcType=INTEGER},
+      </if>
+      <if test="consumeReachMoney != null">
+        consume_reach_money = #{consumeReachMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="marketReachMoney != null">
+        market_reach_money = #{marketReachMoney,jdbcType=NUMERIC},
+      </if>
+    </set>
+    where card_grade_id = #{cardGradeId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.njwd.entity.reportdata.CrmCardType">
+    <!--@mbg.generated-->
+    update crm_card_type
+    set card_grade_name = #{cardGradeName,jdbcType=VARCHAR},
+      once_money = #{onceMoney,jdbcType=NUMERIC},
+      card_fee = #{cardFee,jdbcType=NUMERIC},
+      largess_money = #{largessMoney,jdbcType=NUMERIC},
+      is_discount = #{isDiscount,jdbcType=INTEGER},
+      discount = #{discount,jdbcType=INTEGER},
+      shop_id = #{shopId,jdbcType=VARCHAR},
+      swipe_confirm = #{swipeConfirm,jdbcType=VARCHAR},
+      enter_confirm = #{enterConfirm,jdbcType=VARCHAR},
+      commission_type = #{commissionType,jdbcType=INTEGER},
+      commission_money = #{commissionMoney,jdbcType=NUMERIC},
+      commission_percent = #{commissionPercent,jdbcType=NUMERIC},
+      is_commission = #{isCommission,jdbcType=INTEGER},
+      consume_largess_limit_num = #{consumeLargessLimitNum,jdbcType=INTEGER},
+      consume_largess_max_money = #{consumeLargessMaxMoney,jdbcType=NUMERIC},
+      consume_largess_money_percent = #{consumeLargessMoneyPercent,jdbcType=NUMERIC},
+      consume_largess_effective_date = #{consumeLargessEffectiveDate,jdbcType=INTEGER},
+      consume_largess_is_immediately = #{consumeLargessIsImmediately,jdbcType=INTEGER},
+      market_largess_limit_num = #{marketLargessLimitNum,jdbcType=INTEGER},
+      market_largess_max_money = #{marketLargessMaxMoney,jdbcType=NUMERIC},
+      market_largess_money_percent = #{marketLargessMoneyPercent,jdbcType=NUMERIC},
+      market_largess_effective_date = #{marketLargessEffectiveDate,jdbcType=INTEGER},
+      market_largess_is_immediately = #{marketLargessIsImmediately,jdbcType=INTEGER},
+      is_exchange_money = #{isExchangeMoney,jdbcType=INTEGER},
+      consume_reach_money = #{consumeReachMoney,jdbcType=NUMERIC},
+      market_reach_money = #{marketReachMoney,jdbcType=NUMERIC}
+    where card_grade_id = #{cardGradeId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+  </update>
+</mapper>

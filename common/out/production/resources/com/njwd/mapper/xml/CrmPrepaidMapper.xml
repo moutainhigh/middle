@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.mapper.CrmPrepaidMapper">
+
+
+    <!--新增-->
+    <insert id="addCrmCardPrepaid" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto" >
+        insert into crm_prepaid(
+        prepaid_id,card_id,card_no,money,prepaid_money,largess_money,market_largess_money,prepaid_time,third_shop_id,ente_id,app_id,third_creator_id,
+        pay_info,third_pay_type_id,third_transaction_type_id,is_invoice,remark,create_time,update_time
+        )values
+        <foreach collection="list" item="crmCardPrepaidDto" separator=",">
+            (
+            #{crmCardPrepaidDto.prepaidId}
+            ,#{crmCardPrepaidDto.cardId}
+            ,#{crmCardPrepaidDto.cardNo}
+            ,#{crmCardPrepaidDto.money}
+            ,#{crmCardPrepaidDto.prepaidMoney}
+            ,#{crmCardPrepaidDto.largessMoney}
+            ,#{crmCardPrepaidDto.marketLargessMoney}
+            ,#{crmCardPrepaidDto.prepaidTime}
+            ,#{crmCardPrepaidDto.thirdShopId}
+            ,#{crmCardPrepaidDto.enteId}
+            ,#{crmCardPrepaidDto.appId}
+            ,#{crmCardPrepaidDto.thirdCreatorId}
+            ,#{crmCardPrepaidDto.payInfo}
+            ,#{crmCardPrepaidDto.thirdPayTypeId}
+            ,#{crmCardPrepaidDto.thirdTransactionTypeId}
+            ,#{crmCardPrepaidDto.isInvoice}
+            ,#{crmCardPrepaidDto.remark}
+            ,#{crmCardPrepaidDto.createTime}
+            ,#{crmCardPrepaidDto.updateTime}
+            )
+        </foreach>
+    </insert>
+
+    <select id="findCrmCardPrepaidBatch" resultType="com.njwd.entity.kettlejob.vo.CrmPrepaidVo" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto">
+         select
+            prepaid_id,card_no,money,prepaid_money,largess_money,market_largess_money,prepaid_time,third_shop_id,ente_id,app_id,third_creator_id,
+            pay_info,third_pay_type_id,transaction_type_id,third_transaction_type_id,is_invoice,remark,create_time,update_time
+	     from
+	     crm_prepaid
+	     where
+          prepaid_id in
+          <foreach collection="crmCardPrepaidDto.prepaidIds" index="index" item="item" open="(" separator="," close=")">
+               #{item}
+          </foreach>
+          and app_id=#{crmCardPrepaidDto.appId}
+	      and ente_id=#{crmCardPrepaidDto.enteId}
+    </select>
+
+
+    <update id="updateCrmCardPrepaid" parameterType="java.util.List">
+        <foreach collection="list" item="crmCardPrepaidDto" index="index" separator=";">
+            update crm_prepaid
+            set
+            card_id=#{crmCardPrepaidDto.cardId}
+            ,card_no=#{crmCardPrepaidDto.cardNo}
+            ,money=#{crmCardPrepaidDto.money}
+            ,prepaid_money=#{crmCardPrepaidDto.prepaidMoney}
+            ,largess_money=#{crmCardPrepaidDto.largessMoney}
+            ,market_largess_money=#{crmCardPrepaidDto.marketLargessMoney}
+            ,prepaid_time=#{crmCardPrepaidDto.prepaidTime}
+            ,third_shop_id=#{crmCardPrepaidDto.thirdShopId}
+            ,creator_id=#{crmCardPrepaidDto.creatorId}
+            ,third_creator_id=#{crmCardPrepaidDto.thirdCreatorId}
+            ,pay_info=#{crmCardPrepaidDto.payInfo}
+            ,third_pay_type_id=#{crmCardPrepaidDto.thirdPayTypeId}
+            ,third_transaction_type_id=#{crmCardPrepaidDto.thirdTransactionTypeId}
+            ,is_invoice=#{crmCardPrepaidDto.isInvoice}
+            ,remark=#{crmCardPrepaidDto.remark}
+            ,create_time=#{crmCardPrepaidDto.createTime}
+            ,update_time=#{crmCardPrepaidDto.updateTime}
+            where
+            prepaid_id=#{crmCardPrepaidDto.prepaidId}
+            and app_id=#{crmCardPrepaidDto.appId}
+            and ente_id=#{crmCardPrepaidDto.enteId}
+        </foreach>
+    </update>
+
+    <select id="findPrepaidPayTypeBatch" resultType="com.njwd.entity.kettlejob.vo.CrmPrepaidPayTypeVo" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto">
+        select
+        prepaid_pay_type_id,prepaid_id,money,third_shop_id,ente_id,app_id,third_pay_type_id
+        from
+        crm_prepaid_pay_type
+        where
+        prepaid_id in
+        <foreach collection="crmCardPrepaidDto.prepaidIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and app_id=#{crmCardPrepaidDto.appId}
+        and ente_id=#{crmCardPrepaidDto.enteId}
+    </select>
+
+    <insert id="addPrepaidPayType" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidPayTypeDto" >
+        insert into crm_prepaid_pay_type(
+            prepaid_pay_type_id,prepaid_id,money,third_shop_id,ente_id,app_id,third_pay_type_id,prepaid_time,create_time,update_time
+        )values
+        <foreach collection="list" item="prepaidPayTypeDto" separator=",">
+            (
+            #{prepaidPayTypeDto.prepaidPayTypeId}
+            ,#{prepaidPayTypeDto.prepaidId}
+            ,#{prepaidPayTypeDto.money}
+            ,#{prepaidPayTypeDto.thirdShopId}
+            ,#{prepaidPayTypeDto.enteId}
+            ,#{prepaidPayTypeDto.appId}
+            ,#{prepaidPayTypeDto.thirdPayTypeId}
+            ,#{prepaidPayTypeDto.prepaidTime}
+            ,#{prepaidPayTypeDto.createTime}
+            ,#{prepaidPayTypeDto.updateTime}
+            )
+        </foreach>
+    </insert>
+    <update id="updatePrepaidPayType" parameterType="java.util.List">
+        <foreach collection="list" item="prepaidPayTypeDto" index="index" separator=";">
+            update crm_prepaid_pay_type
+            set
+            money=#{prepaidPayTypeDto.money}
+            ,third_shop_id=#{prepaidPayTypeDto.thirdShopId}
+            ,third_pay_type_id=#{prepaidPayTypeDto.thirdPayTypeId}
+            , prepaid_time = #{prepaidPayTypeDto.prepaidTime}
+            ,update_time=#{prepaidPayTypeDto.updateTime}
+            where prepaid_pay_type_id=#{prepaidPayTypeDto.prepaidPayTypeId}
+        </foreach>
+    </update>
+
+    <update id="updateCleanPrepaid" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto">
+        UPDATE crm_prepaid p
+        LEFT JOIN base_shop_rela s ON p.third_shop_id = s.third_shop_id and p.app_id=s.app_id and p.ente_id=s.ente_id
+        LEFT JOIN base_transaction_type_rela t ON  p.app_id=t.app_id and p.third_transaction_type_id=t.third_transaction_type_id
+        SET p.shop_id = s.shop_id,p.transaction_type_id = t.transaction_type_id
+        where ((p.shop_id is null or p.shop_id='' or p.shop_id='-1') or (p.transaction_type_id is null or p.transaction_type_id='' or p.transaction_type_id='-1'))
+        and p.prepaid_time>=#{prepaidDto.prepaidTime}
+        and  p.app_id = #{prepaidDto.appId}
+        and p.ente_id =#{prepaidDto.enteId}
+    </update>
+
+    <update id="updateCleanPrepaidPayType" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto">
+        UPDATE crm_prepaid_pay_type p
+        LEFT JOIN base_shop_rela s ON p.third_shop_id = s.third_shop_id and p.app_id=s.app_id and p.ente_id=s.ente_id
+        LEFT JOIN base_pay_type_rela t ON p.app_id=t.app_id and  p.ente_id=t.ente_id and p.third_pay_type_id=t.third_pay_type_id
+        SET p.pay_type_id = t.pay_type_id ,p.shop_id = s.shop_id
+        where ((p.shop_id is null or p.shop_id='' or p.shop_id='-1')  or (p.pay_type_id is null or p.pay_type_id='' or p.pay_type_id='-1'))
+        and p.prepaid_time>=#{prepaidDto.prepaidTime}
+        and  p.app_id = #{prepaidDto.appId} and p.ente_id =#{prepaidDto.enteId}
+    </update>
+
+    <select id="findUnCleanPrepaidNum" resultType="Integer" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto">
+        select count(1) from crm_prepaid c
+        where (c.shop_id is null or c.shop_id='')  and (c.transaction_type_id is null or c.transaction_type_id='')
+        and  app_id=#{prepaidDto.appId}
+        and ente_id=#{prepaidDto.enteId}
+    </select>
+
+    <select id="findUnCleanPrepaidPayType" resultType="Integer" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto">
+        select count(1) from crm_prepaid_pay_type c
+        where (c.shop_id is null or c.shop_id='') and (c.pay_type_id is null or c.pay_type_id='')
+        and  app_id=#{prepaidDto.appId}
+        and ente_id=#{prepaidDto.enteId}
+    </select>
+
+    <select id="findUnCleanCode" resultType="map" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto">
+        select DISTINCT
+        (case when (c.shop_id is null or c.shop_id='' or c.shop_id ='-1') then 'shop' else '' end) shop,
+        (case when (c.transaction_type_id is null or c.transaction_type_id='' or c.transaction_type_id='-1') then 'transactionType' else '' end) transactionType
+        from crm_prepaid c
+        where  c.prepaid_time>=#{prepaidDto.prepaidTime}
+        and ((c.shop_id is null or c.shop_id='' or c.shop_id ='-1')
+        or (c.transaction_type_id is null or c.transaction_type_id='' or c.transaction_type_id='-1'))
+        and	app_id=#{prepaidDto.appId}
+        and ente_id=#{prepaidDto.enteId} group by c.shop_id,c.transaction_type_id
+    </select>
+
+    <select id="findUnCleanPayTypeCode" resultType="map" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto">
+        select (case when (c.pay_type_id is null or c.pay_type_id='' or c.pay_type_id ='-1') then 'payType' else '' end) payType
+        from crm_prepaid_pay_type c
+        where  c.prepaid_time>=#{prepaidDto.prepaidTime}
+        and (c.pay_type_id is null or c.pay_type_id='' or c.pay_type_id ='-1')
+        and	app_id=#{prepaidDto.appId}
+        and ente_id=#{prepaidDto.enteId} limit 1
+    </select>
+
+    <select id="findMaxPrepaidTime" resultType="string" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto">
+        select prepaid_time from crm_prepaid where app_id = #{prepaidDto.appId} and ente_id=#{prepaidDto.enteId} order by prepaid_time desc limit 1
+    </select>
+
+</mapper>

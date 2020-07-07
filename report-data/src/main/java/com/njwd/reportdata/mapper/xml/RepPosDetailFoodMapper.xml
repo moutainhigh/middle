@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportdata.mapper.RepPosDetailFoodMapper">
+    <select id="findRepPosDetailFoodByCondition" resultType="RepPosDetailFoodVo" parameterType="RepPosDetailFoodDto">
+        SELECT
+            f.food_style_id,
+            f.FOOD_STYLE_NO,
+            f.food_style_name,
+            sum(f.food_amount) AS foodAllPrice
+        FROM
+            rep_pos_detail_food f
+        WHERE
+         f.ente_id = #{enteId}
+        AND f.account_date >= #{beginDate}
+        AND f.account_date &lt;= #{endDate}
+        AND f.is_package = '0'
+        <if test="shopIdList !=null and shopIdList.size()>0">
+            AND f.shop_id IN
+            <foreach collection="shopIdList" item="shopItem" separator="," open="(" close=")">
+                #{shopItem}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size()>0">
+            AND f.shop_type_id IN
+            <foreach collection="shopTypeIdList" item="shopTypeIdItem" close=")" open="(" separator=",">
+                #{shopTypeIdItem}
+            </foreach>
+        </if>
+        GROUP BY f.food_style_id,f.FOOD_STYLE_NO,f.food_style_name
+    </select>
+
+    <select id="findFoodAllPrice" resultType="RepPosDetailFoodVo" parameterType="RepPosDetailFoodDto">
+        SELECT
+            sum(f.food_amount) AS foodAllPrice
+        FROM
+            rep_pos_detail_food f
+        WHERE
+            f.ente_id = #{enteId}
+        AND f.account_date >= #{beginDate}
+        AND f.account_date &lt;= #{endDate}
+        AND f.is_package = '0'
+        <if test="shopIdList !=null and shopIdList.size()>0">
+            AND f.shop_id IN
+            <foreach collection="shopIdList" item="shopItem" separator="," open="(" close=")">
+                #{shopItem}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size()>0">
+            AND f.shop_type_id IN
+            <foreach collection="shopTypeIdList" item="shopTypeIdItem" close=")" open="(" separator=",">
+                #{shopTypeIdItem}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="findGiveFoodPrice" resultType="RepPosDetailFoodVo" parameterType="RepPosDetailFoodDto">
+        SELECT
+        sum(f.grive_amount) AS giveFoodPrice
+        FROM
+        rep_pos_detail_food f
+        WHERE
+        f.ente_id = #{enteId}
+        AND f.account_date >= #{beginDate}
+        AND f.account_date &lt;= #{endDate}
+        <if test="shopIdList !=null and shopIdList.size()>0">
+            AND f.shop_id IN
+            <foreach collection="shopIdList" item="shopItem" separator="," open="(" close=")">
+                #{shopItem}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size()>0">
+            AND f.shop_type_id IN
+            <foreach collection="shopTypeIdList" item="shopTypeIdItem" close=")" open="(" separator=",">
+                #{shopTypeIdItem}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="findRepPosDetailFoodList" resultType="RepPosDetailFoodVo" parameterType="RepPosDetailFoodDto">
+        SELECT
+        f.food_style_id,
+        t.FOOD_STYLE_NO,
+        f.food_style_name,
+        f.shop_id,
+        sum(f.food_amount) AS foodAllPrice
+        FROM
+        rep_pos_detail_food f,base_food_style t
+        WHERE
+        f.FOOD_STYLE_ID = t.FOOD_STYLE_ID
+        and f.ente_id = #{enteId}
+        AND f.account_date >= #{beginDate}
+        AND f.account_date &lt;= #{endDate}
+        <if test="shopIdList !=null and shopIdList.size()>0">
+            AND f.shop_id IN
+            <foreach collection="shopIdList" item="shopItem" separator="," open="(" close=")">
+                #{shopItem}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size()>0">
+            AND f.shop_type_id IN
+            <foreach collection="shopTypeIdList" item="shopTypeIdItem" close=")" open="(" separator=",">
+                #{shopTypeIdItem}
+            </foreach>
+        </if>
+        GROUP BY f.shop_id,f.food_style_id,t.FOOD_STYLE_NO,f.food_style_name
+    </select>
+</mapper>

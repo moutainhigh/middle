@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.schedule.mapper.CommonMapper" >
+
+  <select id="checkExist" resultType="String" parameterType="com.njwd.entity.schedule.dto.TableDto" >
+    select
+    ${idName}
+    from ${tableName}
+    where ${columnName}=#{value}
+  </select>
+
+</mapper>

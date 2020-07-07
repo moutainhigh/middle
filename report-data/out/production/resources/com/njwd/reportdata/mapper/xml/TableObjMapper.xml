@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.TableObjMapper">
+
+    <resultMap id="TableObjMap" type="com.njwd.entity.admin.vo.TableObjVo">
+        <result column="table_name" property="tableName"/>
+        <result column="table_desc" property="tableDesc"/>
+        <collection property="tableAttributeList" ofType="com.njwd.entity.admin.vo.TableAttributeVo">
+            <result column="column_name" property="columnName"/>
+            <result column="column_desc" property="columnDesc"/>
+            <result column="column_alias" property="columnAlias"/>
+            <result column="join_table" property="joinTable"/>
+            <result column="join_col_id" property="joinColId"/>
+            <result column="join_col_name" property="joinColName"/>
+            <result column="display_order" property="displayOrder"/>
+            <result column="display_flag" property="displayFlag"/>
+            <result column="data_type" property="dataType"/>
+        </collection>
+    </resultMap>
+
+    <!-- 查询主数据展示模块 -->
+    <select id="findTableObj" resultMap="TableObjMap">
+        SELECT o."table_name", o.table_desc, ta."column_name", ta.column_desc, ta.column_alias, ta.display_order,
+               ta.join_table,ta.join_col_id,ta.join_col_name,ta.display_flag,'8' data_type
+        FROM wd_table_obj o
+        LEFT JOIN wd_table_attribute ta ON o."table_name" = ta."table_name"
+        WHERE o.data_type = #{param.dataType}
+          AND O.display_flag = '1'
+          AND ta.display_flag = '1'
+        ORDER BY ta.display_order
+    </select>
+
+    <!-- 查询主数据展示模块列表 -->
+    <select id="findTableObjList" resultType="com.njwd.entity.admin.vo.TableObjVo">
+        SELECT obj.table_desc value_name,obj.data_type
+        FROM wd_table_obj obj
+        <where>
+            AND obj.display_flag = '1'
+            <if test="param.query != null and param.query != ''">
+                AND obj.table_desc LIKE CONCAT('%',#{param.query},'%')
+            </if>
+        </where>
+        ORDER BY obj.order_id
+    </select>
+
+    <!-- 查询主数据展示模块内容列表 -->
+    <select id="findTableObjContentList" resultType="java.util.HashMap">
+        select
+        <foreach collection="param.tableAttributeList" item="item" separator=",">
+            <!-- 需要展示的列 -->
+            <if test="item.joinTable == null">
+                <if test="item.columnName == 'status'">
+                    CASE WHEN ${param.tableName}.${item.columnName} = 0 THEN '正常' ELSE '闭店' END "status"
+                </if>
+                <if test="item.columnName != 'status'">
+                    ${param.tableName}.${item.columnName} "${item.columnAlias}"
+                </if>
+            </if>
+            <!-- 关联的列 -->
+            <if test="item.joinTable != null">
+                ${item.joinTable}.${item.joinColName} "${item.columnAlias}"
+            </if>
+        </foreach>
+        from ${param.tableName} ${param.tableName}
+        <!-- 关联查询 -->
+        <foreach collection="param.tableAttributeList" item="item">
+            <!-- 关联的列 -->
+            <if test="item.joinTable != null">
+                left join ${item.joinTable} ${item.joinTable} on ${param.tableName}.${item.columnName}||'' = ${item.joinTable}.${item.joinColId}||''
+            </if>
+        </foreach>
+        <where>
+            and ${param.tableName}.ente_id = #{param.enteId}
+            <if test="param.query != null and param.query != ''">
+            and (
+                <foreach collection="param.tableAttributeList" index="index" item="item" separator="or">
+                    <!-- 如果是需要查询的列 -->
+                    <if test="item.columnName != 'status'">
+                        <if test="item.joinColName != null">
+                            ${item.joinTable}.${item.joinColName} like CONCAT('%',#{param.query},'%')
+                        </if>
+                        <if test="item.joinColName == null">
+                            ${param.tableName}.${item.columnName} like CONCAT('%',#{param.query},'%')
+                        </if>
+                    </if>
+                    <if test="item.columnName == 'status'">
+                        <if test="param.query == '正常'">
+                            ${param.tableName}.${item.columnName} = 0
+                        </if>
+                        <if test="param.query == '关店'">
+                            ${param.tableName}.${item.columnName} = 1
+                        </if>
+                    </if>
+                </foreach>
+                )
+            </if>
+        </where>
+        order by ${param.tableName}.${param.tableAttributeList[0].columnName}
+    </select>
+
+</mapper>

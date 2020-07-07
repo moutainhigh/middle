@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.InsBeerFeeMapper" >
+
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.vo.InsBeerFeeVo">
+  </resultMap>
+
+  <sql id="BaseColumnList">
+    beer_fee_id,
+    ente_id,
+    brand_id,
+    brand_name,
+    region_id,
+    region_name,
+    shop_id,
+    shop_name,
+    supplier_id,
+    supplier_name,
+    fee,
+    begin_date,
+    end_date,
+    status,
+    update_time
+  </sql>
+
+  <!--批量新增-->
+  <insert id="addFeeBatch" parameterType="com.njwd.entity.reportdata.dto.InsBeerFeeDto">
+    insert into ins_beer_fee(
+    beer_fee_id,
+    ente_id,
+    brand_id,
+    brand_name,
+    region_id,
+    region_name,
+    shop_id,
+    shop_name,
+    supplier_id,
+    supplier_name,
+    fee,
+    begin_date,
+    end_date
+    )values
+    <foreach collection="list" item="insBeerFeeDto" separator=",">
+      (
+      #{insBeerFeeDto.beerFeeId},
+      #{insBeerFeeDto.enteId},
+      #{insBeerFeeDto.brandId},
+      #{insBeerFeeDto.brandName},
+      #{insBeerFeeDto.regionId},
+      #{insBeerFeeDto.regionName},
+      #{insBeerFeeDto.shopId},
+      #{insBeerFeeDto.shopName},
+      #{insBeerFeeDto.supplierId},
+      #{insBeerFeeDto.supplierName},
+      #{insBeerFeeDto.fee},
+      #{insBeerFeeDto.beginDate},
+      #{insBeerFeeDto.endDate}
+      )
+    </foreach>
+  </insert>
+
+  <update id="updateFeeById" parameterType="com.njwd.entity.reportdata.dto.InsBeerFeeDto" >
+    UPDATE ins_beer_fee
+    SET
+    beer_fee_id=#{insBeerFeeDto.beerFeeId}
+    <if test="insBeerFeeDto.fee!=null">
+      ,fee = #{insBeerFeeDto.fee}
+    </if>
+    <if test="insBeerFeeDto.beginDate!=null">
+      ,begin_date = #{insBeerFeeDto.beginDate}
+    </if>
+    <if test="insBeerFeeDto.endDate!=null">
+      ,end_date = #{insBeerFeeDto.endDate}
+    </if>
+    WHERE beer_fee_id = #{insBeerFeeDto.beerFeeId}
+  </update>
+
+  <!--批量-->
+  <update id="updateFeeBatch" parameterType="com.njwd.entity.reportdata.dto.InsBeerFeeDto" >
+        UPDATE ins_beer_fee
+        SET
+           status = #{insBeerFeeDto.status}
+        WHERE beer_fee_id in
+        <foreach collection="insBeerFeeDto.idList" item="beerFeeId" open="(" separator="," close=")">
+           #{beerFeeId}
+        </foreach>
+    </update>
+
+  <select id="findFeeList" resultType="com.njwd.entity.reportdata.vo.InsBeerFeeVo" parameterType="com.njwd.entity.reportdata.dto.InsBeerFeeDto">
+    select
+    beer_fee_id,
+    ente_id,
+    brand_id,
+    brand_name,
+    region_id,
+    region_name,
+    shop_id,
+    shop_name,
+    supplier_id,
+    supplier_name,
+    fee,
+    begin_date,
+    end_date,
+    status,
+    update_time
+     FROM ins_beer_fee
+     WHERE
+    ente_id= #{insBeerFeeDto.enteId}
+     <if test="insBeerFeeDto.idList!=null">
+      and beer_fee_id in
+       <foreach collection="insBeerFeeDto.idList" item="beerFeeId" open="(" separator="," close=")">
+         #{beerFeeId}
+       </foreach>
+     </if>
+    <if test="insBeerFeeDto.shopId!=null">
+      and shop_id=#{insBeerFeeDto.shopId}
+    </if>
+    <if test="insBeerFeeDto.brandId!=null">
+      and brand_id=#{insBeerFeeDto.brandId}
+    </if>
+    <if test="insBeerFeeDto.regionId!=null">
+      and region_id=#{insBeerFeeDto.regionId}
+    </if>
+    <if test="insBeerFeeDto.status!=null">
+      and status=#{insBeerFeeDto.status}
+    </if>
+  </select>
+
+  <select id="findFeeById" resultType="com.njwd.entity.reportdata.vo.InsBeerFeeVo" parameterType="com.njwd.entity.reportdata.dto.InsBeerFeeDto">
+     select
+    beer_fee_id,
+    ente_id,
+    brand_id,
+    brand_name,
+    region_id,
+    region_name,
+    shop_id,
+    shop_name,
+    supplier_id,
+    supplier_name,
+    fee,
+    begin_date,
+    end_date,
+    status,
+    update_time
+     FROM ins_beer_fee
+     WHERE beer_fee_id = #{insBeerFeeDto.beerFeeId}
+  </select>
+
+
+</mapper>

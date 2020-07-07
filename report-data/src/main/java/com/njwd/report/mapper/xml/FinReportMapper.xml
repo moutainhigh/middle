@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.report.mapper.FinReportMapper">
+
+
+    <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.vo.fin.FinReportVo">
+    </resultMap>
+
+    <resultMap id="VoucherResultMap" type="com.njwd.entity.reportdata.vo.fin.FinVoucherVo">
+    </resultMap>
+
+    <sql id="BaseColumnList">
+        t.ente_id,t.brand_id,t.region_id,t.shop_id,
+        t.account_subject_id,t.account_subject_name,t.account_subject_code
+    </sql>
+
+    <!--
+    更新科目发生额数据,更新维度为:企业id,日期,门店,科目id,发生额
+    当报表中存在上诉维度数据则更新,否则新增
+    -->
+    <update id="refreshSubjectData">
+        MERGE INTO FIN_REPORT t1 USING
+        (
+        select d.ENTE_ID,
+        v.VOUCHER_DATE as TRANS_TIME ,
+        V.VOUCHER_DAY as TRANS_DAY,
+        c.BRAND_ID,c.REGION_ID,c.SHOP_ID,
+        d.ACCOUNT_SUBJECT_ID,
+        a.ACCOUNT_SUBJECT_NAME,
+        a.ACCOUNT_SUBJECT_CODE,
+        sum(d.AMOUNT) as AMOUNT1
+        from FIN_VOUCHER v
+        left join FIN_VOUCHER_DETAIL d
+        on v.VOUCHER_ID = d.VOUCHER_ID
+        left join BASE_COMPANY c
+        on c.COMPANY_ID = v.COMPANY_ID
+        left join BASE_ACCOUNT_SUBJECT a
+        on a.ACCOUNT_SUBJECT_ID = d.ACCOUNT_SUBJECT_ID
+
+        where
+        v.VOUCHER_DAY &gt;=#{param1.transDay,jdbcType=VARCHAR}
+        and v.ENTE_ID = #{simpleDto.enteId,jdbcType=VARCHAR}
+        <if test="subList != null and subList.size()>0">
+            AND
+            <foreach collection="subList" index="index" item="item" open="(" separator=" OR " close=")">
+                a.ACCOUNT_SUBJECT_CODE LIKE CONCAT(#{item}, '%')
+            </foreach>
+        </if>
+        and v.IS_POST=1
+
+        group by d.ENTE_ID,
+        v.VOUCHER_DATE ,
+        V.VOUCHER_DAY,
+        c.BRAND_ID,c.REGION_ID,c.SHOP_ID,
+        d.ACCOUNT_SUBJECT_ID,
+        a.ACCOUNT_SUBJECT_NAME,
+        a.ACCOUNT_SUBJECT_CODE
+
+        ) t2
+        ON (
+        t1.ENTE_ID = t2.ENTE_ID
+        and t1.TRANS_TIME = t2.TRANS_TIME
+        and t1.TRANS_DAY = t2.TRANS_DAY
+        and t1.SHOP_ID = t2.SHOP_ID
+        and t1.ACCOUNT_SUBJECT_ID = t2.ACCOUNT_SUBJECT_ID
+        )
+
+        WHEN MATCHED THEN
+
+        UPDATE SET t1.AMOUNT1 = t2.AMOUNT1
+
+        WHEN NOT MATCHED THEN
+
+        INSERT(t1.ENTE_ID,t1.TRANS_TIME,t1.TRANS_DAY,t1.BRAND_ID,t1.REGION_ID,t1.SHOP_ID,
+        t1.ACCOUNT_SUBJECT_ID,t1.ACCOUNT_SUBJECT_NAME,t1.ACCOUNT_SUBJECT_CODE,t1.AMOUNT1)
+        VALUES(t2.ENTE_ID,t2.TRANS_TIME,t2.TRANS_DAY,t2.BRAND_ID,t2.REGION_ID,t2.SHOP_ID,
+        t2.ACCOUNT_SUBJECT_ID,t2.ACCOUNT_SUBJECT_NAME,t2.ACCOUNT_SUBJECT_CODE,t2.AMOUNT1)
+
+    </update>
+
+    <select id="getVouchers" resultMap="BaseResultMap">
+        select d.ente_id as enteId,
+        v.voucher_date as transTime ,
+        v.voucher_day as transDay,
+        c.brand_id as brandId,c.region_id as regionId,c.shop_id as shopId,
+        d.account_subject_id accountSubjectId,
+        a.account_subject_name accountSubjectName,
+        a.account_subject_code accountSubjectCode,
+        sum(d.debit_amount) as debitAmount,
+        sum(d.credit_amount) as creditAmount,
+        sum(d.amount) as amount
+        from fin_voucher v
+        left join fin_voucher_detail d
+        on v.voucher_id = d.voucher_id
+        left join base_company c
+        on c.company_id = v.company_id
+        left join base_account_subject a
+        on a.account_subject_id = d.account_subject_id
+        <where>
+            <if test="dayType=='allData'">
+                <!--此处全部时间,所以不含时间条件-->
+            </if>
+            <if test="dayType == 'transDay'">
+                and v.voucher_day &gt;=#{simpleDto.transDay,jdbcType=VARCHAR}
+            </if>
+            <if test="dayType =='between'">
+                and v.voucher_day between #{simpleDto.transDay,jdbcType=VARCHAR} and
+                #{simpleDto.endDay,jdbcType=VARCHAR}
+            </if>
+            <if test="dayType =='before'">
+                and v.voucher_day &lt;= #{simpleDto.endDay,jdbcType=VARCHAR}
+            </if>
+            <if test="simpleDto.shopIdList != null and simpleDto.shopIdList.size()>0">
+                and c.shop_id in
+                <foreach collection="simpleDto.shopIdList" index="index" item="shopId" open="(" close=")" separator=",">
+                    #{shopId}
+                </foreach>
+            </if>
+            <if test="simpleDto.shopTypeIdList != null and simpleDto.shopTypeIdList.size()>0">
+                and c.shop_type_id in
+                <foreach collection="simpleDto.shopTypeIdList" index="index" item="shopTypeId" open="(" close=")"
+                         separator=",">
+                    #{shopTypeId}
+                </foreach>
+            </if>
+            <if test="subjectList != null and subjectList.size()>0">
+                <!--queryDto.matchSubjectType判断是精确匹配还是左匹配-->
+                <choose>
+                    <!--精确匹配-->
+                    <when test="simpleDto.matchSubjectType != null and simpleDto.matchSubjectType == 'is'">
+                        and a.account_subject_code in
+                        <foreach collection="subjectList" index="index" item="item" open="(" separator="," close=")">
+                            #{item}
+                        </foreach>
+                    </when>
+                    <!--左匹配-->
+                    <when test="simpleDto.matchSubjectType != null and simpleDto.matchSubjectType == 'left'">
+                        and
+                        <foreach collection="subjectList" index="index" item="item" open="(" separator="or" close=")">
+                            a.account_subject_code like CONCAT(#{item}, '%')
+                        </foreach>
+                    </when>
+                    <!--其他情况 走左匹配-->
+                    <otherwise>
+                        and
+                        <foreach collection="subjectList" index="index" item="item" open="(" separator="or" close=")">
+                            a.account_subject_code like CONCAT(#{item}, '%')
+                        </foreach>
+                    </otherwise>
+                </choose>
+
+            </if>
+            <!--凭证id不在这个里面的-->
+            <if test="simpleDto.voucherIdList!=null and simpleDto.voucherIdList.size()>0">
+                and v.voucher_id not in
+                <foreach collection="simpleDto.voucherIdList" item="item" index="index" open="(" close=")"
+                         separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="simpleDto.abstractContent != null and simpleDto.abstractContent != ''">
+                and d.abstract_content LIKE CONCAT('%',#{simpleDto.abstractContent,jdbcType=VARCHAR} , '%')
+            </if>
+            and v.ente_id = #{simpleDto.enteId,jdbcType=VARCHAR}
+            <!--
+            凭证过账状态先不考虑, 有凭证就算
+            and v.is_post=1
+            -->
+
+        </where>
+        group by d.ente_id,
+        v.voucher_date ,
+        v.voucher_day,
+        c.brand_id,c.region_id,c.shop_id,
+        d.account_subject_id,
+        a.account_subject_name,
+        a.account_subject_code
+        order by c.brand_id,c.region_id,c.shop_id
+    </select>
+
+    <!--查询废弃凭证-->
+    <select id="getDiscardVouchers" resultMap="VoucherResultMap">
+        select t.* from
+        (
+        select d.ente_id,
+        v.voucher_id,
+        v.voucher_date ,
+        v.voucher_day,
+        c.brand_id ,c.region_id ,c.shop_id,
+        sum(d.debit_amount) as debitAmount,
+        sum(d.credit_amount) as creditAmount,
+        sum(d.amount) as amount
+        from fin_voucher v
+        left join fin_voucher_detail d
+        on v.voucher_id = d.voucher_id
+        left join base_company c
+        on c.company_id = v.company_id
+        left join base_account_subject a
+        on a.account_subject_id = d.account_subject_id
+        <where>
+            <if test="simpleDto.enteId!=null and simpleDto.enteId!=''">
+                and v.ente_id = #{simpleDto.enteId,jdbcType=VARCHAR}
+            </if>
+            <if test="simpleDto.transDay!=null and simpleDto.transDay!=''">
+                and v.voucher_day &gt;=#{simpleDto.transDay,jdbcType=VARCHAR}
+            </if>
+            and v.is_post=1
+        </where>
+        group by d.ente_id,
+        v.voucher_id,
+        v.voucher_date ,
+        v.voucher_day,
+        c.brand_id ,c.region_id ,c.shop_id
+        ) t
+        where t.debitAmount = t.creditAmount
+    </select>
+
+
+    <select id="getReports" resultMap="BaseResultMap">
+        select<include refid="BaseColumnList"/>,t.trans_day,t.debit_amount,t.credit_amount,t.amount
+        from fin_report t
+        <where>
+            and t.ente_id = #{simpleDto.enteId,jdbcType=VARCHAR}
+            <if test="dayType=='allData'">
+                <!--此处全部时间,所以不含时间条件-->
+            </if>
+            <if test="dayType == 'transDay'">
+                and t.trans_day &gt;=#{simpleDto.transDay,jdbcType=VARCHAR}
+            </if>
+            <if test="dayType =='between'">
+                and t.trans_day between #{simpleDto.transDay,jdbcType=VARCHAR} and
+                #{simpleDto.endDay,jdbcType=VARCHAR}
+            </if>
+            <if test="dayType =='before'">
+                and t.trans_day &lt; #{simpleDto.beforDay,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </select>
+
+    <select id="getPersonalReports" resultMap="BaseResultMap">
+        select<include refid="BaseColumnList"/>,t.trans_day,t.debit_amount,t.credit_amount,t.amount, t.flag
+        from fin_report_personal t
+        <where>
+            and t.ente_id = #{simpleDto.enteId,jdbcType=VARCHAR}
+            and t.flag = #{flag}
+            <if test="dayType=='allData'">
+                <!--此处全部时间,所以不含时间条件-->
+            </if>
+            <if test="dayType == 'transDay'">
+                and t.trans_day &gt;=#{simpleDto.transDay,jdbcType=VARCHAR}
+            </if>
+            <if test="dayType =='between'">
+                and t.trans_day between #{simpleDto.transDay,jdbcType=VARCHAR} and
+                #{simpleDto.endDay,jdbcType=VARCHAR}
+            </if>
+            <if test="dayType =='before'">
+                and t.trans_day &lt; #{simpleDto.beforDay,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </select>
+
+    <delete id="truncateReport">
+        truncate table fin_report
+    </delete>
+
+    <delete id="truncatePersonalReport">
+        truncate table fin_report_personal
+    </delete>
+
+    <insert id="addBatch">
+        insert into fin_report(
+        ente_id,trans_time,trans_day,
+        brand_id,region_id,shop_id,
+        account_subject_id,
+        account_subject_name,
+        account_subject_code,
+        debit_amount,
+        credit_amount,
+        amount
+        )
+        values
+        <foreach collection="list" item="p" separator=",">
+            (
+            #{p.enteId},#{p.transTime},#{p.transDay},
+            #{p.brandId},#{p.regionId},#{p.shopId},
+            #{p.accountSubjectId},
+            #{p.accountSubjectName},
+            #{p.accountSubjectCode},
+            #{p.debitAmount},
+            #{p.creditAmount},
+            #{p.amount}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="addPersonalBatch">
+        insert into fin_report_personal(
+        ente_id,trans_time,trans_day,
+        brand_id,region_id,shop_id,
+        account_subject_id,
+        account_subject_name,
+        account_subject_code,
+        debit_amount,
+        credit_amount,
+        amount,
+        flag
+        )
+        values
+        <foreach collection="list" item="p" separator=",">
+            (
+            #{p.enteId},#{p.transTime},#{p.transDay},
+            #{p.brandId},#{p.regionId},#{p.shopId},
+            #{p.accountSubjectId},
+            #{p.accountSubjectName},
+            #{p.accountSubjectCode},
+            #{p.debitAmount},
+            #{p.creditAmount},
+            #{p.amount},
+            #{flag}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateBatch">
+        <foreach collection="list" item="item" separator=";">
+            update fin_report set amount = #{item.amount},
+            debit_amount =#{item.debitAmount},
+            credit_amount=#{item.creditAmount}
+            where ente_id =#{item.enteId}
+            and trans_day =#{item.transDay}
+            and shop_id = #{item.shopId}
+            and account_subject_id = #{item.accountSubjectId}
+        </foreach>
+
+    </update>
+
+    <update id="updatePersonalBatch">
+        <foreach collection="list" item="item" separator=";">
+            update fin_report_personal set amount = #{item.amount},
+            debit_amount =#{item.debitAmount},
+            credit_amount=#{item.creditAmount}
+            where ente_id =#{item.enteId}
+            and flag = #{item.flag}
+            and trans_day =#{item.transDay}
+            and shop_id = #{item.shopId}
+            and account_subject_id = #{item.accountSubjectId}
+        </foreach>
+
+    </update>
+
+    <select id="getSubjectDataByCondition" resultMap="BaseResultMap">
+        select<include refid="BaseColumnList"/>,
+        b.brand_name, b.region_name,b.shop_name,
+        sum(t.debit_amount) as debitAmount,sum(t.credit_amount) as creditAmount,sum(t.amount) as amount
+        from
+        <!--根据personal判断 是主科目还是个性化科目-->
+        <choose>
+            <when test="queryDto.personal=='personal'">
+                fin_report_personal t
+            </when>
+            <otherwise>
+                fin_report t
+            </otherwise>
+        </choose>
+        ,
+        base_company b,
+        base_shop s
+        <where>
+            and t.shop_id = b.shop_id
+            and t.shop_id = s.shop_id
+            and t.ente_id = #{queryDto.enteId,jdbcType=VARCHAR}
+            and s.status =0
+            <if test="queryDto.onlyEnd!=null and queryDto.onlyEnd==true ">
+                and t.trans_day &lt;= #{queryDto.endTime,jdbcType=VARCHAR}
+            </if>
+            <if test="queryDto.onlyEnd==null">
+                and t.trans_day between #{queryDto.beginTime,jdbcType=VARCHAR} and #{queryDto.endTime,jdbcType=VARCHAR}
+            </if>
+            <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() != 0">
+                and t.shop_id in
+                <foreach collection="queryDto.shopIdList" item="shopId" open="(" close=")" separator=",">
+                    #{shopId}
+                </foreach>
+            </if>
+            <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size() != 0">
+                and b.shop_type_id in
+                <foreach collection="queryDto.shopTypeIdList" item="shopTypeId" open="(" close=")" separator=",">
+                    #{shopTypeId}
+                </foreach>
+            </if>
+            <!--按区域id-->
+            <if test="queryDto.regionIdList!=null and queryDto.regionIdList.size()>0">
+                and t.region_id in
+                <foreach collection="queryDto.regionIdList" item="regionId" open="(" close=")" separator=",">
+                    #{regionId}
+                </foreach>
+            </if>
+            <if test="queryDto.subjectCodeList != null and queryDto.subjectCodeList.size()>0">
+                <!--queryDto.matchSubjectType判断是精确匹配还是左匹配-->
+                <choose>
+                    <!--精确匹配-->
+                    <when test="queryDto.matchSubjectType != null and queryDto.matchSubjectType == 'is'">
+                        and t.account_subject_code in
+                        <foreach collection="queryDto.subjectCodeList" index="index" item="item" open="(" separator=","
+                                 close=")">
+                            #{item}
+                        </foreach>
+                    </when>
+                    <!--左匹配-->
+                    <when test="queryDto.matchSubjectType != null and queryDto.matchSubjectType == 'left'">
+                        and
+                        <foreach collection="queryDto.subjectCodeList" index="index" item="item" open="(" separator="or"
+                                 close=")">
+                            t.account_subject_code like CONCAT(#{item}, '%')
+                        </foreach>
+                    </when>
+                    <!--其他情况 走左匹配-->
+                    <otherwise>
+                        and
+                        <foreach collection="queryDto.subjectCodeList" index="index" item="item" open="(" separator="or"
+                                 close=")">
+                            t.account_subject_code like CONCAT(#{item}, '%')
+                        </foreach>
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="queryDto.subjectCodeLen!=null and queryDto.subjectCodeLen==10">
+                and length(t.account_subject_code) = #{queryDto.subjectCodeLen,jdbcType=INTEGER}
+            </if>
+            <if test="queryDto.flag!=null and queryDto.flag!=''">
+                and t.flag =#{queryDto.flag,jdbcType=VARCHAR}
+            </if>
+            and t.shop_id is not null
+        </where>
+        group by t.ente_id,t.brand_id,t.region_id,t.shop_id,
+        t.account_subject_id,t.account_subject_name,t.account_subject_code,
+        b.brand_name, b.region_name,b.shop_name
+    </select>
+
+    <select id="getRealProfitBudgetList"  resultType="com.njwd.entity.reportdata.vo.fin.RealProfitBudgetVo">
+        select
+           t.id as id,
+           t.brand_id as brandId ,
+           t.region_id as regionId,
+           t.shop_id as shopId,
+           p.item_name as project,
+           t.budget as budget,
+           t.begin_date as beginDate,
+           t.end_date as endDate,
+           t.status as status,
+           t.ente_id as enteId
+           from wd_setting_profit t
+        left join wd_report_item_set p on t.project_id = p.report_item_set_id||''
+        <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() != 0">
+            where t.shop_id in
+            <foreach collection="queryDto.shopIdList" item="shopId" open="(" close=")" separator=",">
+                #{shopId}
+            </foreach>
+        </if>
+         and t.status = 1
+    </select>
+
+
+</mapper>

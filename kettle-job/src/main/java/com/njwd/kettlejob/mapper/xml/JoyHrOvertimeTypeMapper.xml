@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.kettlejob.mapper.JoyHrOvertimeTypeMapper">
+
+    <!-- 批量新增或更新数据 -->
+    <insert id="insertOrUpdateBatch">
+        insert into hr_overtime_type (
+        overtime_type_id,
+        overtime_type_name,
+        depart_branch_id,
+        depart_branch_code,
+        is_del,
+        ente_id,
+        app_id,
+        create_time
+        )
+        values
+        <foreach collection="sqlParam.dataList" item="item" index="index" separator=",">
+            (
+            #{item.overtimeTypeId},
+            #{item.overtimeTypeName},
+            #{item.departBranchId},
+            #{item.departBranchCode},
+            #{item.isDel},
+            #{sqlParam.enteId},
+            #{sqlParam.appId},
+            #{sqlParam.createTime}
+            )
+        </foreach>
+        on duplicate key update
+        overtime_type_name     = values(overtime_type_name),
+        depart_branch_id       = values(depart_branch_id),
+        depart_branch_code     = values(depart_branch_code),
+        is_del                  = values(is_del),
+        update_time            = #{sqlParam.updateTime}
+    </insert>
+
+</mapper>

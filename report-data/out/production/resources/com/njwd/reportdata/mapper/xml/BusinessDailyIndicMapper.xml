@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.BusinessDailyIndicMapper" >
+
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.vo.BusinessDailyIndicVo">
+    <result column="daily_indic_id" property="dailyIndicId" />
+    <result column="ente_id" property="enteId" />
+    <result column="brand_id" property="brandId" />
+    <result column="brand_name" property="brandName" />
+    <result column="region_id" property="regionId" />
+    <result column="region_name" property="regionName" />
+    <result column="shop_id" property="shopId" />
+    <result column="shop_name" property="shopName" />
+    <result column="porject_id" property="projectId" />
+    <result column="porject_name" property="projectName" />
+    <result column="indicator" property="indicator" />
+    <result column="begin_date" property="beginDate" />
+    <result column="end_date" property="endDate" />
+    <result column="status" property="status" />
+    <result column="update_time" property="updateTime" />
+  </resultMap>
+
+  <sql id="BaseColumnList">
+    daily_indic_id,
+        ente_id,
+        brand_id,
+        brand_name,
+        region_id,
+        region_name,
+        shop_id,
+        shop_name,
+        project_id,
+        project_name,
+        indicator,
+        begin_date,
+        end_date,
+        status,
+        update_time
+  </sql>
+
+    <select id="findBusinessDailyIndicByCondition" resultType="com.njwd.entity.reportdata.vo.BusinessDailyIndicVo" parameterType="com.njwd.entity.reportdata.dto.BusinessDailyIndicDto">
+        SELECT
+            shop_id,
+            project_id,
+            project_name,
+            period_year_num,
+            case when type =0 then sum(indicator) else avg(indicator)
+             end indicator
+        FROM
+            business_daily_indic
+        <where>
+            ente_id = #{enteId}
+            and status = 1
+            <if test="reportId !=null ">
+                AND report_id = #{reportId}
+            </if>
+            <if test="shopIdList != null and shopIdList.size() != 0">
+                AND shop_id in
+                <foreach collection="shopIdList" item="shop" separator="," open="(" close=")">
+                    #{shop}
+                </foreach>
+            </if>
+            <if test="projectIdList != null and projectIdList.size() != 0">
+                AND project_id IN
+                <foreach collection="projectIdList" item="projectId" open="(" close=")" separator=",">
+                    #{projectId}
+                </foreach>
+            </if>
+            AND period_year_num >= #{beginTime}
+            AND period_year_num &lt;= #{endTime}
+        </where>
+        group by shop_id,project_id,project_name, period_year_num,type
+    </select>
+    <!--店长看板指标排名-->
+    <select id="findIndicByCondition" resultType="com.njwd.entity.reportdata.vo.BusinessDailyIndicVo" parameterType="com.njwd.entity.reportdata.dto.BusinessDailyIndicDto">
+        SELECT
+        shop_id,
+        project_id,
+        project_name,
+        period_year_num ,
+        type,
+        indicator
+        FROM
+        business_daily_indic
+        <where>
+            ente_id = #{enteId}
+            and status = 1
+            <if test="reportId !=null ">
+                AND report_id = #{reportId}
+            </if>
+            <if test="shopIdList != null and shopIdList.size() != 0">
+                AND shop_id in
+                <foreach collection="shopIdList" item="shop" separator="," open="(" close=")">
+                    #{shop}
+                </foreach>
+            </if>
+            <if test="projectIdList != null and projectIdList.size() != 0">
+                AND project_id IN
+                <foreach collection="projectIdList" item="projectId" open="(" close=")" separator=",">
+                    #{projectId}
+                </foreach>
+            </if>
+            AND period_year_num >= #{beginTime}
+            AND period_year_num &lt;= #{endTime}
+        </where>
+    </select>
+</mapper>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.basedata.mapper.BaseShopAllInfoMapper">
+    <select id="findBaseShopAllInfoByOrgId" parameterType="BaseShopAllInfoDto" resultType="BaseShopAllInfoVo">
+        SELECT
+            b.brand_id,
+            b.brand_code,
+            b.brand_name,
+            r.region_id,
+            r.region_code,
+            r.region_name,
+            s.shop_id,
+            s.shop_no,
+            s.shop_name
+        FROM base_shop s
+        left join base_brand b on b.brand_id = s.brand_id
+        left join base_region r on r.region_id = s.region_id
+        WHERE
+            b.ente_id = #{enteId}
+            AND s.SHOP_NO is not null
+        <if test="shopIdList != null and shopIdList.size() != 0">
+            and s.shop_id in
+            <foreach collection="shopIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+
+        <if test="shopTypeIdList != null and shopTypeIdList.size() != 0">
+            and s.shop_type_id in
+            <foreach collection="shopTypeIdList" item="item1" separator="," open="(" close=")">
+                #{item1}
+            </foreach>
+        </if>
+        order by s.shop_id
+    </select>
+</mapper>

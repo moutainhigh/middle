@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.SettingEvaluateMapper" >
+
+    <!-- 查询评价汇总阀值-->
+    <select id="findSettingEvaluate" resultType="com.njwd.entity.reportdata.vo.SettingEvaluateVo">
+        SELECT
+        e.id,
+        e.dimension,
+        e.range,
+        e.warn,
+        e.status,
+        e.ente_id,
+        e.begin_date,
+        e.end_date,
+        e.create_time,
+        e.update_time
+        FROM
+        wd_setting_evaluate e
+        <where>
+            and e.id = #{param.id}
+            and e.ente_id = #{param.enteId}
+        </where>
+    </select>
+
+    <!-- 查询实时利润预算列表 -->
+    <select id="findSettingEvaluateList" resultType="com.njwd.entity.reportdata.vo.SettingEvaluateVo">
+        SELECT
+            e.ID,
+            e.dimension,
+            e.RANGE,
+            e.warn,
+            e.status,
+            e.ente_id,
+            e.begin_date||' - '||e.end_date dateStr,
+            e.create_time,
+            e.update_time
+        FROM
+        wd_setting_evaluate e
+        <where>
+            AND e.ente_id = #{param.enteId}
+            <if test="param.query != null and param.query != ''">
+                AND (
+                e.dimension LIKE CONCAT('%',#{param.query},'%')
+                OR e.range LIKE CONCAT('%',#{param.query},'%')
+                OR e.warn LIKE CONCAT('%',#{param.query},'%')
+                <!-- 日期 -->
+                <if test="param.queryType ==2">
+                OR e.begin_date = '${param.query}'
+                OR e.end_date = '${param.query}'
+                </if>
+                )
+            </if>
+        </where>
+        ORDER BY e.create_time desc,e.id desc
+    </select>
+
+    <!-- 查询重复的数据 -->
+    <select id="findDuplicateDataList" resultType="java.util.HashMap">
+        SELECT
+        dimension "0",
+        range "1",
+        warn "2",
+        begin_date||'' begin_date,
+        end_date||'' end_date
+        FROM wd_setting_evaluate
+        WHERE ente_id = #{enteId}
+        AND(
+        <foreach collection="valueList" index="index" item="item" separator="or">
+            (dimension = #{item.dimension} and range = #{item.range} and warn = #{item.warn})
+        </foreach>
+        )
+    </select>
+
+    <!-- 更新评价汇总阀值-->
+    <update id="updateSettingEvaluate">
+        update wd_setting_evaluate
+        <set>
+            range = #{param.range},
+            warn = #{param.warn},
+            update_time =#{param.updateTime}
+        </set>
+        <where>
+            and id = #{param.id}
+            and ente_id = #{param.enteId}
+        </where>
+    </update>
+
+    <!-- 更新评价汇总阀值状态 -->
+    <update id="updateSettingEvaluateStatus">
+        update wd_setting_evaluate
+        <set>
+            status = #{param.status},
+            update_time =#{param.updateTime}
+        </set>
+        <where>
+            and id = #{param.id}
+            and ente_id = #{param.enteId}
+        </where>
+    </update>
+
+    <!-- 批量新增 -->
+    <insert id="insertDataBatch">
+        INSERT INTO wd_setting_evaluate
+        (
+        id,
+        dimension,
+        range,
+        warn,
+        status,
+        ente_id,
+        begin_date,
+        end_date,
+        create_time
+        )
+        VALUES
+        <foreach collection="dataList" index="index" item="item" separator=",">
+            (
+            #{item.id},
+            #{item.dimension},
+            #{item.range},
+            #{item.warn},
+            1,
+            #{item.enteId},
+            #{item.beginDate},
+            #{item.endDate},
+            #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

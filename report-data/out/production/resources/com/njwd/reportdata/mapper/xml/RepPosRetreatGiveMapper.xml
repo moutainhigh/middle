@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.RepPosRetreatGiveMapper">
+    <select id="findWaitAndOutTimeMoney" resultType="RepPosRetreatGiveVo" parameterType="RepPosRetreatGiveDto">
+        SELECT
+            shop_id,
+            retreat_remark,
+            SUM (sum_price) AS sumPriceAll
+        FROM
+            rep_pos_retreat_give
+        WHERE
+            retreat_give_type = '1'
+        AND account_date >= #{beginDate}
+        AND account_date &lt;= #{endDate}
+        AND ente_id = #{enteId}
+        <if test="shopIdList != null and shopIdList.size() != 0">
+            and shop_id in
+            <foreach collection="shopIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() !=0">
+            and shop_type_id in
+            <foreach collection="shopTypeIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY
+            shop_id,
+            retreat_remark
+    </select>
+</mapper>

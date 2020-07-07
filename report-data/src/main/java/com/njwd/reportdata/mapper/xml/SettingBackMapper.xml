@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.SettingBackMapper" >
+
+    <select id="findSettingBack" resultType="com.njwd.entity.reportdata.vo.SettingBackVo">
+        SELECT
+        b.id,
+        b.brand_id,
+        b.region_id,
+        b.shop_id,
+        b.food_id,
+        b.unit_id,
+        b.threshold,
+        b.status,
+        b.ente_id,
+        b.create_time,
+        b.update_time
+        FROM wd_setting_back b
+        <where>
+            b.id = #{param.id}
+        </where>
+    </select>
+
+    <!-- 查询退赠优免安全阀值列表 -->
+    <select id="findSettingBackList" resultType="com.njwd.entity.reportdata.vo.SettingBackVo">
+        SELECT
+            sb.id,
+            sb.brand_id,
+            b.brand_code,
+            case when sb.brand_id = '0' then '默认' else b.brand_name end brand_name,
+            sb.region_id,
+            r.region_code,
+            case when sb.region_id = '0' then '默认' else r.region_name end region_name,
+            sb.shop_id,
+            ss.shop_no,
+            case when sb.shop_id = '0' then '默认' else ss.shop_name end shop_name,
+            sb.food_id,
+            f.food_no,
+            f.food_name,
+            sb.unit_id,
+            u.unit_name,
+            sb.threshold,
+            sb.status,
+            sb.ente_id
+        FROM
+            wd_setting_back sb
+        LEFT JOIN base_brand b ON sb.brand_id = b.brand_id
+        LEFT JOIN base_region r ON sb.region_id = r.region_id
+        LEFT JOIN base_shop ss ON sb.shop_id = ss.shop_id
+        LEFT JOIN base_food f ON sb.food_id = f.food_id
+        LEFT JOIN base_unit u ON sb.unit_id = u.unit_id
+        <where>
+            AND sb.ente_id = #{param.enteId}
+            <if test="param.query != null and param.query != ''">
+                AND (
+                b.brand_name LIKE CONCAT('%',#{param.query},'%')
+                OR r.region_name LIKE CONCAT('%',#{param.query},'%')
+                OR ss.shop_name LIKE CONCAT('%',#{param.query},'%')
+                OR f.food_no LIKE CONCAT('%',#{param.query},'%')
+                OR f.food_name LIKE CONCAT('%',#{param.query},'%')
+                OR u.unit_name LIKE CONCAT('%',#{param.query},'%')
+                <!-- 数字 -->
+                <if test="param.queryType ==1">
+                    OR sb."threshold" = ${param.query}
+                </if>
+                )
+            </if>
+        </where>
+        ORDER BY sb.create_time desc,sb."id" desc
+    </select>
+
+    <!-- 获取对应转化值 -->
+    <select id="findConvertDataList" resultType="com.njwd.entity.reportdata.ConvertData">
+        SELECT * FROM (
+            SELECT '0' "index",'0' convert_data,'默认' old_data
+                UNION ALL
+            SELECT '0' "index", brand_id convert_data,brand_name  old_data
+                FROM base_brand
+                WHERE ente_id = #{enteId}
+            UNION ALL
+                SELECT '1' "index",'0' convert_data,'默认' old_data
+            UNION ALL
+                SELECT '1' "index", region_id convert_data ,region_name old_data
+                FROM base_region
+                WHERE ente_id = #{enteId}
+            UNION ALL
+                SELECT '2' "index",'0' convert_data,'默认' old_data
+            UNION ALL
+                SELECT '2' "index",shop_id convert_data,shop_name old_data
+                FROM base_shop
+                WHERE ente_id = #{enteId}
+            UNION ALL
+                SELECT '3' "index",food_id convert_data,food_no old_data
+                FROM base_food
+                WHERE ente_id = #{enteId}||'' AND is_status = 0
+            )tab
+        ORDER BY "index",convert_data
+    </select>
+
+    <!-- 查询重复的数据 -->
+    <select id="findDuplicateDataList" resultType="java.util.HashMap">
+        SELECT shop_id "2",food_id "3"
+        FROM wd_setting_back
+        WHERE ente_id = #{enteId}
+        AND(
+        <foreach collection="valueList" index="index" item="item" separator="or">
+            (shop_id = #{item.shopId} and food_id = #{item.foodId})
+        </foreach>
+        )
+    </select>
+
+    <!-- 更新门店退赠优免安全阀值 -->
+    <update id="updateSettingBack">
+        update wd_setting_back
+        <set>
+            threshold = #{param.threshold},
+        </set>
+        <where>
+            and id = #{param.id}
+            and ente_id = #{param.enteId}
+        </where>
+    </update>
+
+    <!-- 更新退赠优免安全阀值状态 -->
+    <update id="updateSettingBackStatus">
+        update wd_setting_back
+        <set>
+            status = #{param.status}
+        </set>
+        <where>
+            and id = #{param.id}
+            and ente_id = #{param.enteId}
+        </where>
+    </update>
+
+    <!-- 批量新增 -->
+    <insert id="insertDataBatch">
+        INSERT INTO wd_setting_back
+        (
+        id,
+        brand_id,
+        region_id,
+        shop_id,
+        food_id,
+        threshold,
+        status,
+        ente_id,
+        create_time
+        )
+        VALUES
+        <foreach collection="dataList" index="index" item="item" separator=",">
+            (
+            #{item.id},
+            #{item.brandId},
+            #{item.regionId},
+            #{item.shopId},
+            #{item.foodId},
+            #{item.threshold},
+            1,
+            #{item.enteId},
+            #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

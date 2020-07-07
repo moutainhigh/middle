@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.mapper.LogMapper">
+    <resultMap id="BaseResultMap" type="com.njwd.entity.admin.Log">
+        <!--@mbg.generated-->
+        <id column="log_id" jdbcType="VARCHAR" property="logId"/>
+        <result column="ente_id" jdbcType="VARCHAR" property="enteId"/>
+        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
+        <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+        <result column="module" jdbcType="VARCHAR" property="module"/>
+        <result column="log_desc" jdbcType="VARCHAR" property="logDesc"/>
+        <result column="content" jdbcType="VARCHAR" property="content"/>
+        <result column="ip" jdbcType="VARCHAR" property="ip"/>
+        <result column="able" javaType="Integer" property="able"/>
+
+    </resultMap>
+
+    <!--批量新增-->
+    <insert id="addLogBatch" parameterType="com.njwd.entity.admin.Log" >
+        insert into wd_log(
+        log_id,
+        ente_id,
+        user_id,
+        user_name,
+        module,
+        log_desc,
+        content,
+        ip,
+        able,
+        create_time
+        )values
+        <foreach collection="list" item="log" separator=",">
+           (
+            #{log.logId},
+            #{log.enteId},
+            #{log.userId},
+            #{log.userName},
+            #{log.module},
+            #{log.logDesc},
+            #{log.content},
+            #{log.ip},
+            #{log.ip},
+            #{log.able},
+            now()
+        )
+        </foreach>
+    </insert>
+
+    <!--新增-->
+    <insert id="addLog" parameterType="com.njwd.entity.admin.Log" >
+        insert into wd_log(
+        log_id,
+        ente_id,
+        user_id,
+        user_name,
+        module,
+        log_desc,
+        content,
+        ip,
+        able,
+        create_time
+        )values
+        (
+            #{logId},
+            #{enteId},
+            #{userId},
+            #{userName},
+            #{module},
+            #{logDesc},
+            #{content},
+            #{ip},
+            #{able},
+            now()
+            )
+    </insert>
+
+</mapper>

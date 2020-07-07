@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.mapper.BaseShopRelaMapper">
+    <resultMap id="BaseResultMap" type="com.njwd.entity.kettlejob.BaseShopRela">
+        <!--@mbg.generated-->
+        <id column="app_id" jdbcType="VARCHAR" property="appId"/>
+        <result column="third_shop_id" jdbcType="VARCHAR" property="thirdShopId"/>
+        <result column="shop_id" jdbcType="VARCHAR" property="shopId"/>
+        <result column="shop_no" jdbcType="VARCHAR" property="shopNo"/>
+        <result column="shop_name" jdbcType="VARCHAR" property="shopName"/>
+        <result column="shop_type_id" jdbcType="VARCHAR" property="shopTypeId"/>
+        <result column="address" jdbcType="VARCHAR" property="address"/>
+        <result column="shop_lat" jdbcType="VARCHAR" property="shopLat"/>
+        <result column="shop_lon" jdbcType="VARCHAR" property="shopLon"/>
+        <result column="link_man" jdbcType="VARCHAR" property="linkMan"/>
+        <result column="link_mobile" jdbcType="VARCHAR" property="linkMobile"/>
+        <result column="link_tele" jdbcType="VARCHAR" property="linkTele"/>
+        <result column="city" jdbcType="VARCHAR" property="city"/>
+        <result column="shop_area" jdbcType="VARCHAR" property="shopArea"/>
+        <result column="third_ente_id" jdbcType="VARCHAR" property="thirdEnteId"/>
+        <result column="ente_id" jdbcType="VARCHAR" property="enteId"/>
+        <result column="brand_id" jdbcType="VARCHAR" property="brandId"/>
+        <result column="third_brand_id" jdbcType="VARCHAR" property="thirdBrandId"/>
+        <result column="company_id" jdbcType="VARCHAR" property="companyId"/>
+        <result column="third_company_id" jdbcType="VARCHAR" property="thirdCompanyId"/>
+        <result column="region_id" jdbcType="VARCHAR" property="regionId"/>
+        <result column="third_region_id" jdbcType="VARCHAR" property="thirdRegionId"/>
+        <result column="dept_id" jdbcType="VARCHAR" property="deptId"/>
+        <result column="third_dept_id" jdbcType="VARCHAR" property="thirdDeptId"/>
+    </resultMap>
+
+    <!--新增-->
+    <insert id="addBaseShopRela" parameterType="com.njwd.entity.kettlejob.dto.BaseShopRelaDto" >
+        insert into base_shop_rela(
+        app_id,
+        third_shop_id,
+        shop_id,
+        shop_no,
+        shop_name,
+        shop_type_id,
+        address,
+        shop_lat,
+        shop_lon,
+        link_man,
+        link_mobile,
+        link_tele,
+        city,
+        shop_area,
+        third_ente_id,
+        ente_id,
+        brand_id,
+        third_brand_id,
+        company_id,
+        third_company_id,
+        region_id,
+        third_region_id,
+        dept_id,
+        third_dept_id
+        )values
+        <foreach collection="list" item="baseShopRelaDto" separator=",">
+            (
+            #{baseShopRelaDto.appId},
+            #{baseShopRelaDto.thirdShopId},
+            #{baseShopRelaDto.shopId},
+            #{baseShopRelaDto.shopNo},
+            #{baseShopRelaDto.shopName},
+            #{baseShopRelaDto.shopTypeId},
+            #{baseShopRelaDto.address},
+            #{baseShopRelaDto.shopLat},
+            #{baseShopRelaDto.shopLon},
+            #{baseShopRelaDto.linkMan},
+            #{baseShopRelaDto.linkMobile},
+            #{baseShopRelaDto.linkTele},
+            #{baseShopRelaDto.city},
+            #{baseShopRelaDto.shopArea},
+            #{baseShopRelaDto.thirdEnteId},
+            #{baseShopRelaDto.enteId},
+            #{baseShopRelaDto.brandId},
+            #{baseShopRelaDto.thirdBrandId},
+            #{baseShopRelaDto.companyId},
+            #{baseShopRelaDto.thirdCompanyId},
+            #{baseShopRelaDto.regionId},
+            #{baseShopRelaDto.thirdRegionId},
+            #{baseShopRelaDto.deptId},
+            #{baseShopRelaDto.thirdDeptId}
+            )
+        </foreach>
+    </insert>
+
+    <!--新增并修改-->
+    <insert id="replaceBaseShopRela" parameterType="com.njwd.entity.kettlejob.dto.BaseShopRelaDto" >
+        replace into base_shop_rela(
+        app_id,
+        third_shop_id,
+        shop_id,
+        shop_no,
+        shop_name,
+        shop_type_id,
+        address,
+        shop_lat,
+        shop_lon,
+        link_man,
+        link_mobile,
+        link_tele,
+        city,
+        shop_area,
+        third_ente_id,
+        ente_id,
+        brand_id,
+        third_brand_id,
+        company_id,
+        third_company_id,
+        region_id,
+        third_region_id,
+        dept_id,
+        third_dept_id
+        )values
+        <foreach collection="list" item="baseShopRelaDto" separator=",">
+            (
+            #{baseShopRelaDto.appId},
+            #{baseShopRelaDto.thirdShopId},
+            #{baseShopRelaDto.shopId},
+            #{baseShopRelaDto.shopNo},
+            #{baseShopRelaDto.shopName},
+            #{baseShopRelaDto.shopTypeId},
+            #{baseShopRelaDto.address},
+            #{baseShopRelaDto.shopLat},
+            #{baseShopRelaDto.shopLon},
+            #{baseShopRelaDto.linkMan},
+            #{baseShopRelaDto.linkMobile},
+            #{baseShopRelaDto.linkTele},
+            #{baseShopRelaDto.city},
+            #{baseShopRelaDto.shopArea},
+            #{baseShopRelaDto.thirdEnteId},
+            #{baseShopRelaDto.enteId},
+            #{baseShopRelaDto.brandId},
+            #{baseShopRelaDto.thirdBrandId},
+            #{baseShopRelaDto.companyId},
+            #{baseShopRelaDto.thirdCompanyId},
+            #{baseShopRelaDto.regionId},
+            #{baseShopRelaDto.thirdRegionId},
+            #{baseShopRelaDto.deptId},
+            #{baseShopRelaDto.thirdDeptId}
+            )
+        </foreach>
+    </insert>
+
+    <!--根据appid和企业ID查询门店-->
+    <select id="findBaseShopRelaBatch" resultType="com.njwd.entity.kettlejob.vo.BaseShopRelaVo" parameterType="com.njwd.entity.kettlejob.dto.BaseShopRelaDto">
+         select
+         third_shop_id,
+         shop_no,
+	     shop_name,
+	     address,
+	     shop_lat,
+	     shop_lon
+	     from
+	     base_shop_rela
+	     where
+	     app_id=#{baseShopRelaDto.appId}
+	     and ente_id=#{baseShopRelaDto.enteId}
+    </select>
+
+    <!--根据appid和企业ID和第三方ID修改门店-->
+    <update id="updateBaseShopRela" parameterType="java.util.List">
+        <foreach collection="list" item="baseShopRelaDto" index="index" separator=";">
+        update base_shop_rela
+        set
+        shop_no = #{baseShopRelaDto.shopNo},
+        shop_name = #{baseShopRelaDto.shopName},
+        address = #{baseShopRelaDto.address},
+        shop_lat = #{baseShopRelaDto.shopLat},
+        shop_lon =  #{baseShopRelaDto.shopLon}
+        where
+        app_id=#{baseShopRelaDto.appId}
+	    and ente_id=#{baseShopRelaDto.enteId}
+	    and third_shop_id=#{baseShopRelaDto.thirdShopId}
+        </foreach>
+    </update>
+
+</mapper>

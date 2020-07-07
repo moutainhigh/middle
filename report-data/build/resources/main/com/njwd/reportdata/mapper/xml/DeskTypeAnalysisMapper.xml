@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.DeskTypeAnalysisMapper" >
+
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.vo.DeskTypeAnalysisVo">
+  </resultMap>
+  <select id="findDeskTypeAnalysisInfo" resultMap="BaseResultMap" parameterType="com.njwd.entity.reportdata.dto.DeskTypeAnalysisDto" >
+   select
+      bdat.desk_area_type_no deskAreaTypeNo,
+      bdat.desk_area_type_name deskAreaTypeName,
+      bdt.desk_type_name deskTypeName,
+      count(po.order_id) stationsNum,
+      sum(po.people_num) customNum,
+      sum(pc.money_consume) turnover
+    from pos_order po,pos_cash pc,base_desk bd,base_desk_type bdt,base_shop bs,base_desk_area_type bdat,base_desk_area bda
+    where po.ente_id = #{deskTypeAnalysisDto.enteId}
+      <if test="deskTypeAnalysisDto.shopIdList != null and deskTypeAnalysisDto.shopIdList.size() > 0 ">
+        and po.shop_id in
+        <foreach collection="deskTypeAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+          #{shopId}
+        </foreach>
+      </if>
+      and po.order_date between #{deskTypeAnalysisDto.startDate} and #{deskTypeAnalysisDto.endDate}
+    <if test="deskTypeAnalysisDto.shopTypeIdList != null and deskTypeAnalysisDto.shopTypeIdList.size() > 0 ">
+      and bs.shop_type_id in
+      <foreach collection="deskTypeAnalysisDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+        #{shopTypeId}
+      </foreach>
+    </if>
+      and po.app_id = pc.app_id
+      and po.ente_id = pc.ente_id
+      and po.order_id = pc.order_id
+      and po.desk_id = bd.desk_id
+      and po.shop_id = bs.shop_id
+      and bd.desk_area_id = bda.desk_area_id
+      and bd.desk_type_id = bdt.desk_type_id
+      and bda.desk_area_type_no = bdat.desk_area_type_no
+    GROUP BY deskAreaTypeNo,deskTypeName
+    order by CONVERT(deskTypeName, SIGNED)
+  </select>
+
+  <select id="findDeskNumByType" resultMap="BaseResultMap" parameterType="com.njwd.entity.reportdata.dto.DeskTypeAnalysisDto" >
+    select
+      count(bd.desk_id) deskNum,
+	  bdat.desk_area_type_no deskAreaTypeNo,
+      bdt.desk_type_name deskTypeName
+    from base_desk bd,base_desk_type bdt,base_desk_area_type bdat,base_desk_area bda
+    where  bd.ente_id = #{deskTypeAnalysisDto.enteId}
+      <if test="deskTypeAnalysisDto.shopIdList != null and deskTypeAnalysisDto.shopIdList.size() > 0 ">
+        and bd.shop_id in
+        <foreach collection="deskTypeAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+          #{shopId}
+        </foreach>
+      </if>
+      and bd.desk_area_id = bda.desk_area_id
+      and bd.desk_type_id = bdt.desk_type_id
+      and bda.desk_area_type_no = bdat.desk_area_type_no
+    GROUP BY deskAreaTypeNo,deskTypeName
+  </select>
+
+  <select id="findDeskTypeAnalysisReport" resultMap="BaseResultMap" parameterType="com.njwd.entity.reportdata.dto.DeskTypeAnalysisDto" >
+   SELECT
+	desk_area_type_no deskAreaTypeNo,
+	desk_area_type_name deskAreaTypeName,
+	desk_type_name deskTypeName,
+	sum( desk_count ) stationsNum,
+	sum(client_count) customNum,
+	sum(amount) turnover
+  FROM
+	rep_pos_desk
+  WHERE
+	ente_id = #{deskTypeAnalysisDto.enteId}
+    <if test="deskTypeAnalysisDto.shopIdList != null and deskTypeAnalysisDto.shopIdList.size() > 0 ">
+      and shop_id in
+      <foreach collection="deskTypeAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+        #{shopId}
+      </foreach>
+    </if>
+    and account_date between #{deskTypeAnalysisDto.startDate} and #{deskTypeAnalysisDto.endDate}
+    <if test="deskTypeAnalysisDto.shopTypeIdList != null and deskTypeAnalysisDto.shopTypeIdList.size() > 0 ">
+      and shop_type_id in
+      <foreach collection="deskTypeAnalysisDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+        #{shopTypeId}
+      </foreach>
+    </if>
+  GROUP BY
+	deskAreaTypeNo,
+    deskTypeName
+    order by CONVERT(deskTypeName, SIGNED)
+  </select>
+
+</mapper>

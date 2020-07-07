@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.kettlejob.mapper.JoyHrScheduleMapper">
+
+    <!-- 查询最后更新时间 -->
+    <select id="findLastUpdateTime" resultType="string">
+        select max(last_update_time) last_update_time from hr_schedule
+        where app_id = #{appId}
+          and ente_id = #{enteId}
+    </select>
+
+    <!-- 批量新增或更新数据 -->
+    <insert id="insertOrUpdateBatch">
+        insert into hr_schedule (
+        third_user_id,
+        shift_id,
+        schedule_date,
+        isLine,
+        ente_id,
+        app_id,
+        last_update_time
+        )
+        values
+        <foreach collection="sqlParam.dataList" item="item" index="index" separator=",">
+            (
+            #{item.thirdUserId},
+            #{item.shiftId},
+            #{item.scheduleDate},
+            #{item.isLine},
+            #{sqlParam.enteId},
+            #{sqlParam.appId},
+            #{sqlParam.lastUpdateTime}
+            )
+        </foreach>
+        on duplicate key update
+        shift_id=values(shift_id),
+        isLine=values(isLine),
+        last_update_time=#{sqlParam.lastUpdateTime}
+    </insert>
+
+    <!-- 批量更新排班数据用户信息 -->
+    <update id="updateScheduleUserBatch">
+        update hr_schedule s
+        left join base_user_rela ur on s.third_user_id = ur.third_user_id and s.app_id = ur.app_id and s.ente_id = ur.ente_id
+        <set>
+            s.user_id = ur.user_id
+        </set>
+        <where>
+            s.app_id = #{appId}
+            and s.ente_id = #{enteId}
+        </where>
+    </update>
+
+</mapper>

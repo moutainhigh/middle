@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.BaseYearMomThresholdMapper" >
+
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.vo.BaseYearMomThresholdVo">
+  </resultMap>
+  <select id="findBaseYearMomThresholdByCode" resultMap="BaseResultMap" parameterType="com.njwd.entity.reportdata.dto.BaseYearMomThresholdDto" >
+    SELECT year_threshold, mom_threshold
+    FROM base_year_mom_threshold
+    WHERE ente_id = #{dto.enteId}
+    AND table_code = #{dto.tableCode}
+    AND #{dto.startTime} BETWEEN start_time AND end_time
+    AND #{dto.endTime} BETWEEN start_time AND end_time
+  </select>
+
+</mapper>

@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.ScmReportTableMapper">
+    <select id="findWineCostList" parameterType="com.njwd.entity.reportdata.dto.scm.ScmReportTableDto"
+            resultType="com.njwd.entity.reportdata.vo.scm.ScmReportTableVo">
+        SELECT
+        s.brand_id,
+        s.region_id,
+        t.ente_id,
+        t.shop_id,
+        t.fin_day transDay,
+        sum( t.amount ) costWine
+        FROM
+        scm_misdelivery_entry t
+        LEFT JOIN scm_formenu_item f ON t.putout_type = f.value
+        LEFT JOIN base_shop s ON t.shop_id = s.shop_id
+        WHERE t.shop_id is not null and t.shop_id != ''
+        <if test="description != null and description != ''">
+            and f.description = #{description}
+        </if>
+        <if test="transDay != null and transDay != ''">
+            and t.fin_day >= #{transDay}
+        </if>
+        GROUP BY
+        s.brand_id,
+        s.region_id,
+        t.ente_id,
+        t.shop_id,
+        t.fin_day
+    </select>
+
+    <select id="findStkCostList" parameterType="com.njwd.entity.reportdata.dto.scm.ScmReportTableDto"
+            resultType="com.njwd.entity.reportdata.vo.scm.ScmReportTableVo">
+        select
+        s.brand_id,
+        s.region_id,
+        t.ente_id,
+        t.shop_id,
+        t.fin_day transDay,
+        sum( m.amount ) costDish,
+        sum( n.amount ) costCondiment,
+        sum( p.amount ) dishGive,
+        sum( q.amount ) fruitGive
+        from
+        scm_stkcountloss_entry t
+        left join base_material f on t.material_id = f.material_id
+        left join base_shop s on t.shop_id = s.shop_id
+        left join scm_stkcountloss_entry m on t.app_id = m.app_id and t.ente_id = m.ente_id
+        and t.countloss_entry_id = m.countloss_entry_id and f.material_id = m.material_id
+        and f.number between #{materialNumberList[0]} and #{materialNumberList[1]} and f.number not like
+        #{materialNumberList[2]}||'%'
+        left join scm_stkcountloss_entry n on t.app_id = n.app_id and t.ente_id = n.ente_id
+        and t.countloss_entry_id = n.countloss_entry_id and f.material_id = n.material_id
+        and f.material_des = #{materialDescriptionList[0]}
+        left join scm_stkcountloss_entry p on t.app_id = p.app_id and t.ente_id = p.ente_id
+        and t.countloss_entry_id = p.countloss_entry_id and f.material_id = p.material_id
+        and f.material_des = #{materialDescriptionList[1]}
+        left join scm_stkcountloss_entry q on t.app_id = q.app_id and t.ente_id = q.ente_id
+        and t.countloss_entry_id = q.countloss_entry_id and f.material_id = q.material_id
+        and f.material_des = #{materialDescriptionList[2]}
+        where t.shop_id is not null and t.shop_id != ''
+        <if test="transDay != null and transDay != ''">
+            and t.fin_day >= #{transDay}
+        </if>
+        group by
+        s.brand_id,
+        s.region_id,
+        t.ente_id,
+        t.shop_id,
+        t.fin_day
+    </select>
+
+    <delete id="deleteByParam" parameterType="com.njwd.entity.kettlejob.dto.TransferReportSimpleDto">
+        delete from scm_report_table
+        where 1=1
+        <if test="transDay != null and transDay != ''">
+            and trans_day >= #{transDay}
+        </if>
+    </delete>
+
+    <insert id="addBatch" parameterType="com.njwd.entity.reportdata.vo.scm.ScmReportTableVo">
+        insert into scm_report_table(
+        ente_id,trans_day,
+        brand_id,region_id,shop_id,
+        cost_dish,
+        cost_condiment,
+        dish_give,
+        fruit_give,
+        cost_wine,
+        dish_stock_amount
+        )
+        values
+        <foreach collection="list" item="p" separator=",">
+            (
+            #{p.enteId},#{p.transDay},
+            #{p.brandId},#{p.regionId},#{p.shopId},
+            #{p.costDish},
+            #{p.costCondiment},
+            #{p.dishGive},
+            #{p.fruitGive},
+            #{p.costWine},
+            #{p.dishStockAmount}
+            )
+        </foreach>
+    </insert>
+
+    <select id="findGrossProfitCostList" parameterType="com.njwd.entity.reportdata.dto.GrossProfitDto"
+            resultType="com.njwd.entity.reportdata.vo.scm.ScmReportTableVo">
+        SELECT
+        t.brand_id,
+        t.region_id,
+        t.ente_id,
+        t.shop_id,
+        SUM( t.cost_dish ) costDish,
+        SUM( t.cost_condiment ) costCondiment,
+        SUM( t.dish_give ) dishGive,
+        SUM( t.fruit_give ) fruitGive,
+        SUM( t.cost_wine ) costWine,
+        SUM( t.dish_stock_amount ) dishStockAmount
+        FROM
+        scm_report_table t
+        WHERE t.ente_id = #{enteId}
+        AND t.trans_day BETWEEN left(#{beginDate},10) AND left(#{endDate},10)
+        <if test="shopIdList !=null and shopIdList.size() >0 ">
+            AND t.shop_id in
+            <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY
+        t.brand_id,
+        t.region_id,
+        t.ente_id,
+        t.shop_id
+    </select>
+
+    <select id="findDishStockAmountList" parameterType="com.njwd.entity.reportdata.dto.scm.ScmReportTableDto"
+            resultType="com.njwd.entity.reportdata.vo.scm.ScmReportTableVo">
+        SELECT
+        s.brand_id,
+        s.region_id,
+        t.ente_id,
+        t.shop_id,
+        t.period_year||'-'||LPAD(CAST(t.period_num AS character varying),2,'0')||'-01' transDay,
+        SUM ( t.amount ) dishStockAmount
+        FROM
+        scm_inventory_balance t
+        LEFT JOIN base_material f ON t.material_id = f.material_id
+        LEFT JOIN base_shop s ON t.shop_id = s.shop_id
+        WHERE t.shop_id is not null and t.shop_id != ''
+        AND f.number BETWEEN #{stockMaterialNumberList[0]} and #{stockMaterialNumberList[1]}
+        AND t.type= #{type}
+        <if test="transDay != null and transDay != ''">
+            and t.period_year||'-'||LPAD(CAST(t.period_num AS character varying),2,'0')||'-01' >= #{transDay}
+        </if>
+        GROUP BY
+        s.brand_id,
+        s.region_id,
+        t.ente_id,
+        t.shop_id,
+        t.period_year||'-'||LPAD(CAST(t.period_num AS character varying),2,'0')||'-01';
+    </select>
+
+    <select id="findLastPeriodStockList" parameterType="com.njwd.entity.reportdata.dto.GrossProfitDto"
+            resultType="com.njwd.entity.reportdata.vo.scm.ScmReportTableVo">
+        SELECT
+        t.brand_id,
+        t.region_id,
+        t.ente_id,
+        t.shop_id,
+        SUM(t.dish_stock_amount) lastPeriodStock
+        FROM
+        scm_report_table t
+        WHERE t.ente_id = #{enteId}
+        AND t.trans_day BETWEEN left(#{beginDate},10) AND left(#{endDate},10)
+        <if test="shopIdList !=null and shopIdList.size() >0 ">
+            AND t.shop_id in
+            <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY
+        t.brand_id,
+        t.region_id,
+        t.ente_id,
+        t.shop_id
+    </select>
+
+</mapper>

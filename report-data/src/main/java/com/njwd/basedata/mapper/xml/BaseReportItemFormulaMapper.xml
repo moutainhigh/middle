@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.basedata.mapper.BaseReportItemFormulaMapper">
+    <select id="findBaseReportItemFormulaVoByReportId" resultType="BaseReportItemFormulaVo" parameterType="BaseReportItemFormulaDto">
+        SELECT item_set_id,
+               formula_type,
+               formula_item_code,
+               operator
+        FROM wd_report_item_formula
+		WHERE item_set_id IN(SELECT report_item_set_id
+		   FROM wd_report_item_set WHERE report_id= #{reportId} AND ENTE_ID=#{enteId})
+		ORDER BY item_set_id
+    </select>
+</mapper>

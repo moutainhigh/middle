@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.kettlejob.mapper.JoyHrSalaryMapper">
+
+    <!-- 查询最后更新时间 -->
+    <select id="findLastUpdateTime" resultType="integer">
+        select max(period_year_num) from hr_salary
+        where app_id = #{appId}
+          and ente_id = #{enteId}
+    </select>
+
+    <!-- 批量新增或更新数据 -->
+    <insert id="insertOrUpdateBatch">
+        insert into hr_salary (
+        third_org_id,
+        item_id,
+        item_name,
+        money,
+        period_year_num,
+        ente_id,
+        app_id
+        )
+        values
+        <foreach collection="sqlParam.dataList" item="item" index="index" separator=",">
+            (
+            #{item.thirdOrgId},
+            #{item.itemId},
+            #{item.itemName},
+            #{item.money},
+            #{sqlParam.periodYearNum},
+            #{sqlParam.enteId},
+            #{sqlParam.appId}
+            )
+        </foreach>
+        on duplicate key update
+        item_name=values(item_name),
+        money=values(money)
+    </insert>
+
+    <!-- 批量更新数据 -->
+    <update id="updateSalaryOrgBacth">
+        UPDATE hr_salary s
+            LEFT JOIN base_brand_rela br ON s.third_org_id = br.third_brand_id AND s.app_id = br.app_id
+            LEFT JOIN base_region_rela rr ON s.third_org_id = rr.third_region_id AND s.app_id = rr.app_id
+            LEFT JOIN base_shop_rela sr ON s.third_org_id = sr.third_shop_id AND s.app_id = sr.app_id
+            LEFT JOIN base_shop_dept_rela sdr ON s.third_org_id = sdr.third_shop_dept_id AND s.app_id = sdr.app_id
+        SET
+            s.org_id = coalesce(br.brand_id,rr.region_id, sr.shop_id,sdr.shop_dept_id)
+            <if test="param.lastUpdateTime != null">
+                ,s.last_update_time = #{param.lastUpdateTime}
+            </if>
+        WHERE
+            s.app_id =  #{param.appId}
+          AND s.ente_id = #{param.enteId}
+          AND (
+          s.last_update_time is null
+          <if test="param.lastUpdateTime != null">
+              or s.last_update_time &gt;= #{param.lastUpdateTime}
+          </if>
+          )
+    </update>
+
+</mapper>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.basedata.mapper.BaseShopTypeMapper">
+
+  <select id="findAllBaseShopTypeByEnteId" resultType="BaseShopTypeVo" parameterType="BaseShopTypeDto">
+    SELECT
+      DISTINCT shop_type_no,
+      shop_type_id,
+      shop_type_name,
+      ente_id
+    FROM
+        base_shop_type
+    where ente_id = #{enteId}
+  </select>
+  <select id="findOrderTypeInfoByEnteId" resultType="BaseOrderTypeVo" parameterType="String">
+    SELECT
+      DISTINCT
+      channel_id as OrderTypeId,
+      channel_name as OrderTypeName
+    FROM
+        pos_channel
+    where ente_id = #{enteId}
+  </select>
+</mapper>

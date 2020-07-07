@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.platform.mapper.AlertsRecordMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.platform.vo.AlertsRecordVo">
+    <id column="alerts_record_id" jdbcType="BIGINT" property="alertsRecordId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="goods_id" jdbcType="BIGINT" property="goodsId" />
+    <result column="goods_name" jdbcType="VARCHAR" property="goodsName" />
+    <result column="content" jdbcType="VARCHAR" property="content" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="alerts_type" jdbcType="INTEGER" property="alertsType" />
+    <result column="is_del" jdbcType="INTEGER" property="isDel" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    alerts_record_id, user_id, goods_id, goods_name, content, create_time,alerts_type,is_del
+  </sql>
+
+  <!--查询预警记录-->
+  <select id="selectAlertsRecord" parameterType="com.njwd.entity.platform.dto.AlertsRecordDto" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from wd_alerts_record
+    where user_id = #{userId}
+  </select>
+
+  <!--依据条件查询有效的预警记录-->
+  <select id="selectAlertsRecordUsed" parameterType="com.njwd.entity.platform.dto.AlertsRecordDto" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from wd_alerts_record
+    where is_del = 0 and user_id = #{userId}
+    <if test="alertsType != null">
+      and alerts_type = #{alertsType}
+    </if>
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from wd_alerts_record
+    where alerts_record_id = #{alertsRecordId,jdbcType=BIGINT}
+  </delete>
+
+  <!--批量插入预警记录表数据-->
+  <insert id="insertList" keyColumn="alerts_record_id" keyProperty="alertsRecordId" parameterType="java.util.List" useGeneratedKeys="true">
+    insert into wd_alerts_record (user_id, goods_id, goods_name, 
+      content, create_time,alerts_type)
+    values
+    <foreach collection="list" item="item" index="index" separator=",">
+      (
+      ifnull(#{item.userId},''),
+      ifnull(#{item.goodsId},-1),
+      ifnull(#{item.goodsName},''),
+      ifnull(#{item.content},''),
+      ifnull(#{item.createTime},NOW()),
+      ifnull(#{item.alertsType},1)
+      )
+    </foreach>
+  </insert>
+  <insert id="insertSelective" keyColumn="alerts_record_id" keyProperty="alertsRecordId" parameterType="com.njwd.entity.platform.dto.AlertsRecordDto" useGeneratedKeys="true">
+    insert into wd_alerts_record
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="goodsId != null">
+        goods_id,
+      </if>
+      <if test="goodsName != null">
+        goods_name,
+      </if>
+      <if test="content != null">
+        content,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        #{userId,jdbcType=BIGINT},
+      </if>
+      <if test="goodsId != null">
+        #{goodsId,jdbcType=BIGINT},
+      </if>
+      <if test="goodsName != null">
+        #{goodsName,jdbcType=VARCHAR},
+      </if>
+      <if test="content != null">
+        #{content,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.platform.dto.AlertsRecordDto">
+    update wd_alerts_record
+    <set>
+      <if test="userId != null">
+        user_id = #{userId,jdbcType=BIGINT},
+      </if>
+      <if test="goodsId != null">
+        goods_id = #{goodsId,jdbcType=BIGINT},
+      </if>
+      <if test="goodsName != null">
+        goods_name = #{goodsName,jdbcType=VARCHAR},
+      </if>
+      <if test="content != null">
+        content = #{content,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where alerts_record_id = #{alertsRecordId,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.njwd.entity.platform.dto.AlertsRecordDto">
+    update wd_alerts_record
+    set user_id = #{userId,jdbcType=BIGINT},
+      goods_id = #{goodsId,jdbcType=BIGINT},
+      goods_name = #{goodsName,jdbcType=VARCHAR},
+      content = #{content,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP}
+    where alerts_record_id = #{alertsRecordId,jdbcType=BIGINT}
+  </update>
+</mapper>

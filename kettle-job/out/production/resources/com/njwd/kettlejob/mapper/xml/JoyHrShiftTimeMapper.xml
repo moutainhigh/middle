@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.kettlejob.mapper.JoyHrShiftTimeMapper">
+
+    <!-- 批量删除信息 -->
+    <delete id="deleteBatch">
+        delete from hr_shift_time
+        where shift_id in
+        <foreach collection="sqlParam.dataIdList" item="item" index="index" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+        and app_id = #{sqlParam.appId}
+        and ente_id = #{sqlParam.enteId}
+    </delete>
+
+    <!-- 批量新增 -->
+    <insert id="insertBatch">
+        insert into hr_shift_time(
+            shift_time_id,
+            shift_time_name,
+            shift_id,
+            paid_time,
+            start_time,
+            end_time,
+            ente_id,
+            app_id
+        )
+        values
+        <foreach collection="sqlParam.dataList" item="item" index="index" separator=",">
+        (
+            #{item.shiftTimeId},
+            #{item.shiftTimeName},
+            #{item.shiftId},
+            #{item.paidTime},
+            #{item.startTime},
+            #{item.endTime},
+            #{sqlParam.enteId},
+            #{sqlParam.appId}
+        )
+        </foreach>
+    </insert>
+
+</mapper>

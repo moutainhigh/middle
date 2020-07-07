@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.report.mapper.FinReportTableMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.FinReportTable">
+    <!--@mbg.generated-->
+    <result column="ENTE_ID" jdbcType="VARCHAR" property="enteId" />
+    <result column="BRAND_ID" jdbcType="VARCHAR" property="brandId" />
+    <result column="REGION_ID" jdbcType="VARCHAR" property="regionId" />
+    <result column="SHOP_ID" jdbcType="VARCHAR" property="shopId" />
+    <result column="PERIOD_YEAR_NUM" jdbcType="INTEGER" property="periodYearNum" />
+    <result column="CLOSE_BALANCE" jdbcType="DECIMAL" property="closeBalance" />
+    <result column="YEAR_BALANCE" jdbcType="DECIMAL" property="yearBalance" />
+    <result column="ITEM_NAME" jdbcType="VARCHAR" property="itemName" />
+    <result column="ITEM_NUMBER" jdbcType="VARCHAR" property="itemNumber" />
+    <result column="ITEM_TYPE" jdbcType="INTEGER" property="itemType" />
+    <result column="ITEM_LEVEL" jdbcType="INTEGER" property="itemLevel" />
+    <result column="REPORT_ID" jdbcType="INTEGER" property="reportId" />
+    <result column="REPORT_NAME" jdbcType="VARCHAR" property="reportName" />
+  </resultMap>
+  <insert id="refreshFinReportTable">
+    INSERT INTO fin_report_table values
+    <foreach collection="reportItemSetVos" item="item" separator="," >
+      (#{item.enteId,jdbcType=VARCHAR},
+      #{item.brandId,jdbcType=VARCHAR} ,
+      #{item.regionId,jdbcType=VARCHAR} ,
+      #{item.shopId,jdbcType=VARCHAR} ,
+      #{item.periodYearNum,jdbcType=NUMERIC} ,
+      #{item.closeBalance,jdbcType=NUMERIC} ,
+      #{item.yearBalance,jdbcType=NUMERIC} ,
+      #{item.itemName,jdbcType=VARCHAR} ,
+      #{item.itemNumber,jdbcType=VARCHAR} ,
+      #{item.itemType,jdbcType=NUMERIC} ,
+      #{item.itemLevel,jdbcType=NUMERIC} ,
+      #{item.reportId,jdbcType=NUMERIC} ,
+      #{item.reportName,jdbcType=VARCHAR} ,
+      #{item.sortNum,jdbcType=NUMERIC} ,
+      #{item.amountBalance,jdbcType=NUMERIC} ,
+      #{item.totalAmountBalance,jdbcType=NUMERIC} ,
+      #{item.shopTypeId,jdbcType=VARCHAR} ,
+      #{item.lastAmountBalance,jdbcType=NUMERIC})
+    </foreach>
+  </insert>
+
+    <select id="findFinReportTableList" resultType="com.njwd.entity.reportdata.vo.FinReportTableVo">
+      select
+             t1.PERIOD_YEAR_NUM,
+             sum(t1.CLOSE_BALANCE) as closeBalance,
+             sum(t1.YEAR_BALANCE) as yearBalance,
+             t1.ITEM_NAME,
+             t1.ITEM_NUMBER,
+             t1.ITEM_TYPE,
+             t1.ITEM_LEVEL
+      from  fin_report_table t1
+      where
+      t1.ENTE_ID = #{enteId}
+      and t1.REPORT_ID = #{reportId}
+      and t1.PERIOD_YEAR_NUM=#{periodYearNum}
+      <if test="shopIdList != null and shopIdList.size() != 0">
+        AND t1.shop_id IN
+        <foreach collection="shopIdList" item="shopId" open="(" close=")" separator=",">
+          #{shopId}
+        </foreach>
+      </if>
+      group by t1.ITEM_NAME,
+      t1.ITEM_NUMBER,
+      t1.ITEM_TYPE,
+      t1.ITEM_LEVEL,
+      t1.PERIOD_YEAR_NUM,
+      t1.sort_num
+      order by t1.sort_num
+    </select>
+
+  <!--查询利润表-->
+  <select id="findProfitReportTableVo" parameterType="FinProfitReportTableDto" resultType="FinProfitReportTableVo">
+    SELECT
+      PERIOD_YEAR_NUM,
+      ITEM_NAME,
+      ITEM_NUMBER,
+      ITEM_NUMBER as itemLine,
+      ITEM_TYPE,
+      ITEM_LEVEL,
+      REPORT_ID,
+      REPORT_NAME,
+      SORT_NUM,
+      sum(AMOUNT_BALANCE) AS AMOUNT_BALANCE,
+      sum(TOTAL_AMOUNT_BALANCE) AS TOTAL_AMOUNT_BALANCE
+    FROM
+        fin_report_table t1
+    where
+      t1.ENTE_ID = #{enteId,jdbcType=VARCHAR}
+      and t1.REPORT_ID = #{reportId,jdbcType=NUMERIC}
+      and t1.PERIOD_YEAR_NUM=#{periodYearNum,jdbcType=NUMERIC}
+    <if test="shopIdList != null and shopIdList.size() != 0">
+      AND t1.shop_id IN
+      <foreach collection="shopIdList" item="shopId" open="(" close=")" separator=",">
+        #{shopId}
+      </foreach>
+    </if>
+    group by
+    PERIOD_YEAR_NUM,
+    ITEM_NAME,
+    ITEM_NUMBER,
+    ITEM_TYPE,
+    ITEM_LEVEL,
+    REPORT_ID,
+    REPORT_NAME,
+    SORT_NUM
+    order by t1.sort_num
+  </select>
+    <select id="findCashFlowReportTableVo" resultType="com.njwd.entity.reportdata.vo.FinCashFlowReportTableVo">
+      select
+      t1.PERIOD_YEAR_NUM,
+      sum(t1.AMOUNT_BALANCE) amountBalance,
+      sum(t1.LAST_AMOUNT_BALANCE) lastAmountBalance,
+      t1.ITEM_NAME,
+      t1.ITEM_NUMBER,
+      t1.ITEM_TYPE,
+      t1.ITEM_LEVEL
+      from  fin_report_table t1
+      where
+      t1.ENTE_ID = #{enteId}
+      and t1.REPORT_ID = #{reportId}
+      and t1.PERIOD_YEAR_NUM=#{periodYearNum}
+      <if test="shopIdList != null and shopIdList.size() != 0">
+        AND t1.shop_id IN
+        <foreach collection="shopIdList" item="shopId" open="(" close=")" separator=",">
+           #{shopId}
+        </foreach>
+      </if>
+      group by t1.ITEM_NAME,
+      t1.ITEM_NUMBER,
+      t1.ITEM_TYPE,
+      t1.ITEM_LEVEL,
+      t1.PERIOD_YEAR_NUM,
+      t1.sort_num
+      order by t1.sort_num
+    </select>
+
+  <delete id="deleteReportTableDataByCondition" parameterType="com.njwd.entity.reportdata.dto.BalanceDto">
+    DELETE
+    FROM
+        fin_report_table
+    WHERE
+        period_year_num >= #{periodYearNum,jdbcType=INTEGER}
+        AND ente_id = #{enteId,jdbcType=VARCHAR}
+        AND report_id in
+    <foreach collection="reportIdList" item="item" open="(" close=")" separator=",">
+      #{item,jdbcType=INTEGER}
+    </foreach>
+  </delete>
+  <select id="findNetProfit" resultType="com.njwd.entity.reportdata.vo.NetProfitVo">
+    SELECT
+        t1.shop_id,
+        t1.AMOUNT_BALANCE AS netProfit
+    FROM
+    fin_report_table t1
+    LEFT JOIN base_company c on t1.shop_id = c.shop_id
+    where
+    t1.ENTE_ID = #{queryDto.enteId,jdbcType=VARCHAR}
+    and t1.REPORT_ID = #{queryDto.reportId,jdbcType=NUMERIC}
+    and t1.PERIOD_YEAR_NUM=#{queryDto.periodYearNum,jdbcType=NUMERIC}
+    and t1.item_name='五、净利润'
+    <if test="queryDto.shopIdList != null and queryDto.shopIdList.size()>0">
+      AND
+      <foreach collection="queryDto.shopIdList" index="index" item="item" open="(" separator=" OR "
+               close=")">
+        t1.shop_id =#{item}
+      </foreach>
+    </if>
+    <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size()>0">
+      AND
+      <foreach collection="queryDto.shopTypeIdList" index="index" item="item" open="(" separator=" OR "
+               close=")">
+        c.shop_type_id =#{item}
+      </foreach>
+    </if>
+  </select>
+</mapper>

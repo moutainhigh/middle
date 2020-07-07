@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportdata.mapper.CrmCardVarMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.CrmCardVar">
+    <!--@mbg.generated-->
+    <!--@Table crm_card_var-->
+    <id column="card_id" jdbcType="VARCHAR" property="cardId" />
+    <id column="app_id" jdbcType="VARCHAR" property="appId" />
+    <id column="ente_id" jdbcType="VARCHAR" property="enteId" />
+    <result column="money" jdbcType="NUMERIC" property="money" />
+    <result column="prepaid_money" jdbcType="NUMERIC" property="prepaidMoney" />
+    <result column="largess_money" jdbcType="NUMERIC" property="largessMoney" />
+    <result column="total_money" jdbcType="NUMERIC" property="totalMoney" />
+    <result column="total_prepaid_money" jdbcType="NUMERIC" property="totalPrepaidMoney" />
+    <result column="total_largess_money" jdbcType="NUMERIC" property="totalLargessMoney" />
+    <result column="integral" jdbcType="INTEGER" property="integral" />
+    <result column="total_integral" jdbcType="INTEGER" property="totalIntegral" />
+    <result column="total_consume_num" jdbcType="INTEGER" property="totalConsumeNum" />
+    <result column="total_consume_money" jdbcType="NUMERIC" property="totalConsumeMoney" />
+    <result column="last_handle_time" jdbcType="DATE" property="lastHandleTime" />
+    <result column="shop_id" jdbcType="VARCHAR" property="shopId" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    card_id, app_id, ente_id, money, prepaid_money, largess_money, total_money, total_prepaid_money, 
+    total_largess_money, integral, total_integral, total_consume_num, total_consume_money, 
+    last_handle_time, shop_id
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    <!--@mbg.generated-->
+    select 
+    <include refid="Base_Column_List" />
+    from crm_card_var
+    where card_id = #{cardId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    <!--@mbg.generated-->
+    delete from crm_card_var
+    where card_id = #{cardId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.njwd.entity.reportdata.CrmCardVar">
+    <!--@mbg.generated-->
+    insert into crm_card_var (card_id, app_id, ente_id, 
+      money, prepaid_money, largess_money, 
+      total_money, total_prepaid_money, total_largess_money, 
+      integral, total_integral, total_consume_num, 
+      total_consume_money, last_handle_time, shop_id
+      )
+    values (#{cardId,jdbcType=VARCHAR}, #{appId,jdbcType=VARCHAR}, #{enteId,jdbcType=VARCHAR}, 
+      #{money,jdbcType=NUMERIC}, #{prepaidMoney,jdbcType=NUMERIC}, #{largessMoney,jdbcType=NUMERIC}, 
+      #{totalMoney,jdbcType=NUMERIC}, #{totalPrepaidMoney,jdbcType=NUMERIC}, #{totalLargessMoney,jdbcType=NUMERIC}, 
+      #{integral,jdbcType=INTEGER}, #{totalIntegral,jdbcType=INTEGER}, #{totalConsumeNum,jdbcType=INTEGER}, 
+      #{totalConsumeMoney,jdbcType=NUMERIC}, #{lastHandleTime,jdbcType=DATE}, #{shopId,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.njwd.entity.reportdata.CrmCardVar">
+    <!--@mbg.generated-->
+    insert into crm_card_var
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="cardId != null">
+        card_id,
+      </if>
+      <if test="appId != null">
+        app_id,
+      </if>
+      <if test="enteId != null">
+        ente_id,
+      </if>
+      <if test="money != null">
+        money,
+      </if>
+      <if test="prepaidMoney != null">
+        prepaid_money,
+      </if>
+      <if test="largessMoney != null">
+        largess_money,
+      </if>
+      <if test="totalMoney != null">
+        total_money,
+      </if>
+      <if test="totalPrepaidMoney != null">
+        total_prepaid_money,
+      </if>
+      <if test="totalLargessMoney != null">
+        total_largess_money,
+      </if>
+      <if test="integral != null">
+        integral,
+      </if>
+      <if test="totalIntegral != null">
+        total_integral,
+      </if>
+      <if test="totalConsumeNum != null">
+        total_consume_num,
+      </if>
+      <if test="totalConsumeMoney != null">
+        total_consume_money,
+      </if>
+      <if test="lastHandleTime != null">
+        last_handle_time,
+      </if>
+      <if test="shopId != null">
+        shop_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="cardId != null">
+        #{cardId,jdbcType=VARCHAR},
+      </if>
+      <if test="appId != null">
+        #{appId,jdbcType=VARCHAR},
+      </if>
+      <if test="enteId != null">
+        #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="money != null">
+        #{money,jdbcType=NUMERIC},
+      </if>
+      <if test="prepaidMoney != null">
+        #{prepaidMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="largessMoney != null">
+        #{largessMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="totalMoney != null">
+        #{totalMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="totalPrepaidMoney != null">
+        #{totalPrepaidMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="totalLargessMoney != null">
+        #{totalLargessMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="integral != null">
+        #{integral,jdbcType=INTEGER},
+      </if>
+      <if test="totalIntegral != null">
+        #{totalIntegral,jdbcType=INTEGER},
+      </if>
+      <if test="totalConsumeNum != null">
+        #{totalConsumeNum,jdbcType=INTEGER},
+      </if>
+      <if test="totalConsumeMoney != null">
+        #{totalConsumeMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="lastHandleTime != null">
+        #{lastHandleTime,jdbcType=DATE},
+      </if>
+      <if test="shopId != null">
+        #{shopId,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.reportdata.CrmCardVar">
+    <!--@mbg.generated-->
+    update crm_card_var
+    <set>
+      <if test="money != null">
+        money = #{money,jdbcType=NUMERIC},
+      </if>
+      <if test="prepaidMoney != null">
+        prepaid_money = #{prepaidMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="largessMoney != null">
+        largess_money = #{largessMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="totalMoney != null">
+        total_money = #{totalMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="totalPrepaidMoney != null">
+        total_prepaid_money = #{totalPrepaidMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="totalLargessMoney != null">
+        total_largess_money = #{totalLargessMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="integral != null">
+        integral = #{integral,jdbcType=INTEGER},
+      </if>
+      <if test="totalIntegral != null">
+        total_integral = #{totalIntegral,jdbcType=INTEGER},
+      </if>
+      <if test="totalConsumeNum != null">
+        total_consume_num = #{totalConsumeNum,jdbcType=INTEGER},
+      </if>
+      <if test="totalConsumeMoney != null">
+        total_consume_money = #{totalConsumeMoney,jdbcType=NUMERIC},
+      </if>
+      <if test="lastHandleTime != null">
+        last_handle_time = #{lastHandleTime,jdbcType=DATE},
+      </if>
+      <if test="shopId != null">
+        shop_id = #{shopId,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where card_id = #{cardId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.njwd.entity.reportdata.CrmCardVar">
+    <!--@mbg.generated-->
+    update crm_card_var
+    set money = #{money,jdbcType=NUMERIC},
+      prepaid_money = #{prepaidMoney,jdbcType=NUMERIC},
+      largess_money = #{largessMoney,jdbcType=NUMERIC},
+      total_money = #{totalMoney,jdbcType=NUMERIC},
+      total_prepaid_money = #{totalPrepaidMoney,jdbcType=NUMERIC},
+      total_largess_money = #{totalLargessMoney,jdbcType=NUMERIC},
+      integral = #{integral,jdbcType=INTEGER},
+      total_integral = #{totalIntegral,jdbcType=INTEGER},
+      total_consume_num = #{totalConsumeNum,jdbcType=INTEGER},
+      total_consume_money = #{totalConsumeMoney,jdbcType=NUMERIC},
+      last_handle_time = #{lastHandleTime,jdbcType=DATE},
+      shop_id = #{shopId,jdbcType=VARCHAR}
+    where card_id = #{cardId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+  </update>
+</mapper>

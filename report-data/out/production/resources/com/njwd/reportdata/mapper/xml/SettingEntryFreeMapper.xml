@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.SettingEntryFreeMapper" >
+
+    <select id="findSettingEntryFree" resultType="com.njwd.entity.reportdata.vo.SettingEntryFreeVo">
+        select ef.id,
+        ef.brand_id,
+        ef.region_id,
+        ef.shop_id,
+        ef.supplier_id,
+        ef.ma
+        ef.material_id,
+        ef.begin_date,
+        ef.end_date,
+        ef.status,
+        ef.ente_id,
+        ef.create_time,
+        ef.update_time
+        from wd_setting_entry_free ef
+        <where>
+            ef.id = #{param.id}
+        </where>
+    </select>
+
+    <!-- 查询啤酒进场费列表 -->
+    <select id="findSettingEntryFreeList" resultType="com.njwd.entity.reportdata.vo.SettingEntryFreeVo">
+        select ef.id,
+        ef.brand_id,
+        b.brand_code,
+        b.brand_name,
+        ef.region_id,
+        r.region_code,
+        r.region_name,
+        ef.shop_id,
+        ss.shop_no,
+        ss.shop_name,
+        ef.supplier_id,
+        s.number,
+        s.supplier_name,
+        m.material_id,
+        m."number" material_number,
+        m.material_name,
+        ef.money,
+        ef.begin_date,
+        ef.end_date,
+        ef.begin_date || ' - ' || ef.end_date datestr,
+        ef.status,
+        ef.ente_id
+        from wd_setting_entry_free ef
+        left join base_brand b on ef.brand_id = b.brand_id
+        left join base_region r on ef.region_id = r.region_id
+        left join base_shop ss on ef.shop_id = ss.shop_id
+        left join base_supplier s on ef.supplier_id = s.supplier_id
+        left join base_material m on ef.material_id = m.material_id
+        <where>
+            and ef.ente_id = #{param.enteId}
+            <if test="param.query != null and param.query != ''">
+                and (
+                b.brand_name like concat('%',#{param.query},'%')
+                or r.region_name like concat('%',#{param.query},'%')
+                or ss.shop_name like concat('%',#{param.query},'%')
+                or s.number like concat('%',#{param.query},'%')
+                or s.supplier_name like concat('%',#{param.query},'%')
+                or m.number like concat('%',#{param.query},'%')
+                or m.material_name like concat('%',#{param.query},'%')
+                <!-- 数字 -->
+                <if test="param.queryType ==1">
+                    or ef.money = ${param.query}
+                </if>
+                <!-- 日期 -->
+                <if test="param.queryType ==2">
+                    or ef.begin_date = '${param.query}'
+                    or ef.end_date = '${param.query}'
+                </if>
+                )
+            </if>
+        </where>
+        order by ef.create_time desc,ef."id" desc
+    </select>
+
+    <!-- 获取对应转化值 -->
+    <select id="findConvertDataList" resultType="com.njwd.entity.reportdata.ConvertData">
+        SELECT * FROM (
+            SELECT '0' "index", brand_id convert_data,brand_name  old_data
+                FROM base_brand
+                WHERE ente_id = #{enteId}
+            UNION ALL
+                SELECT '1' "index", region_id convert_data ,region_name old_data
+                FROM base_region
+                WHERE ente_id = #{enteId}
+            UNION ALL
+                SELECT '2' "index",shop_id convert_data,shop_name old_data
+                FROM base_shop
+                WHERE ente_id = #{enteId}
+            )tab
+        ORDER BY "index",convert_data
+    </select>
+
+    <!-- 查询是否存在该供应商数据 -->
+    <select id="findSupplierInfo" resultType="java.util.HashMap">
+        select s.shop_id "2",bs."number" "3",bs.supplier_id "convert_data"
+        from base_shop s
+                 inner join base_company bc on s.shop_id = bc.shop_id
+                 inner join base_supplier bs on bc.company_id = bs.use_org_id
+        where s.ente_id = #{enteId}
+        and(
+        <foreach collection="valueList" index="index" item="item" separator="or">
+            (s.shop_id = #{item.shopId} and bs."number" = #{item.number})
+        </foreach>
+        )
+    </select>
+
+    <!-- 查询是否存在该物料数据 -->
+    <select id="findMaterialInfo" resultType="java.util.HashMap">
+        select s.shop_id "2",bm."number" "5",bm.material_id "convert_data"
+        from base_shop s
+        inner join base_company bc on s.shop_id = bc.shop_id
+        inner join base_material bm on bc.company_id = bm.use_org_id
+        where s.ente_id = #{enteId}
+        and(
+        <foreach collection="valueList" index="index" item="item" separator="or">
+            (s.shop_id = #{item.shopId} and bm."number" = #{item.materialNumber})
+        </foreach>
+        )
+    </select>
+
+    <!-- 查询重复数据数量 -->
+    <select id="findDuplicateData"  resultType="com.njwd.entity.reportdata.vo.SettingEntryFreeVo">
+        select begin_date,end_date
+        from wd_setting_entry_free
+        <where>
+            and ente_id = #{param.enteId}
+            and shop_id = #{param.shopId}
+            and supplier_id = #{param.supplierId}
+            and id != #{param.id}
+        </where>
+    </select>
+
+    <!-- 查询重复的数据 -->
+    <select id="findDuplicateDataList" resultType="java.util.HashMap">
+        SELECT shop_id "2",supplier_id "3",material_id "5",begin_date||'' begin_date,end_date||'' end_date
+        FROM wd_setting_entry_free
+        WHERE ente_id = #{enteId}
+        AND(
+        <foreach collection="valueList" index="index" item="item" separator="or">
+            (shop_id = #{item.shopId} and supplier_id = #{item.supplierId} and material_id = #{item.materialId})
+        </foreach>
+        )
+    </select>
+
+    <!-- 更新啤酒进场费状态 -->
+    <update id="updateSettingEntryFree">
+        update wd_setting_entry_free
+        <set>
+            money = #{param.money},
+            begin_date = #{param.beginDate},
+            end_date = #{param.endDate},
+            update_time =#{param.updateTime}
+        </set>
+        <where>
+            and id = #{param.id}
+            and ente_id = #{param.enteId}
+        </where>
+    </update>
+
+    <!-- 更新啤酒进场费状态 -->
+    <update id="updateSettingEntryFreeStatus">
+        update wd_setting_entry_free
+        <set>
+            status = #{param.status},
+            update_time = #{param.updateTime}
+        </set>
+        <where>
+            and id = #{param.id}
+            and ente_id = #{param.enteId}
+        </where>
+    </update>
+
+    <!-- 批量新增 -->
+    <insert id="insertDataBatch">
+        insert into wd_setting_entry_free
+        (
+        id,
+        brand_id,
+        region_id,
+        shop_id,
+        supplier_id,
+        supplier_no,
+        material_id,
+        material_no,
+        money,
+        begin_date,
+        end_date,
+        status,
+        ente_id,
+        create_time
+        )
+        VALUES
+        <foreach collection="dataList" index="index" item="item" separator=",">
+            (
+            #{item.id},
+            #{item.brandId},
+            #{item.regionId},
+            #{item.shopId},
+            #{item.supplierId},
+            #{item.supplierNo},
+            #{item.materialId},
+            #{item.materialNo},
+            #{item.money},
+            #{item.beginDate},
+            #{item.endDate},
+            1,
+            #{item.enteId},
+            #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+    <!--根据供应商编码和门店id查询赌对应供应商信息-->
+    <select id="findBearSettingInfo" parameterType="com.njwd.entity.reportdata.dto.SettingEntryFreeDto" resultType="com.njwd.entity.reportdata.vo.SettingEntryFreeVo">
+        SELECT
+        shop_id,
+        supplier_no as number,
+        material_no,
+        sum(money) as money
+        FROM
+        wd_setting_entry_free
+        WHERE
+        status = 1
+        AND begin_date &lt;=#{beginDate}
+        AND end_date &gt;=#{endDate}
+        <if test="shopIdList != null and shopIdList.size() != 0">
+            and shop_id in
+            <foreach collection="shopIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="supplierNoList != null and supplierNoList.size() != 0">
+            and supplier_no in
+            <foreach collection="supplierNoList" item="item" close=")" open="(" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        group by shop_id,supplier_no,material_no
+    </select>
+
+</mapper>

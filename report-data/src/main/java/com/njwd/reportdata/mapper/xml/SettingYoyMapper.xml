@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.SettingYoyMapper" >
+
+    <!-- 查询同比环比阀值-->
+    <select id="findSettingYoy" resultType="com.njwd.entity.reportdata.vo.SettingYoyVo">
+        SELECT
+            y.id,
+            y.table_name,
+            y.yoy,
+            y.mom,
+            y.begin_date,
+            y.end_date,
+            y.status,
+            y.ente_id,
+            y.create_time,
+            y.update_time
+        FROM
+            wd_setting_yoy y
+        <where>
+            and y.id = #{param.id}
+            and y.ente_id = #{param.enteId}
+        </where>
+    </select>
+
+    <!-- 查询实时利润预算列表 -->
+    <select id="findSettingYoyList" resultType="com.njwd.entity.reportdata.vo.SettingYoyVo">
+        SELECT
+        y.id,
+        y.table_name,
+        y.yoy,
+        y.mom,
+        y.begin_date||' - '||y.end_date dateStr,
+        y.status,
+        y.ente_id,
+        y.create_time,
+        y.update_time
+        FROM
+        wd_setting_yoy y
+        <where>
+            AND y.ente_id = #{param.enteId}
+            <if test="param.query != null and param.query != ''">
+                AND (
+                y.table_name LIKE CONCAT('%',#{param.query},'%')
+                <!-- 数字 -->
+                <if test="param.queryType ==1">
+                    OR y.yoy = ${param.query}
+                    OR y.mom = ${param.query}
+                </if>
+                <!-- 日期 -->
+                <if test="param.queryType ==2">
+                OR y.begin_date = '${param.query}'
+                OR y.end_date = '${param.query}'
+                </if>
+                )
+            </if>
+        </where>
+        ORDER BY y.create_time DESC,y.id DESC
+    </select>
+
+    <!-- 查询重复的数据 -->
+    <select id="findDuplicateDataList" resultType="java.util.HashMap">
+        SELECT
+        table_name "0",begin_date||'' begin_date,end_date||'' end_date
+        FROM wd_setting_yoy
+        WHERE ente_id = #{enteId}
+        AND(
+        <foreach collection="valueList" index="index" item="item" separator="or">
+            (table_name = #{item.tableName})
+        </foreach>
+        )
+    </select>
+
+    <!-- 更新经营日报状态 -->
+    <update id="updateSettingYoyStatus">
+        update wd_setting_yoy
+        <set>
+            status = #{param.status}
+        </set>
+        <where>
+            and id = #{param.id}
+            and ente_id = #{param.enteId}
+        </where>
+    </update>
+
+
+    <!-- 批量新增 -->
+    <insert id="insertDataBatch">
+        INSERT INTO wd_setting_yoy
+        (
+        id,
+        table_name,
+        yoy,
+        mom,
+        begin_date,
+        end_date,
+        status,
+        ente_id,
+        create_time
+        )
+        VALUES
+        <foreach collection="dataList" index="index" item="item" separator=",">
+            (
+            #{item.id},
+            #{item.tableName},
+            #{item.yoy},
+            #{item.mom},
+            #{item.beginDate},
+            #{item.endDate},
+            1,
+            #{item.enteId},
+            #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.admin.mapper.PrimaryPaddingMapper">
+    <select id="getTableAllAttribute" resultType="com.njwd.entity.admin.TableAttribute">
+        SELECT
+            b.table_name,
+            b.column_name,
+            b.column_desc
+        FROM
+            wd_table_obj a,
+            wd_table_attribute b
+        WHERE
+            a.table_name = b.table_name
+        AND a.table_name in
+        <foreach collection="list" item="item"  open="(" close=")" separator=",">
+            #{item.tableName}
+        </foreach>
+
+    </select>
+
+    <select id="getPrimayPadding" resultType="com.njwd.entity.admin.vo.PrimaryPaddingVo">
+        SELECT
+            a.padding_id,
+            source_col AS source_column,
+            target_col AS base_column,
+            target_table,
+            a.app_id as source_app_id,
+            b.app_name as source_app_name,
+            0 AS joint_flag,
+            0 AS fixed_flag
+        FROM
+            wd_primary_padding a,
+            wd_app b
+        WHERE
+            a.app_id = b.app_id
+        AND ente_id = #{enterpriseId}
+        AND data_type = #{dataType}
+    </select>
+
+    <update id="executeOneToOnePadding" parameterType="map">
+        <foreach collection="_parameter.entrySet()" item="value"  index="key" separator=";">
+            update ${key} table0
+            ${value}
+        </foreach>
+    </update>
+
+    <delete id="executeOneToManyDelete" parameterType="map">
+        <foreach collection="_parameter.entrySet()" item="value"  index="key" separator=";">
+            delete table0 from  ${key} table0
+            ${value.deleteSql}
+        </foreach>
+    </delete>
+
+    <select id="executeOneToManyInsert" parameterType="map">
+        <foreach collection="_parameter.entrySet()" item="value"  index="key" separator=";">
+            insert into ${key}
+            ${value.insertSql}
+        </foreach>
+    </select>
+</mapper>

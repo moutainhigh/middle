@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.RepCrmTurnoverMapper">
+    <!-- 查询会员储值消费信息 -->
+    <select id="findMemberConsumeInfo" parameterType="com.njwd.entity.reportdata.dto.RepCrmTurnoverDto" resultType="com.njwd.entity.reportdata.vo.RepCrmTurnoverVo">
+    SELECT
+        SUM ( CASE WHEN account_date BETWEEN #{beginDate,jdbcType=DATE} AND #{endDate,jdbcType=DATE} THEN prepaid_money ELSE 0 END ) AS total_prepaid_money,
+        SUM ( CASE WHEN account_date BETWEEN #{beginDate,jdbcType=DATE} AND #{endDate,jdbcType=DATE} THEN consume_money ELSE 0 END ) AS consume_money,
+        SUM ( total_prepaid_money ) - SUM ( consume_prepaid_money ) AS memberBalance
+    FROM
+        rep_crm_turnover
+    WHERE
+        ente_id = #{enteId,jdbcType=VARCHAR}
+        <if test="shopIdList != null and shopIdList.size() != 0">
+            AND shop_id in
+            <foreach collection="shopIdList" item="shopId" open="(" close=")" separator=",">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() != 0">
+            AND shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" open="(" close=")" separator=",">
+                #{shopTypeId}
+            </foreach>
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.DeskTypeAnalysisMapper" >
+
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.vo.DeskTypeAnalysisVo">
+  </resultMap>
+
+  <select id="findDeskNumByType" resultMap="BaseResultMap" parameterType="com.njwd.entity.reportdata.dto.DeskTypeAnalysisDto" >
+    select u.* from (
+    select
+    count(bd.desk_id) deskNum,
+    bdat.desk_area_type_no deskAreaTypeNo,
+    bdat.desk_area_type_name deskAreaTypeName,
+    bdt.desk_type_name deskTypeName
+    from base_shop bs
+    left join base_desk bd on bd.shop_id = bs.shop_id and bd.is_noopentable = 1
+    and bd.status = 0
+    left join base_desk_type bdt on bd.desk_type_id = bdt.desk_type_id
+    left join base_desk_area bda on bd.desk_area_id = bda.desk_area_id
+    left join base_desk_area_type bdat on bda.desk_area_type_no = bdat.desk_area_type_no
+    where bs.ente_id = #{deskTypeAnalysisDto.enteId}
+    <if test="deskTypeAnalysisDto.shopTypeIdList != null and deskTypeAnalysisDto.shopTypeIdList.size() > 0 ">and
+      bs.shop_type_id in
+      <foreach collection="deskTypeAnalysisDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+          #{shopTypeId}
+        </foreach>
+      </if>
+      <if test="deskTypeAnalysisDto.shopIdList != null and deskTypeAnalysisDto.shopIdList.size() > 0 ">
+        and bs.shop_id in
+        <foreach collection="deskTypeAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+          #{shopId}
+        </foreach>
+      </if>
+    GROUP BY bdat.desk_area_type_no,bdat.desk_area_type_name,bdt.desk_type_name
+    ) u
+    where u.deskNum != 0
+  </select>
+
+  <select id="findDeskTypeAnalysisReport" resultMap="BaseResultMap" parameterType="com.njwd.entity.reportdata.dto.DeskTypeAnalysisDto" >
+   SELECT
+	desk_area_type_no deskAreaTypeNo,
+	desk_area_type_name deskAreaTypeName,
+	desk_type_name deskTypeName,
+	sum( desk_count ) stationsNum,
+	sum(client_count) customNum,
+	sum(amount) turnover
+  FROM
+	rep_pos_desk
+  WHERE
+	ente_id = #{deskTypeAnalysisDto.enteId}
+    and is_noopentable = 1
+    and def1 = '1'
+    <if test="deskTypeAnalysisDto.shopIdList != null and deskTypeAnalysisDto.shopIdList.size() > 0 ">
+      and shop_id in
+      <foreach collection="deskTypeAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+        #{shopId}
+      </foreach>
+    </if>
+    and account_date between #{deskTypeAnalysisDto.startDate} and #{deskTypeAnalysisDto.endDate}
+    <if test="deskTypeAnalysisDto.shopTypeIdList != null and deskTypeAnalysisDto.shopTypeIdList.size() > 0 ">
+      and shop_type_id in
+      <foreach collection="deskTypeAnalysisDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+        #{shopTypeId}
+      </foreach>
+    </if>
+  GROUP BY
+    desk_area_type_no,
+    desk_area_type_name,
+    desk_type_name
+  </select>
+
+</mapper>

@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportdata.mapper.CrmMemberMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.CrmMember">
+    <!--@mbg.generated-->
+    <!--@Table crm_member-->
+    <id column="member_id" jdbcType="VARCHAR" property="memberId" />
+    <id column="app_id" jdbcType="VARCHAR" property="appId" />
+    <id column="ente_id" jdbcType="VARCHAR" property="enteId" />
+    <result column="member_name" jdbcType="VARCHAR" property="memberName" />
+    <result column="birthday" jdbcType="DATE" property="birthday" />
+    <result column="sex" jdbcType="VARCHAR" property="sex" />
+    <result column="member_type_id" jdbcType="VARCHAR" property="memberTypeId" />
+    <result column="mobile" jdbcType="VARCHAR" property="mobile" />
+    <result column="email" jdbcType="VARCHAR" property="email" />
+    <result column="address" jdbcType="VARCHAR" property="address" />
+    <result column="cid" jdbcType="VARCHAR" property="cid" />
+    <result column="openid" jdbcType="VARCHAR" property="openid" />
+    <result column="register_time" jdbcType="TIMESTAMP" property="registerTime" />
+    <result column="un_register_time" jdbcType="TIMESTAMP" property="unRegisterTime" />
+    <result column="shop_id" jdbcType="VARCHAR" property="shopId" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    member_id, app_id, ente_id, member_name, birthday, sex, member_type_id, mobile, email, 
+    address, cid, openid, register_time, un_register_time, shop_id
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    <!--@mbg.generated-->
+    select 
+    <include refid="Base_Column_List" />
+    from crm_member
+    where member_id = #{memberId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    <!--@mbg.generated-->
+    delete from crm_member
+    where member_id = #{memberId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.njwd.entity.reportdata.CrmMember">
+    <!--@mbg.generated-->
+    insert into crm_member (member_id, app_id, ente_id, 
+      member_name, birthday, sex, 
+      member_type_id, mobile, email, 
+      address, cid, openid, 
+      register_time, un_register_time, shop_id
+      )
+    values (#{memberId,jdbcType=VARCHAR}, #{appId,jdbcType=VARCHAR}, #{enteId,jdbcType=VARCHAR}, 
+      #{memberName,jdbcType=VARCHAR}, #{birthday,jdbcType=DATE}, #{sex,jdbcType=VARCHAR}, 
+      #{memberTypeId,jdbcType=VARCHAR}, #{mobile,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, 
+      #{address,jdbcType=VARCHAR}, #{cid,jdbcType=VARCHAR}, #{openid,jdbcType=VARCHAR}, 
+      #{registerTime,jdbcType=TIMESTAMP}, #{unRegisterTime,jdbcType=TIMESTAMP}, #{shopId,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.njwd.entity.reportdata.CrmMember">
+    <!--@mbg.generated-->
+    insert into crm_member
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="memberId != null">
+        member_id,
+      </if>
+      <if test="appId != null">
+        app_id,
+      </if>
+      <if test="enteId != null">
+        ente_id,
+      </if>
+      <if test="memberName != null">
+        member_name,
+      </if>
+      <if test="birthday != null">
+        birthday,
+      </if>
+      <if test="sex != null">
+        sex,
+      </if>
+      <if test="memberTypeId != null">
+        member_type_id,
+      </if>
+      <if test="mobile != null">
+        mobile,
+      </if>
+      <if test="email != null">
+        email,
+      </if>
+      <if test="address != null">
+        address,
+      </if>
+      <if test="cid != null">
+        cid,
+      </if>
+      <if test="openid != null">
+        openid,
+      </if>
+      <if test="registerTime != null">
+        register_time,
+      </if>
+      <if test="unRegisterTime != null">
+        un_register_time,
+      </if>
+      <if test="shopId != null">
+        shop_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="memberId != null">
+        #{memberId,jdbcType=VARCHAR},
+      </if>
+      <if test="appId != null">
+        #{appId,jdbcType=VARCHAR},
+      </if>
+      <if test="enteId != null">
+        #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="memberName != null">
+        #{memberName,jdbcType=VARCHAR},
+      </if>
+      <if test="birthday != null">
+        #{birthday,jdbcType=DATE},
+      </if>
+      <if test="sex != null">
+        #{sex,jdbcType=VARCHAR},
+      </if>
+      <if test="memberTypeId != null">
+        #{memberTypeId,jdbcType=VARCHAR},
+      </if>
+      <if test="mobile != null">
+        #{mobile,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null">
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="address != null">
+        #{address,jdbcType=VARCHAR},
+      </if>
+      <if test="cid != null">
+        #{cid,jdbcType=VARCHAR},
+      </if>
+      <if test="openid != null">
+        #{openid,jdbcType=VARCHAR},
+      </if>
+      <if test="registerTime != null">
+        #{registerTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="unRegisterTime != null">
+        #{unRegisterTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="shopId != null">
+        #{shopId,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.reportdata.CrmMember">
+    <!--@mbg.generated-->
+    update crm_member
+    <set>
+      <if test="memberName != null">
+        member_name = #{memberName,jdbcType=VARCHAR},
+      </if>
+      <if test="birthday != null">
+        birthday = #{birthday,jdbcType=DATE},
+      </if>
+      <if test="sex != null">
+        sex = #{sex,jdbcType=VARCHAR},
+      </if>
+      <if test="memberTypeId != null">
+        member_type_id = #{memberTypeId,jdbcType=VARCHAR},
+      </if>
+      <if test="mobile != null">
+        mobile = #{mobile,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null">
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="address != null">
+        address = #{address,jdbcType=VARCHAR},
+      </if>
+      <if test="cid != null">
+        cid = #{cid,jdbcType=VARCHAR},
+      </if>
+      <if test="openid != null">
+        openid = #{openid,jdbcType=VARCHAR},
+      </if>
+      <if test="registerTime != null">
+        register_time = #{registerTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="unRegisterTime != null">
+        un_register_time = #{unRegisterTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="shopId != null">
+        shop_id = #{shopId,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where member_id = #{memberId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.njwd.entity.reportdata.CrmMember">
+    <!--@mbg.generated-->
+    update crm_member
+    set member_name = #{memberName,jdbcType=VARCHAR},
+      birthday = #{birthday,jdbcType=DATE},
+      sex = #{sex,jdbcType=VARCHAR},
+      member_type_id = #{memberTypeId,jdbcType=VARCHAR},
+      mobile = #{mobile,jdbcType=VARCHAR},
+      email = #{email,jdbcType=VARCHAR},
+      address = #{address,jdbcType=VARCHAR},
+      cid = #{cid,jdbcType=VARCHAR},
+      openid = #{openid,jdbcType=VARCHAR},
+      register_time = #{registerTime,jdbcType=TIMESTAMP},
+      un_register_time = #{unRegisterTime,jdbcType=TIMESTAMP},
+      shop_id = #{shopId,jdbcType=VARCHAR}
+    where member_id = #{memberId,jdbcType=VARCHAR}
+      and app_id = #{appId,jdbcType=VARCHAR}
+      and ente_id = #{enteId,jdbcType=VARCHAR}
+  </update>
+</mapper>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.kettlejob.mapper.TaskParamMapper" >
+
+    <update id="updateTaskParam" parameterType="com.njwd.entity.schedule.dto.TaskParamDto" >
+        update wd_task_param
+        <trim prefix="set" suffixOverrides=",">
+            <if test="taskParamDto.status != null" >
+                status = #{taskParamDto.status,jdbcType=INTEGER},
+            </if>
+            <if test="taskParamDto.param != null" >
+                last_param = param,
+                param = #{taskParamDto.param,jdbcType=VARCHAR},
+            </if>
+        </trim>
+        where task_key = #{taskParamDto.taskKey} and ente_id=#{taskParamDto.enteId}
+        and status = 1
+    </update>
+
+    <update id="updateTaskParamBatch" parameterType="java.util.List" >
+        <foreach collection="list" item="taskParamDto" index="index" separator=";">
+            update wd_task_param
+            <trim prefix="set" suffixOverrides=",">
+                <if test="taskParamDto.status != null" >
+                    status = #{taskParamDto.status,jdbcType=INTEGER},
+                </if>
+                <if test="taskParamDto.param != null" >
+                    last_param = param,
+                    param = #{taskParamDto.param,jdbcType=VARCHAR},
+                </if>
+            </trim>
+            where task_key = #{taskParamDto.taskKey} and ente_id=#{taskParamDto.enteId}
+        </foreach>
+    </update>
+
+    <select id="findTaskParamByKey" resultType="com.njwd.entity.schedule.vo.TaskParamVo" parameterType="com.njwd.entity.schedule.dto.TaskParamDto">
+        select ente_id,task_key,business_type,param_type,param,status,last_param
+        from wd_task_param where task_key=#{taskParamDto.taskKey} and ente_id=#{taskParamDto.enteId}
+    </select>
+
+    <select id="findTaskParamListByKeys" resultType="com.njwd.entity.schedule.vo.TaskParamVo" parameterType="map">
+        select ente_id,task_key,business_type,param_type,param,status,last_param
+        from wd_task_param where task_key in
+        <foreach collection="taskKeyList" item="taskKey" index="index"  open="(" separator="," close=")">
+            #{taskKey}
+        </foreach>
+        and ente_id=#{enteId}
+
+    </select>
+
+</mapper>

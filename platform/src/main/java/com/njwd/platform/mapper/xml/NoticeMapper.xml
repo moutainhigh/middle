@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.platform.mapper.NoticeMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.platform.vo.NoticeVo">
+    <id column="notice_id" jdbcType="BIGINT" property="noticeId" />
+    <result column="notice_type" jdbcType="INTEGER" property="noticeType" />
+    <result column="title" jdbcType="VARCHAR" property="title" />
+    <result column="is_top" jdbcType="BIT" property="isTop" />
+    <result column="is_del" jdbcType="BIT" property="isDel" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="com.njwd.entity.platform.dto.NoticeDto">
+    <result column="remark" jdbcType="LONGVARCHAR" property="remark" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    notice_id, notice_type, title, is_top, is_del, create_time, update_time
+  </sql>
+  <sql id="Blob_Column_List">
+    remark
+  </sql>
+
+  <!--查询公告列表或依据条件查询某个公告-->
+  <select id="selectNoiceList" parameterType="com.njwd.entity.platform.dto.NoticeDto" resultMap="ResultMapWithBLOBs">
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from wd_notice
+    where is_del = 0
+    <if test="noticeId != null">
+      and notice_id  = #{noticeId}
+    </if>
+    order by is_top desc
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from wd_notice
+    where notice_id = #{noticeId,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" keyColumn="notice_id" keyProperty="noticeId" parameterType="com.njwd.entity.platform.dto.NoticeDto" useGeneratedKeys="true">
+    insert into wd_notice (notice_type, title, is_top, 
+      is_del, create_time, update_time, 
+      remark)
+    values (#{noticeType,jdbcType=INTEGER}, #{title,jdbcType=VARCHAR}, #{isTop,jdbcType=BIT}, 
+      #{isDel,jdbcType=BIT}, #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}, 
+      #{remark,jdbcType=LONGVARCHAR})
+  </insert>
+  <insert id="insertSelective" keyColumn="notice_id" keyProperty="noticeId" parameterType="com.njwd.entity.platform.dto.NoticeDto" useGeneratedKeys="true">
+    insert into wd_notice
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="noticeType != null">
+        notice_type,
+      </if>
+      <if test="title != null">
+        title,
+      </if>
+      <if test="isTop != null">
+        is_top,
+      </if>
+      <if test="isDel != null">
+        is_del,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="noticeType != null">
+        #{noticeType,jdbcType=INTEGER},
+      </if>
+      <if test="title != null">
+        #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="isTop != null">
+        #{isTop,jdbcType=BIT},
+      </if>
+      <if test="isDel != null">
+        #{isDel,jdbcType=BIT},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.platform.dto.NoticeDto">
+    update wd_notice
+    <set>
+      <if test="noticeType != null">
+        notice_type = #{noticeType,jdbcType=INTEGER},
+      </if>
+      <if test="title != null">
+        title = #{title,jdbcType=VARCHAR},
+      </if>
+      <if test="isTop != null">
+        is_top = #{isTop,jdbcType=BIT},
+      </if>
+      <if test="isDel != null">
+        is_del = #{isDel,jdbcType=BIT},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="remark != null">
+        remark = #{remark,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where notice_id = #{noticeId,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.njwd.entity.platform.dto.NoticeDto">
+    update wd_notice
+    set notice_type = #{noticeType,jdbcType=INTEGER},
+      title = #{title,jdbcType=VARCHAR},
+      is_top = #{isTop,jdbcType=BIT},
+      is_del = #{isDel,jdbcType=BIT},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      remark = #{remark,jdbcType=LONGVARCHAR}
+    where notice_id = #{noticeId,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.njwd.entity.platform.dto.NoticeDto">
+    update wd_notice
+    set notice_type = #{noticeType,jdbcType=INTEGER},
+      title = #{title,jdbcType=VARCHAR},
+      is_top = #{isTop,jdbcType=BIT},
+      is_del = #{isDel,jdbcType=BIT},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = #{updateTime,jdbcType=TIMESTAMP}
+    where notice_id = #{noticeId,jdbcType=BIGINT}
+  </update>
+</mapper>

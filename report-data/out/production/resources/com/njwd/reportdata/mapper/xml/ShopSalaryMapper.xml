@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.ShopSalaryMapper">
+
+    <!-- 查询门店薪酬分析列表数据 -->
+    <select id="findSampleShopSalaryList" resultType="com.njwd.entity.reportdata.vo.ShopSalaryVo">
+        select s.shop_id, s.actual_salary, s.gross_salary,s.social_salary, coalesce(sum(sc.money), 0) abnormal_salary
+        from (
+            select s.shop_id,
+            sum(case when hs.item_name = '实发工资' then hs.money else 0 end) actual_salary,
+            sum(case when hs.item_name = '应发合计' then hs.money else 0 end) gross_salary,
+            sum(case when hs.item_name = '社保' then hs.money else 0 end) social_salary
+        from (
+            select s.shop_id
+            from base_shop s
+            <where>
+            and s.ente_id = #{param.enteId}
+                <if test="param.shopIdList != null and param.shopIdList.size() > 0 ">
+                    and s.shop_id in
+                    <foreach collection="param.shopIdList" item="shopId" separator="," open="(" close=")">
+                        #{shopId}
+                    </foreach>
+                </if>
+                <if test="param.shopTypeIdList != null and param.shopTypeIdList.size() > 0 ">
+                    and s.shop_type_id in
+                    <foreach collection="param.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                        #{shopTypeId}
+                    </foreach>
+                </if>
+            </where>
+                ) s
+            left join hr_salary hs
+                on s.shop_id = hs.org_id
+                       and hs.period_year_num between #{param.startYearNum} and #{param.endYearNum}
+                       and hs.item_name in ('实发工资', '应发合计','社保')
+            group by s.shop_id
+            ) s
+        left join wd_setting_change sc
+            on s.shop_id = sc.shop_id and sc.period_year_num between #{param.startYearNum} and #{param.endYearNum}
+        group by s.shop_id, s.actual_salary, s.gross_salary,s.social_salary
+    </select>
+
+    <select id="findSalaryListByShop" resultType="com.njwd.entity.reportdata.vo.WageShareAnalysisVo">
+        SELECT s.shop_id shopId,
+        grossSalary+COALESCE(s.abnormalSalary,0) wage,
+        perGrossSalary+COALESCE(s.perAbnormalSalary,0) lastPeriodWage,
+        lastGrossSalary+COALESCE(s.lastAbnormalSalary,0) lastYearWage
+        from (
+        select s.shop_id,
+        sum(case when sc.period_year_num between #{param.beginNum} and #{param.endNum} then sc.money else 0 end)
+        abnormalSalary,
+        sum(case when sc.period_year_num between #{param.prevBeginNum} and #{param.prevEndNum} then sc.money else 0 end)
+        perAbnormalSalary,
+        sum(case when sc.period_year_num between #{param.lastYearBeginNum} and #{param.lastYearEndNum} then sc.money
+        else 0 end) lastAbnormalSalary,
+        COALESCE(s.grossSalary,0) grossSalary,
+        COALESCE(s.perGrossSalary,0) perGrossSalary,
+        COALESCE(s.lastGrossSalary,0) lastGrossSalary
+        from (
+        select s.shop_id,
+        sum( case when hs.period_year_num between #{param.beginNum} and #{param.endNum} then hs.money else 0 end)
+        grossSalary,
+        sum( case when hs.period_year_num between #{param.prevBeginNum} and #{param.prevEndNum} then hs.money else 0
+        end) perGrossSalary,
+        sum( case when hs.period_year_num between #{param.lastYearBeginNum} and #{param.lastYearEndNum} then hs.money
+        else 0 end) lastGrossSalary
+        from (
+        select s.shop_id
+        from base_shop s
+        <where>
+            and s.ente_id = #{param.enteId}
+            <if test="param.shopIdList != null and param.shopIdList.size() > 0 ">
+                and s.shop_id in
+                <foreach collection="param.shopIdList" item="shopId" separator="," open="(" close=")">
+                    #{shopId}
+                </foreach>
+            </if>
+            <if test="param.shopTypeIdList != null and param.shopTypeIdList.size() > 0 ">
+                and s.shop_type_id in
+                <foreach collection="param.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                    #{shopTypeId}
+                </foreach>
+            </if>
+        </where>
+        ) s
+        left join hr_salary hs
+        on s.shop_id = hs.org_id
+        and hs.item_name = '应发合计'
+        group by s.shop_id
+        ) s
+        left join wd_setting_change sc
+        on s.shop_id = sc.shop_id
+        group by s.shop_id, s.grossSalary,
+                             s.perGrossSalary,
+                             s.lastGrossSalary
+        ) s
+    </select>
+
+    <!-- 查询门店薪酬分析列表数据 更多列-->
+    <select id="findShopSalaryList" resultType="com.njwd.entity.reportdata.vo.ShopSalaryVo">
+        select s.shop_id,
+               s.actual_salary,
+               s.gross_salary,
+               s.abnormal_salary,
+               coalesce(sum(amount + money_over_charge), 0) income
+        from (
+                 select s.shop_id, s.actual_salary, s.gross_salary, coalesce(sum(sc.money), 0) abnormal_salary
+                 from (
+                          select s.shop_id,
+                                 sum(case when hs.item_name = '实发工资' then hs.money else 0 end) actual_salary,
+                                 sum(case when hs.item_name = '应发合计' then hs.money else 0 end) gross_salary
+                          from (
+                                   select s.shop_id
+                                   from base_shop s
+                                    <where>
+                                        and s.ente_id = #{param.enteId}
+                                        <if test="param.shopIdList != null and param.shopIdList.size() > 0 ">
+                                            and s.shop_id in
+                                            <foreach collection="param.shopIdList" item="shopId" separator="," open="(" close=")">
+                                                #{shopId}
+                                            </foreach>
+                                        </if>
+                                        <if test="param.shopTypeIdList != null and param.shopTypeIdList.size() > 0 ">
+                                            and s.shop_type_id in
+                                            <foreach collection="param.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                                                #{shopTypeId}
+                                            </foreach>
+                                        </if>
+                                    </where>
+                               ) s
+                                   left join hr_salary hs
+                                             on s.shop_id = hs.org_id
+                                                 and hs.period_year_num between #{param.startYearNum} and #{param.startYearNum}
+                                                 and hs.item_name in ('实发工资', '应发合计', '社保')
+                          group by s.shop_id
+                      ) s
+                          left join wd_setting_change sc
+                                    on s.shop_id = sc.shop_id and sc.period_year_num between #{param.startYearNum} and #{param.startYearNum}
+                 group by s.shop_id, s.actual_salary, s.gross_salary
+             ) s
+                 left join rep_pos_desk d on s.shop_id = d.shop_id and d.account_date between #{param.beginDate} and #{param.endDate}
+        group by s.shop_id, s.actual_salary, s.gross_salary, s.abnormal_salary
+    </select>
+
+    <!-- 查询门店员工信息数据 -->
+    <select id="findShopEmployeeList"  resultType="com.njwd.entity.reportdata.vo.ShopSalaryVo">
+        select s.ente_id,
+               b.brand_id,
+               b.brand_code,
+               b.brand_name,
+               s.region_id,
+               s.region_code,
+               s.region_name,
+               s.shop_id,
+               s.shop_no,
+               s.shop_name,
+               s.employee_num
+        from (
+                 select s.ente_id,
+                        r.region_id,
+                        r.region_code,
+                        r.region_name,
+                        s.brand_id,
+                        s.shop_id,
+                        s.shop_no,
+                        s.shop_name,
+                        s.employee_num
+                 from (
+                          select s.ente_id,
+                                 s.region_id,
+                                 s.brand_id,
+                                 s.shop_id,
+                                 s.shop_no,
+                                 s.shop_name,
+                                 s.shop_employee_num + count(u.user_id) employee_num
+                          from (
+                                   select s.ente_id,
+                                          s.region_id,
+                                          s.brand_id,
+                                          s.shop_id,
+                                          s.shop_no,
+                                          s.shop_name,
+                                          s.shop_employee_num,
+                                          sd.shop_dept_id
+                                   from (select s.ente_id,
+                                                s.region_id,
+                                                s.brand_id,
+                                                s.shop_id,
+                                                s.shop_no,
+                                                s.shop_name,
+                                                count(u.user_id) shop_employee_num
+                                         from (select s.ente_id,s.region_id, s.brand_id, s.shop_id, s.shop_no, s.shop_name
+                                               from base_shop s
+                                                <where>
+                                                    and s.ente_id = #{param.enteId}
+                                                    <if test="param.shopIdList != null and param.shopIdList.size() > 0 ">
+                                                        and s.shop_id in
+                                                        <foreach collection="param.shopIdList" item="shopId" separator="," open="(" close=")">
+                                                            #{shopId}
+                                                        </foreach>
+                                                    </if>
+                                                    <if test="param.shopTypeIdList != null and param.shopTypeIdList.size() > 0 ">
+                                                        and s.shop_type_id in
+                                                        <foreach collection="param.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                                                            #{shopTypeId}
+                                                        </foreach>
+                                                    </if>
+                                                </where>
+                                              ) s
+                                                  left join base_user u on s.shop_id = u.org_id
+                                                  and user_id in  (
+                                                      select user_id from hr_attend
+                                                        where attend_date between #{param.beginDate} and #{param.endDate} and attend_hour > 0
+                                                  )
+                                         group by s.ente_id,s.region_id, s.brand_id, s.shop_id, s.shop_no, s.shop_name
+                                        ) s
+                                            left join base_shop_dept sd on s.shop_id = sd.shop_id
+                               ) s
+                                   left join base_user u on s.shop_dept_id = u.org_id
+                                   and user_id in  (
+                                        select user_id from hr_attend
+                                            where attend_date between #{param.beginDate} and #{param.endDate} and attend_hour > 0
+                                   )
+                        group by s.ente_id,s.region_id, s.brand_id, s.shop_id, s.shop_no, s.shop_name, s.shop_employee_num
+                      ) s
+                          left join base_region r on s.region_id = r.region_id
+             ) s
+                 left join base_brand b on s.brand_id = b.brand_id
+        order by b.brand_code, s.region_code, s.shop_no
+    </select>
+
+
+</mapper>

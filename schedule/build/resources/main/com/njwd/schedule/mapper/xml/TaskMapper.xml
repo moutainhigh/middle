@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.schedule.mapper.TaskMapper" >
+  <resultMap id="BaseResultMap" type="com.njwd.entity.schedule.Task" >
+    <result column="task_key" property="taskKey" jdbcType="VARCHAR" />
+    <result column="ente_id" property="enteId" jdbcType="VARCHAR" />
+    <result column="task_name" property="taskName" jdbcType="VARCHAR" />
+    <result column="task_key" property="taskKey" jdbcType="VARCHAR" />
+    <result column="ente_id" property="enteId" jdbcType="VARCHAR" />
+    <result column="app_id" property="appId" jdbcType="VARCHAR" />
+    <result column="task_type" property="taskType" jdbcType="VARCHAR" />
+    <result column="target_excute" property="targetExcute" jdbcType="VARCHAR" />
+    <result column="task_status" property="taskStatus" jdbcType="VARCHAR" />
+    <result column="error_reason" property="errorReason" jdbcType="VARCHAR" />
+    <result column="cron" property="cron" jdbcType="VARCHAR" />
+    <result column="last_excute_time" property="lastExcuteTime" jdbcType="TIMESTAMP" />
+    <result column="next_excute_time" property="nextExcuteTime" jdbcType="TIMESTAMP" />
+    <result column="switch_status" property="switchStatus" jdbcType="VARCHAR" />
+    <result column="runtime_param" property="runtimeParam" jdbcType="VARCHAR" />
+    <result column="job_role" property="jobRole" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="max_excute_time" property="maxExcuteTime" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    task_name, task_key, ente_id, app_id, task_type, target_excute,task_status, error_reason, cron, last_excute_time,
+    next_excute_time, switch_status,runtime_param, job_role, create_time,max_excute_time
+  </sql>
+
+  <select id="selectCountByEnteId" resultType="int" parameterType="java.lang.String" >
+    select
+    count(1)
+    from wd_task
+    where ente_id = #{enteId,jdbcType=VARCHAR}
+  </select>
+
+  <select id="selectByEnteIdAndTaskKey" resultMap="BaseResultMap" parameterType="com.njwd.entity.schedule.TaskKey" >
+    select
+    <include refid="Base_Column_List" />
+    from wd_task
+    where ente_id=#{enteId}
+    and task_key=#{taskKey}
+  </select>
+
+
+  <select id="selectOverTimeTask" resultMap="BaseResultMap">
+    SELECT
+    t1.ente_id,t1.task_key,t1.cron
+    FROM wd_task t1
+    LEFT JOIN wd_task_config t2 ON t1.ente_id=t2.ente_id
+    WHERE
+    t1.task_status='EXCUTING'
+    AND t1.switch_status = 'ON'
+    AND t2.reflex_status='ON'
+    AND TIMESTAMPDIFF(SECOND,t1.last_excute_time,NOW())>(t1.max_excute_time*t2.reflex_ratio)
+  </select>
+
+  <select id="selectNeedToExcuteByRole" resultType="com.njwd.entity.schedule.vo.TaskVo" parameterType="com.njwd.entity.schedule.Task" >
+    select
+      t1.task_name, t1.task_key, t1.ente_id, t1.app_id, t1.task_type, t1.target_excute,t1.task_status, t1.error_reason, t1.cron, t1.last_excute_time,
+      t1.next_excute_time, t1.switch_status,t1.runtime_param, t1.job_role, t1.create_time,t1.max_excute_time
+    from wd_task t1
+    left join wd_task_config t2 on t1.ente_id=t2.ente_id
+    where 1=1
+    and t1.switch_status = 'ON'
+    and t1.task_status='WAITING'
+    and t1.next_excute_time &lt;= now()
+    <if test=" jobRole != null and jobRole != ''">
+      and t1.job_role =#{jobRole}
+    </if>
+    and t2.valid_status='ON'
+    order by t1.next_excute_time asc
+    limit 1
+  </select>
+
+
+  <select id="getListByParam" resultMap="BaseResultMap" parameterType="com.njwd.entity.schedule.dto.TaskDto" >
+    select
+    <include refid="Base_Column_List" />
+    from wd_task
+    where 1=1
+    <if test="dto.switchStatus != null and dto.switchStatus !=''" >
+        and switch_stastus=#{dto.switchStatus}
+    </if>
+    <if test="dto.enteId != null and dto.enteId !=''" >
+        and ente_id=#{dto.enteId}
+    </if>
+    <if test="dto.jobRole != null and dto.jobRole !=''" >
+        and job_role=#{dto.jobRole}
+    </if>
+    <if test="dto.taskStatus != null and dto.taskStatus !=''" >
+        and dto.task_status=#{dto.taskStatus}
+    </if>
+    order by last_excute_time desc
+  </select>
+
+
+
+  <delete id="deleteByPrimaryKey" parameterType="com.njwd.entity.schedule.TaskKey" >
+    delete from wd_task
+    where ente_id=#{enteId}
+    and task_key=#{taskKey}
+  </delete>
+
+  <insert id="insertSelective" parameterType="com.njwd.entity.schedule.Task" >
+    insert into wd_task
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+
+      <if test="taskName != null" >
+        task_name,
+      </if>
+      <if test="taskKey != null" >
+        task_key,
+      </if>
+      <if test="enteId != null" >
+        ente_id,
+      </if>
+      <if test="appId != null" >
+        app_id,
+      </if>
+      <if test="taskType != null" >
+        task_type,
+      </if>
+
+      <if test="targetExcute != null" >
+        target_excute,
+      </if>
+      <if test="taskStatus != null" >
+        task_status,
+      </if>
+      <if test="errorReason != null" >
+        error_reason,
+      </if>
+      <if test="cron != null" >
+        cron,
+      </if>
+      <if test="lastExcuteTime != null" >
+        last_excute_time,
+      </if>
+      <if test="nextExcuteTime != null" >
+        next_excute_time,
+      </if>
+
+      <if test="switchStatus != null" >
+        switch_status,
+      </if>
+      <if test="jobRole != null" >
+        job_role,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+
+      <if test="taskName != null" >
+        #{taskName,jdbcType=VARCHAR},
+      </if>
+      <if test="taskKey != null" >
+        #{taskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="enteId != null" >
+        #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="appId != null" >
+        #{appId,jdbcType=VARCHAR},
+      </if>
+      <if test="taskType != null" >
+        #{taskType,jdbcType=VARCHAR},
+      </if>
+
+      <if test="targetExcute != null" >
+        #{targetExcute,jdbcType=VARCHAR},
+      </if>
+      <if test="taskStatus != null" >
+        #{taskStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="errorReason != null" >
+        #{errorReason,jdbcType=VARCHAR},
+      </if>
+      <if test="cron != null" >
+        #{cron,jdbcType=VARCHAR},
+      </if>
+      <if test="lastExcuteTime != null" >
+        #{lastExcuteTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="nextExcuteTime != null" >
+        #{nextExcuteTime,jdbcType=TIMESTAMP},
+      </if>
+
+      <if test="switchStatus != null" >
+        #{switchStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="jobRole != null" >
+        #{jobRole,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+
+
+  <insert id="insertByList" parameterType="list" >
+    insert into wd_task
+    (task_name,task_key,ente_id,app_id,task_type,target_excute,task_status,cron,next_excute_time,switch_status,job_role,runtime_param,max_excute_time)
+    values
+    <foreach collection="list" item="task" separator=",">
+      (#{task.taskName},#{task.taskKey},#{task.enteId},#{task.appId},#{task.taskType},#{task.targetExcute},#{task.taskStatus},#{task.cron},#{task.nextExcuteTime},#{task.switchStatus},#{task.jobRole},#{task.runtimeParam},#{task.maxExcuteTime})
+    </foreach>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.schedule.Task" >
+    update wd_task
+    <set >
+      <if test="taskName != null" >
+        task_name = #{taskName,jdbcType=VARCHAR},
+      </if>
+      <if test="appId != null" >
+        app_id = #{appId,jdbcType=VARCHAR},
+      </if>
+      <if test="taskType != null" >
+        task_type = #{taskType,jdbcType=VARCHAR},
+      </if>
+      <if test="targetExcute != null" >
+        target_excute = #{targetExcute,jdbcType=VARCHAR},
+      </if>
+      <if test="taskStatus != null" >
+        task_status = #{taskStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="errorReason != null" >
+        error_reason = #{errorReason,jdbcType=VARCHAR},
+      </if>
+      <if test="cron != null" >
+        cron = #{cron,jdbcType=VARCHAR},
+      </if>
+      <if test="lastExcuteTime != null" >
+        last_excute_time = #{lastExcuteTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="nextExcuteTime != null" >
+        next_excute_time = #{nextExcuteTime,jdbcType=TIMESTAMP},
+      </if>
+
+      <if test="switchStatus != null" >
+        switch_status = #{switchStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="jobRole != null" >
+        job_role = #{jobRole,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="runtimeParam != null" >
+        runtime_param = #{runtimeParam,jdbcType=TIMESTAMP},
+      </if>
+
+    </set>
+    where ente_id=#{enteId}
+    and task_key=#{taskKey}
+  </update>
+  <update id="updateExcuteTimeByIds" parameterType="map" >
+       update wd_task
+       set next_excute_time = #{nextExcuteTime,jdbcType=TIMESTAMP}
+       where ente_id=#{enteId}
+       and next_excute_time> #{nextExcuteTime,jdbcType=TIMESTAMP}
+       and task_key IN
+        <foreach collection="taskKeys" item="taskKey"  open="(" separator="," close=")">
+         #{taskKey}
+        </foreach>
+  </update>
+
+  <update id="updateForReflexTask" parameterType="com.njwd.entity.schedule.Task" >
+    update wd_task
+    set next_excute_time = #{nextExcuteTime,jdbcType=TIMESTAMP},
+        task_status='WAITING'
+    where ente_id=#{enteId}
+     and task_key=#{taskKey}
+     and task_status='EXCUTING'
+  </update>
+</mapper>

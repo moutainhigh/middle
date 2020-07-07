@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.basedata.mapper.BaseReportItemSetMapper">
+    <select id="findBaseReportItemSetByCondition" resultType="BaseReportItemSetVo" parameterType="BaseReportItemSetDto">
+        SELECT
+            report_item_set_id,
+            report_id,
+            report_name,
+            item_number,
+            item_CODE,
+            item_NAME,
+            ente_id,
+            app_id,
+            item_type,
+            item_type_name,
+            item_level,
+            data_type,
+            SORT_NUM
+        FROM
+            wd_report_item_set
+        WHERE
+            report_id = #{reportId}
+        ORDER BY item_type,sort_num
+    </select>
+</mapper>

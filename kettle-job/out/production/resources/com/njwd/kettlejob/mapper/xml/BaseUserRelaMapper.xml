@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.kettlejob.mapper.BaseUserRelaMapper">
+    <sql id="BASE_COLUMN">
+        r.app_id,
+     r.user_id,
+     r.third_user_id,
+     r.user_name,
+     r.job_code,
+     r.mobile,
+     r.sex,
+     r.identity_card,
+     r.birthday,
+     r.email,
+     r.edu_level,
+     r.marriage,
+     r.address,
+     r.hiredate,
+     r.positive_time,
+     r.work_type,
+     r.work_status,
+     r.status,
+     r.leavedate,
+     r.ente_id,
+     r.third_ente_id,
+     r.create_time,
+     r.update_time
+    </sql>
+    <!--    -->
+    <select id="selectExitListByEnteId" resultType="com.njwd.entity.kettlejob.BaseUserRela">
+        select
+        <include refid="BASE_COLUMN"/>
+        from base_user_rela r
+        where r.ente_id = #{enteId}
+        and r.app_id = #{appId}
+    </select>
+
+    <!-- 获取当前最大更新时间 -->
+    <select id="findLastUpdateTime" resultType="string">
+        select max(third_update_time)
+        from base_user_rela
+        where app_id = #{appId}
+          and ente_id = #{enteId}
+    </select>
+
+    <!-- 更新所有的用户状态 -->
+    <update id="updateUserStatus">
+        update base_user_rela
+        <set>
+            status = -1
+        </set>
+        <where>
+            and app_id = #{appId}
+            and ente_id = #{enteId}
+            and work_type != '股东'
+        </where>
+    </update>
+
+    <!-- 更新用户组织信息 -->
+    <update id="updateUserOrgBatch">
+        UPDATE base_user_rela ur
+            LEFT JOIN base_user u ON ur.user_id = u.user_id
+            LEFT JOIN base_brand_rela br ON ur.third_org_id = br.third_brand_id AND br.app_id = #{appId}
+            LEFT JOIN base_region_rela rr ON ur.third_org_id = rr.third_region_id AND rr.app_id = #{appId}
+            LEFT JOIN base_shop_rela sr ON ur.third_org_id = sr.third_shop_id AND sr.app_id = #{appId}
+            LEFT JOIN base_shop_dept_rela sdr ON ur.third_org_id = sdr.third_shop_dept_id AND sdr.app_id = #{appId}
+        SET ur.org_id = coalesce(br.brand_id, rr.region_id, sr.shop_id, sdr.shop_dept_id),
+            u.org_id  = ur.org_id
+        WHERE ur.app_id = #{appId}
+          AND ur.ente_id = #{enteId}
+    </update>
+
+    <!-- 更新用户基础信息  -->
+    <update id="updateUserBaseInfo">
+        UPDATE base_user u
+        LEFT JOIN base_user_rela ur ON u.user_id = ur.user_id
+        SET u.user_name = ur.user_name,
+        u.job_code = ur.job_code,
+        u.mobile = ur.mobile,
+        u.sex = ur.sex,
+        u.identity_card = ur.identity_card,
+        u.birthday = ur.birthday,
+        u.email = ur.email,
+        u.edu_level = ur.edu_level,
+        u.marriage = ur.marriage,
+        u.address = ur.address,
+        u.hiredate = ur.hiredate,
+        u.positive_time = ur.positive_time,
+        u.work_type = ur.work_type,
+        u.work_status = ur.work_status,
+        u.third_org_id = ur.third_org_id,
+        u.third_post_id = ur.third_post_id,
+        u.`status` = ur.`status`,
+        u.leavedate = ur.leavedate,
+        u.`status` = ur.`status`
+        <where>
+            and (ur.user_id is not null or ur.user_id != '')
+            and ur.ente_id = #{enteId}
+            and ur.app_id = #{appId}
+        </where>
+    </update>
+
+    <!-- 更新用户职位信息 -->
+    <update id="updateUserPostBatch">
+        UPDATE base_user_rela ur
+            LEFT JOIN base_user u ON ur.user_id = u.user_id
+            LEFT JOIN base_post_rela pr ON ur.third_post_id = pr.third_post_id AND pr.app_id =ur.app_id
+        SET ur.post_id = pr.post_id,
+            u.post_id   = ur.post_id
+        WHERE ur.app_id = #{appId}
+          AND ur.ente_id = #{enteId}
+    </update>
+
+    <!-- 原保存方法，预留 -->
+    <insert id="replaceBatch">
+        replace into base_user_rela(
+        app_id,
+        user_id,
+        third_user_id,
+        user_name,
+        job_code,
+        mobile,
+        sex,
+        identity_card,
+        birthday,
+        email,
+        edu_level,
+        marriage,
+        address,
+        hiredate,
+        positive_time,
+        work_type,
+        work_status,
+        status,
+        leavedate,
+        ente_id,
+        third_ente_id,
+        third_update_time
+        )values
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.appId},
+            #{item.userId},
+            #{item.thirdUserId},
+            #{item.userName},
+            #{item.jobCode},
+            #{item.mobile},
+            #{item.sex},
+            #{item.identityCard},
+            #{item.birthday},
+            #{item.email},
+            #{item.eduLevel},
+            #{item.marriage},
+            #{item.address},
+            #{item.hiredate},
+            #{item.positiveTime},
+            #{item.workType},
+            #{item.workStatus},
+            #{item.status},
+            #{item.leavedate},
+            #{item.enteId},
+            #{item.thirdEnteId},
+            #{item.thirdUpdateTime}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 批量新增或更新用户数据 -->
+    <insert id="insertOrUpdateBatch">
+        INSERT INTO base_user_rela (
+        app_id,
+        third_user_id,
+        user_name,
+        job_code,
+        mobile,
+        sex,
+        identity_card,
+        birthday,
+        email,
+        edu_level,
+        marriage,
+        address,
+        hiredate,
+        positive_time,
+        work_type,
+        work_status,
+        status,
+        leavedate,
+        ente_id,
+        third_ente_id,
+        third_update_time,
+        create_time,
+        third_org_id,
+        third_post_id
+        )
+        values
+        <foreach collection="sqlParam.dataList" item="item" index="index" separator=",">
+            (
+            #{sqlParam.appId},
+            #{item.thirdUserId},
+            #{item.userName},
+            #{item.jobCode},
+            #{item.mobile},
+            #{item.sex},
+            #{item.identityCard},
+            #{item.birthday},
+            #{item.email},
+            #{item.eduLevel},
+            #{item.marriage},
+            #{item.address},
+            #{item.hiredate},
+            #{item.positiveTime},
+            #{item.workType},
+            #{item.workStatus},
+            #{item.status},
+            #{item.leavedate},
+            #{sqlParam.enteId},
+            #{sqlParam.thirdEnteId},
+            #{item.thirdUpdateTime},
+            #{sqlParam.createTime},
+            #{item.thirdOrgId},
+            #{item.thirdPostId}
+            )
+        </foreach>
+        on duplicate key update
+        user_name = values(user_name),
+        job_code = values(job_code),
+        mobile = values(mobile),
+        sex = values(sex),
+        identity_card = values(identity_card),
+        birthday = values(birthday),
+        email = values(email),
+        edu_level = values(edu_level),
+        marriage = values(marriage),
+        address = values(address),
+        hiredate = values(hiredate),
+        positive_time = values(positive_time),
+        work_type = values(work_type),
+        work_status = values(work_status),
+        third_org_id = values(third_org_id),
+        third_post_id = values(third_post_id),
+        status = values(status),
+        leavedate = values(leavedate),
+        third_update_time = values(third_update_time),
+        update_time = #{sqlParam.updateTime}
+    </insert>
+
+    <!-- 新增用户职位关联信息 -->
+    <insert id="insertOrUpdateUserDepartBatch">
+        INSERT INTO hr_user_role_test (
+        third_user_id,
+        depart_id,
+        post_id,
+        ente_id,
+        create_time
+        )
+        values
+        <foreach
+                collection="sqlParam.dataList"
+                item="item"
+                index="index"
+                separator=",">
+            (
+            #{item.thirdUserId},
+            #{item.departId},
+            #{item.postId},
+            #{sqlParam.enteId},
+            #{sqlParam.createTime}
+            )
+        </foreach>
+        on duplicate key update
+        depart_id = values(depart_id),
+        post_id = values(post_id),
+        update_time = #{sqlParam.updateTime}
+    </insert>
+
+</mapper>

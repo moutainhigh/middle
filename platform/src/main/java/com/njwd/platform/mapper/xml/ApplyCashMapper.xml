@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.platform.mapper.ApplyCashMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.platform.vo.ApplyCashVo">
+    <id column="cash_id" jdbcType="BIGINT" property="cashId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="cash_code" jdbcType="VARCHAR" property="cashCode" />
+    <result column="cash_sum" jdbcType="DECIMAL" property="cashSum" />
+    <result column="bank_account" jdbcType="VARCHAR" property="bankAccount" />
+    <result column="bank_number" jdbcType="VARCHAR" property="bankNumber" />
+    <result column="bank_name" jdbcType="VARCHAR" property="bankName" />
+    <result column="crm_status" jdbcType="INTEGER" property="crmStatus" />
+    <result column="mss_status" jdbcType="INTEGER" property="mssStatus" />
+    <result column="pay_time" jdbcType="TIMESTAMP" property="payTime" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    cash_id, user_id, user_name, cash_code, cash_sum, bank_account, bank_number, bank_name, 
+    crm_status, mss_status, pay_time, create_time, update_time
+  </sql>
+
+  <!--分页查询提现-->
+  <select id="selectApplyCashByPage" parameterType="com.njwd.entity.platform.dto.ApplyCashDto" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from wd_apply_cash
+    where 1=1
+    <if test="param.userId != null">
+      and user_id = #{param.userId}
+    </if>
+    <if test="param.createStartTime != null">
+      and create_time <![CDATA[ >= ]]> #{param.createStartTime}
+    </if>
+    <if test="param.createEndTime != null">
+      and create_time <![CDATA[ <= ]]> #{param.createEndTime}
+    </if>
+    order by create_time desc
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from wd_apply_cash
+    where cash_id = #{cashId,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" keyColumn="cash_id" keyProperty="cashId" parameterType="com.njwd.entity.platform.dto.ApplyCashDto" useGeneratedKeys="true">
+    insert into wd_apply_cash (user_id, user_name, cash_code, 
+      cash_sum, bank_account, bank_number, 
+      bank_name, crm_status, mss_status, 
+      pay_time, create_time, update_time
+      )
+    values (#{userId,jdbcType=VARCHAR}, #{userName,jdbcType=VARCHAR}, #{cashCode,jdbcType=VARCHAR}, 
+      #{cashSum,jdbcType=DECIMAL}, #{bankAccount,jdbcType=VARCHAR}, #{bankNumber,jdbcType=VARCHAR}, 
+      #{bankName,jdbcType=VARCHAR}, #{crmStatus,jdbcType=INTEGER}, #{mssStatus,jdbcType=INTEGER},
+      #{payTime,jdbcType=TIMESTAMP}, #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+
+  <!--新增提现记录-->
+  <insert id="insertApplyCash" keyColumn="cash_id" keyProperty="cashId" parameterType="com.njwd.entity.platform.dto.ApplyCashDto" useGeneratedKeys="true">
+    insert into wd_apply_cash
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="userName != null">
+        user_name,
+      </if>
+      <if test="cashCode != null">
+        cash_code,
+      </if>
+      <if test="cashSum != null">
+        cash_sum,
+      </if>
+      <if test="bankAccount != null">
+        bank_account,
+      </if>
+      <if test="bankNumber != null">
+        bank_number,
+      </if>
+      <if test="bankName != null">
+        bank_name,
+      </if>
+      <if test="crmStatus != null">
+        crm_status,
+      </if>
+      <if test="mssStatus != null">
+        mss_status,
+      </if>
+      <if test="payTime != null">
+        pay_time,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        #{userId,jdbcType=VARCHAR},
+      </if>
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="cashCode != null">
+        #{cashCode,jdbcType=VARCHAR},
+      </if>
+      <if test="cashSum != null">
+        #{cashSum,jdbcType=DECIMAL},
+      </if>
+      <if test="bankAccount != null">
+        #{bankAccount,jdbcType=VARCHAR},
+      </if>
+      <if test="bankNumber != null">
+        #{bankNumber,jdbcType=VARCHAR},
+      </if>
+      <if test="bankName != null">
+        #{bankName,jdbcType=VARCHAR},
+      </if>
+      <if test="crmStatus != null">
+        #{crmStatus,jdbcType=INTEGER},
+      </if>
+      <if test="mssStatus != null">
+        #{mssStatus,jdbcType=INTEGER},
+      </if>
+      <if test="payTime != null">
+        #{payTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.platform.dto.ApplyCashDto">
+    update wd_apply_cash
+    <set>
+      <if test="userId != null">
+        user_id = #{userId,jdbcType=VARCHAR},
+      </if>
+      <if test="userName != null">
+        user_name = #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="cashCode != null">
+        cash_code = #{cashCode,jdbcType=VARCHAR},
+      </if>
+      <if test="cashSum != null">
+        cash_sum = #{cashSum,jdbcType=DECIMAL},
+      </if>
+      <if test="bankAccount != null">
+        bank_account = #{bankAccount,jdbcType=VARCHAR},
+      </if>
+      <if test="bankNumber != null">
+        bank_number = #{bankNumber,jdbcType=VARCHAR},
+      </if>
+      <if test="bankName != null">
+        bank_name = #{bankName,jdbcType=VARCHAR},
+      </if>
+      <if test="crmStatus != null">
+        crm_status = #{crmStatus,jdbcType=INTEGER},
+      </if>
+      <if test="mssStatus != null">
+        mss_status = #{mssStatus,jdbcType=INTEGER},
+      </if>
+      <if test="payTime != null">
+        pay_time = #{payTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where cash_id = #{cashId,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.njwd.entity.platform.dto.ApplyCashDto">
+    update wd_apply_cash
+    set user_id = #{userId,jdbcType=VARCHAR},
+      user_name = #{userName,jdbcType=VARCHAR},
+      cash_code = #{cashCode,jdbcType=VARCHAR},
+      cash_sum = #{cashSum,jdbcType=DECIMAL},
+      bank_account = #{bankAccount,jdbcType=VARCHAR},
+      bank_number = #{bankNumber,jdbcType=VARCHAR},
+      bank_name = #{bankName,jdbcType=VARCHAR},
+      crm_status = #{crmStatus,jdbcType=INTEGER},
+      mss_status = #{mssStatus,jdbcType=INTEGER},
+      pay_time = #{payTime,jdbcType=TIMESTAMP},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = #{updateTime,jdbcType=TIMESTAMP}
+    where cash_id = #{cashId,jdbcType=BIGINT}
+  </update>
+
+  <!--修改CRM提现状态-->
+  <update id="updateCrmStatus" parameterType="com.njwd.entity.platform.dto.ApplyCashDto">
+    update wd_apply_cash
+    set
+      crm_status = #{crmStatus}
+    where cash_code = #{cashCode}
+  </update>
+
+  <!--修改MSS提现状态-->
+  <update id="updateMssStatus" parameterType="com.njwd.entity.platform.dto.ApplyCashDto">
+    update wd_apply_cash
+    set
+      mss_status = #{mssStatus}
+    where cash_code = #{cashCode}
+  </update>
+</mapper>

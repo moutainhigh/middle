@@ -1,0 +1,509 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.BusinessAnalysisMapper">
+    <!--查询门店评分-->
+    <select id="findPsItemScoreAvg" resultType="com.njwd.entity.reportdata.vo.ShopScoreVo"
+            parameterType="com.njwd.entity.reportdata.dto.ShopScoreDto">
+        select
+        bs.brand_name,
+        bs.region_name,
+        pi.type_id,
+        s.item_name,
+        s.type,
+        pis.shop_id,
+        bs.shop_name,
+        bs.shop_type_id,
+        bs.region_id as regionId,
+        bs.brand_id as brandId,
+        ROUND(avg(pis.score),2) AS score,
+        pis.ente_id
+        from
+        ps_item_score pis
+        left join ps_item pi on pi.item_id=pis.item_id
+        left join ps_item_show s on s.type_id=pi.type_id
+        and s.app_id=pi.app_id
+        and s.ente_id=pi.ente_id
+        inner join base_shop bs on bs.shop_id=pis.shop_id
+        where
+        s.is_show=1 and bs.status=0
+        <if test="shopIdList !=null and shopIdList.size() >0 ">
+            and pis.shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList !=null and shopTypeIdList.size() >0 ">
+            AND bs.shop_type_id in
+            <foreach collection="shopTypeIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        and
+        pis.ente_id=#{enteId}
+        and
+        to_date(substr(score_day,1,10),'yyyy-MM-dd') >=#{beginDate}
+        and
+        to_date(substr(score_day,1,10),'yyyy-MM-dd') &lt;=#{endDate}
+        group by bs.brand_name,bs.region_name,pis.shop_id,pi.type_id,s.item_name,bs.shop_name,bs.shop_type_id,
+        bs.region_id,bs.brand_id,pis.ente_id,s.type
+        order by bs.brand_id,bs.region_name,bs.shop_name,pi.type_id,s.item_name
+    </select>
+
+    <!--根据餐别id查询汇总金额-->
+    <select id="findReportPostDeskMealAmountByCondition" parameterType="ReportPosDeskDto" resultType="ReportPosDeskVo">
+        SELECT
+        p.MEAL_ID,
+        sum(p.amount) as amountSum,
+        sum(CASE WHEN p.IS_NOOPENTABLE = '1' and p.def1 = '1' THEN p.client_count ELSE 0 END) AS personSum,
+        sum(case when p.IS_NOOPENTABLE='1' and p.def1 = '1' then p.DESK_COUNT else 0 end) as deskAllCount,
+        sum(P.MONEY_OVER_CHARGE) AS moneyOverChargeSum
+        FROM
+        rep_pos_desk p
+        <where>
+            p.account_date >= #{beginDate}
+            AND p.account_date &lt;= #{endDate}
+            and ente_id = #{enteId}
+
+            <if test="shopIdList !=null and shopIdList.size() >0 ">
+                AND shop_id in
+                <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="shopTypeIdList !=null and shopTypeIdList.size() >0 ">
+                AND shop_type_id in
+                <foreach collection="shopTypeIdList" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        group by p.MEAL_ID
+    </select>
+
+    <select id="findReportPostDeskChannelAmountByCondition" parameterType="ReportPosDeskDto"
+            resultType="ReportPosDeskVo">
+        SELECT
+        p.CHANNEL_ID,
+        sum(p.amount) as amountSum,
+        sum(CASE WHEN p.IS_NOOPENTABLE = '1' THEN p.client_count ELSE 0 END) AS personSum ,
+        sum(case when p.IS_NOOPENTABLE='1' then p.DESK_COUNT else 0 end) as deskAllCount
+        FROM
+        rep_pos_desk p
+        <where>
+            p.account_date >= #{beginDate}
+            AND p.account_date &lt;= #{endDate}
+            and ente_id = #{enteId}
+            <if test="shopIdList !=null and shopIdList.size() >0 ">
+                AND shop_id in
+                <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="shopTypeIdList !=null and shopTypeIdList.size() >0 ">
+                AND shop_type_id in
+                <foreach collection="shopTypeIdList" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        group by p.CHANNEL_ID
+    </select>
+
+    <select id="findShopList" resultType="com.njwd.entity.reportdata.vo.GrossProfitVo">
+        SELECT
+        t.brand_id,
+        t.brand_name,
+        t.region_id,
+        t.region_name,
+        t.shop_name,
+        t.shop_id,
+        'shop' as type
+        FROM
+        base_shop t
+        WHERE t.status = 0
+        and t.ente_id = #{enteId}
+        <if test="shopIdList !=null and shopIdList.size() >0 ">
+            AND t.shop_id in
+            <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList !=null and shopTypeIdList.size() >0 ">
+            AND t.shop_type_id in
+            <foreach collection="shopTypeIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY
+        t.brand_id,
+        t.region_id,
+        t.shop_id
+    </select>
+
+    <select id="findDictList" parameterType="string" resultType="com.njwd.entity.reportdata.vo.DictVo">
+        select * from wd_dict where ente_id = #{enteId}
+    </select>
+
+    <select id="findPosDeskList" parameterType="com.njwd.entity.reportdata.dto.GrossProfitDto"
+            resultType="ReportPosDeskVo">
+        SELECT
+        t.shop_id,
+        t.meal_id,
+        SUM ( t.client_count ) client_count,
+        SUM ( t.desk_count ) desk_count
+        FROM
+        rep_pos_desk t
+        WHERE t.is_noopentable = 1
+        AND t.def1 !='0'
+        AND t.account_date BETWEEN #{beginDate} AND #{endDate}
+        AND t.ente_id = #{enteId}
+        <if test="shopIdList !=null and shopIdList.size() >0 ">
+            AND t.shop_id IN
+            <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList !=null and shopTypeIdList.size() >0 ">
+            AND t.shop_type_id IN
+            <foreach collection="shopTypeIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY
+        t.shop_id,
+        t.meal_id
+        ORDER BY
+        t.shop_id,
+        t.meal_id
+    </select>
+
+    <select id="findPosReceiptsList" parameterType="com.njwd.entity.reportdata.dto.GrossProfitDto"
+            resultType="com.njwd.entity.reportdata.vo.GrossProfitVo">
+        select t.brand_id,t.region_id,t.shop_id,sum(t.money_actual) receipts
+        from rep_pos_desk t
+        where t.account_date between #{beginDate} and #{endDate}
+        and t.ente_id = #{enteId}
+        <if test="shopIdList !=null and shopIdList.size() >0 ">
+            AND t.shop_id in
+            <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList !=null and shopTypeIdList.size() >0 ">
+            AND t.shop_type_id in
+            <foreach collection="shopTypeIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        group by t.brand_id,t.region_id,t.shop_id
+        order by t.brand_id,t.region_id,t.shop_id
+    </select>
+
+    <select id="findPosDetailFoodList" parameterType="com.njwd.entity.reportdata.dto.GrossProfitDto"
+            resultType="com.njwd.entity.reportdata.vo.GrossProfitVo">
+        select t.brand_id,t.region_id,t.shop_id
+        <if test="columnName != null and columnName != ''">
+            <if test="columnName == 'income_dish'">
+                ,sum(t.food_amount) incomeDishExcept
+            </if>
+            <if test="columnName == 'income_wine'">
+                ,sum(t.food_amount) incomeWine
+            </if>
+            <if test="columnName == 'sale_income_condiment'">
+                ,sum(t.food_num) saleCondiment,sum(t.food_amount) incomeCondiment
+            </if>
+        </if>
+        from rep_pos_detail_food t
+        where t.account_date between #{beginDate} and #{endDate}
+        and t.ente_id = #{enteId}
+        <if test="columnName != null and columnName != ''">
+            <if test="columnName == 'income_dish' and foodStyleName != null and foodStyleName != ''">
+                and t.food_style_name = ANY(STRING_TO_ARRAY(#{foodStyleName}, ','))
+            </if>
+            <if test="columnName == 'income_wine' and foodStyleName != null and foodStyleName != ''">
+                and t.food_style_name = #{foodStyleName}
+            </if>
+            <if test="columnName == 'sale_income_condiment'  and foodNo != null and foodNo != ''">
+                and t.food_no = #{foodNo}
+            </if>
+        </if>
+        <if test="shopIdList !=null and shopIdList.size() >0 ">
+            AND t.shop_id in
+            <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList !=null and shopTypeIdList.size() >0 ">
+            AND t.shop_type_id in
+            <foreach collection="shopTypeIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        group by t.brand_id,t.region_id,t.shop_id
+        order by t.brand_id,t.region_id,t.shop_id
+    </select>
+
+    <select id="findRepPosPayList" resultType="com.njwd.entity.reportdata.vo.MarketingGrossProfitVo">
+        SELECT
+        p.ENTE_ID,
+        p.BRAND_ID,
+        p.BRAND_NAME,
+        p.REGION_ID,
+        p.REGION_NAME,
+        p.SHOP_ID,
+        p.SHOP_NAME,
+        p.pay_type_id,
+        p.pay_type_name,
+        sum(p.PAY_COUNT ) AS orderCount,
+        sum(p.money_actual ) AS moneyActual
+        FROM
+        rep_pos_detail_pay p
+        WHERE
+        ente_id =#{enteId}
+        and (money_actual>0 or money=0)
+        AND account_date between #{beginDate} and #{endDate}
+        <if test="shopIdList != null and shopIdList.size() != 0">
+            AND shop_id in
+            <foreach collection="shopIdList" item="shopItem" separator="," open="(" close=")">
+                #{shopItem}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() != 0">
+            AND shop_type_id IN
+            <foreach collection="shopTypeIdList" close=")" open="(" item="shopTypeItem" separator=",">
+                #{shopTypeItem}
+            </foreach>
+        </if>
+        GROUP BY p.ENTE_ID,
+        p.BRAND_ID,
+        p.BRAND_NAME,
+        p.REGION_ID,
+        p.REGION_NAME,
+        p.SHOP_ID,
+        p.SHOP_NAME,
+        p.pay_type_id,
+        p.pay_type_name
+    </select>
+    <select id="findRepPosPayFoodList" resultType="com.njwd.entity.reportdata.vo.MarketingGrossProfitVo">
+        SELECT
+        p.ENTE_ID,
+        p.SHOP_ID,
+        p.pay_type_id,
+        p.food_no,
+        p.food_name,
+        sum(p.food_num ) AS foodNum
+        FROM rep_pos_pay_food p
+        WHERE
+        ente_id =#{enteId}
+        AND account_date between #{beginDate} and #{endDate}
+        <if test="shopIdList != null and shopIdList.size() != 0">
+            AND shop_id in
+            <foreach collection="shopIdList" item="shopItem" separator="," open="(" close=")">
+                #{shopItem}
+            </foreach>
+        </if>
+        group by
+        p.ENTE_ID,
+        p.SHOP_ID,
+        p.pay_type_id,
+        p.food_no,
+        p.food_name
+    </select>
+
+
+    <select id="findShouldDeprListByShopId" parameterType="com.njwd.entity.reportdata.dto.querydto.FinQueryDto"
+            resultType="com.njwd.entity.reportdata.vo.fin.RealProfitVo">
+        select sum(t.should_depr) shouldDepr,t.shop_id shopId
+        from fin_depr_adjust_detail t
+        left join base_shop bs on bs.shop_id=t.shop_id
+        where
+        t.create_date between #{beginDate} and #{endDate}
+        <if test="shopIdList !=null and shopIdList.size() >0 ">
+            AND t.shop_id in
+            <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList !=null and shopTypeIdList.size() >0 ">
+            AND bs.shop_type_id in
+            <foreach collection="shopTypeIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY t.shop_id
+    </select>
+
+    <select id="findAllAmountListByShopId" parameterType="com.njwd.entity.reportdata.dto.querydto.FinQueryDto"
+            resultType="com.njwd.entity.reportdata.vo.fin.RealProfitVo">
+        select inse.shop_id shopId,sum(inse.allamount) allAmount
+        from scm_instock_entry inse
+        left join base_material m
+        on inse.material_id = m.material_id
+        where
+        m.material_name = '广告品'
+        and inse.createdate between #{beginDate} and #{endDate}
+        <if test="shopIdList !=null and shopIdList.size() >0 ">
+            AND inse.shop_id in
+            <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+
+        group by inse.shop_id
+    </select>
+
+
+    <select id="findCountLossListByShopId" parameterType="com.njwd.entity.reportdata.dto.querydto.FinQueryDto"
+            resultType="com.njwd.entity.reportdata.vo.fin.RealProfitVo">
+        select t1.shop_id shopid,sum(t1.amount) amount
+        from scm_stkcountloss_entry t1
+        left join base_material m on t1.material_id = m.material_id
+        where 1=1
+        <if test="codes !=null and codes.size() >0 ">
+            AND m.number in
+            <foreach collection="codes" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        and t1.create_date between #{beginDate} and #{endDate}
+        <if test="shopIdList !=null and shopIdList.size() >0 ">
+            AND t1.shop_id in
+            <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY t1.shop_id
+    </select>
+
+    <select id="findShopInfoList" parameterType="com.njwd.entity.reportdata.dto.querydto.FinQueryDto"
+            resultType="com.njwd.entity.reportdata.vo.CompanyVo">
+        select t.shop_id shopId,COALESCE(t.mdtax,0) mdTax from base_company t
+        where 1=1
+        and t.shop_id is not null
+        and t.shop_id != ''
+        <if test="shopIdList !=null and shopIdList.size() >0 ">
+            AND t.shop_id in
+            <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+
+    </select>
+
+    <select id="findAmortSchemeList" parameterType="com.njwd.entity.reportdata.dto.querydto.FinQueryDto"
+            resultType="com.njwd.entity.reportdata.vo.CompanyVo">
+        select sum(per.amortamaount) amortMoney,
+        com.shop_id shopId,
+        sch.explanation amortName
+        from fin_amortization_scheme sch
+        left join fin_amortperiod per
+        on sch.scheme_id = per.schemeid
+        left join base_account_book bk
+        on sch.account_book_id = bk.account_book_id
+        left join base_company com
+        on bk.company_id = com.company_id
+        where com.shop_id is not null
+        and per.yearperiod is not null
+        <if test="shopIdList != null and shopIdList.size() >0 ">
+            AND com.shop_id in
+            <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="explanation != null and explanation.size() >0 ">
+            and (
+            <foreach collection="explanation" item="item" separator="or">
+                sch.explanation like concat('%',#{item},'%')
+            </foreach>
+            )
+        </if>
+        <if test="periods != null and periods.size() > 0">
+            AND per.yearperiod in
+            <foreach collection="periods" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        group by com.shop_id,sch.explanation
+
+    </select>
+
+    <select id="findMaterialCost" parameterType="com.njwd.entity.reportdata.dto.querydto.FinQueryDto"
+            resultType="com.njwd.entity.reportdata.vo.CompanyVo">
+        select a.material_id,a.shop_id,a.description,a.counts*COALESCE(t.endMoney,t.startmoney,t.price,t1.price) materialCost
+        from (
+        select me.material_id material_id,me.shop_id,f.description,sum(me.quantity) counts
+        from scm_misdelivery_entry me
+        left join scm_formenu_item f on me.putout_type = f.value
+        where 1 = 1
+        <if test="costTypeName != null and costTypeName.size() >0 ">
+            and (
+            <foreach collection="costTypeName" item="item" separator="or">
+                f.description like concat('%',#{item},'%')
+            </foreach>
+            )
+        </if>
+        and me.fin_day between substring(#{beginTime},1,10)  and #{endDate}
+        <if test="shopIdList != null and shopIdList.size() >0 ">
+            and me.shop_id in
+            <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        and me.shop_id is not null
+        group by me.material_id,me.shop_id,f.description) a
+        left join scm_middle_cost t on a.material_id = t.material_id and a.shop_id = t.shop_id and t.description =
+        a.description
+        and t.end_date = #{endDayOfLastMonth} and t.period_year_num = #{yearNum}
+        left join
+        (select  a.material_id,avg(b1.price) price,a.shop_id from
+        (select  max(t.createdate) maxtime,t.material_id,t.shop_id from scm_instock_entry t where <![CDATA[ t.createdate <=  #{endDate} ]]>
+        <if test="shopIdList != null and shopIdList.size() >0 ">
+            and t.shop_id in
+            <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY t.material_id,t.shop_id) a
+        left join scm_instock_entry b1
+        on  a.maxtime = b1.createdate and a.material_id = b1.material_id and a.shop_id = b1.shop_id
+        where  <![CDATA[ b1.createdate <=  #{endDate} ]]>
+        <if test="shopIdList != null and shopIdList.size() >0 ">
+            and b1.shop_id in
+            <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+          group by a.material_id,a.shop_id) t1
+        on a.material_id = t1.material_id
+        and a.shop_id = t1.shop_id ;
+    </select>
+
+    <select id="findRealTimeProfitList" parameterType="com.njwd.entity.reportdata.dto.RealTimeProfitDto"
+            resultType="com.njwd.entity.reportdata.vo.RealTimeProfitVo">
+        SELECT
+        f.item_code,
+        f.item_number,
+        f.item_name,
+        f.item_level,
+        f.item_type,
+        COALESCE(SUM(CASE WHEN t.create_date BETWEEN #{beginDate} AND #{endDate} THEN amount ELSE 0 END),0)
+        currentMoney,
+        COALESCE(SUM(CASE WHEN t.create_date BETWEEN #{calculationBeginDate} AND #{calculationEndDate} THEN amount ELSE
+        0 END),0) calculationMoney
+        FROM middle_realtime_profit t
+        LEFT JOIN wd_report_item_set f ON t.item_type = f.item_code
+        <where>
+            f.report_id = 6
+            AND (t.create_date BETWEEN #{beginDate} AND #{endDate} OR t.create_date BETWEEN #{calculationBeginDate} AND
+            #{calculationEndDate})
+            <if test="shopIdList != null and shopIdList.size() >0 ">
+                AND t.shop_id IN
+                <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        GROUP BY f.item_code, f.item_number, f.item_name, f.item_level, f.item_type
+        ORDER BY f.item_type, f.item_number
+    </select>
+</mapper>

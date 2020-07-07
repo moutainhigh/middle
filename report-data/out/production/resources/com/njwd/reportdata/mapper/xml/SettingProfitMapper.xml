@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.SettingProfitMapper" >
+
+    <!-- 查询实时利润预算 -->
+    <select id="findSettingProfit" resultType="com.njwd.entity.reportdata.vo.SettingProfitVo">
+        SELECT
+        sp.ID,
+        sp.brand_id,
+        sp.region_id,
+        sp.shop_id,
+        sp.project_id,
+        sp.budget,
+        sp.percentage,
+        sp.begin_date,
+        sp.end_date,
+        sp.status,
+        sp.ente_id,
+        sp.create_time,
+        sp.update_time
+        FROM
+        wd_setting_profit sp
+        <where>
+            and sp.id = #{param.id}
+            and sp.ente_id = #{param.enteId}
+        </where>
+    </select>
+
+    <!-- 查询实时利润预算列表 -->
+    <select id="findSettingProfitList" resultType="com.njwd.entity.reportdata.vo.SettingProfitVo">
+        SELECT
+            sp.id,
+            sp.brand_id,
+            b.brand_code,
+            b.brand_name,
+            sp.region_id,
+            r.region_code,
+            r.region_name,
+            sp.shop_id,
+            ss.shop_no,
+            ss.shop_name,
+            sp.project_id,
+            item.item_name,
+            sp.budget,
+            sp.percentage,
+            sp.begin_date||' - '||sp.end_date dateStr,
+            sp.status,
+            sp.ente_id
+        FROM
+            wd_setting_profit sp
+        LEFT JOIN base_brand b ON sp.brand_id = b.brand_id
+        LEFT JOIN base_region r ON sp.region_id = r.region_id
+        LEFT JOIN base_shop ss ON sp.shop_id = ss.shop_id
+        LEFT JOIN wd_report_item_set item ON sp.project_id = item.report_item_set_id||''
+        <where>
+            AND sp.ente_id = #{param.enteId}
+            <if test="param.query != null and param.query != ''">
+                AND (
+                b.brand_name LIKE CONCAT('%',#{param.query},'%')
+                OR r.region_name LIKE CONCAT('%',#{param.query},'%')
+                OR ss.shop_name LIKE CONCAT('%',#{param.query},'%')
+                OR item.item_name LIKE CONCAT('%',#{param.query},'%')
+                <!-- 数字 -->
+                <if test="param.queryType ==1">
+                    OR sp.budget = ${param.query}
+                </if>
+                <!-- 日期 -->
+                <if test="param.queryType ==2">
+                OR sp.begin_date = '${param.query}'
+                OR sp.end_date = '${param.query}'
+                </if>
+                )
+            </if>
+        </where>
+        ORDER BY sp.create_time desc,sp."id" desc
+    </select>
+
+    <!-- 获取对应转化值 -->
+    <select id="findConvertDataList" resultType="com.njwd.entity.reportdata.ConvertData">
+        SELECT * FROM (
+            SELECT '0' "index", brand_id convert_data,brand_name  old_data
+                FROM base_brand
+                WHERE ente_id = #{enteId}
+            UNION ALL
+                SELECT '1' "index", region_id convert_data ,region_name old_data
+                FROM base_region
+                WHERE ente_id = #{enteId}
+            UNION ALL
+                SELECT '2' "index",shop_id convert_data,shop_name old_data
+                FROM base_shop
+                WHERE ente_id = #{enteId}
+            UNION ALL
+                SELECT '3' "index",report_item_set_id||'' convert_data,item_name old_data
+                FROM wd_report_item_set
+                WHERE ente_id = #{enteId} AND report_id = '6'
+            )tab
+        ORDER BY "index",convert_data
+    </select>
+
+    <!-- 查询重复数据数量 -->
+    <select id="findDuplicateData"  resultType="com.njwd.entity.reportdata.vo.SettingProfitVo">
+        select begin_date,end_date
+        from wd_setting_profit
+        <where>
+            and ente_id = #{param.enteId}
+            and shop_id = #{param.shopId}
+            and project_id = #{param.projectId}
+            and id != #{param.id}
+        </where>
+    </select>
+
+    <!-- 查询重复的数据 -->
+    <select id="findDuplicateDataList" resultType="java.util.HashMap">
+        SELECT shop_id "2",project_id "3",begin_date||'' begin_date,end_date||'' end_date
+        FROM wd_setting_profit
+        WHERE ente_id = #{enteId}
+        AND(
+        <foreach collection="valueList" index="index" item="item" separator="or">
+            (shop_id = #{item.shopId} and project_id = #{item.projectId})
+        </foreach>
+        )
+    </select>
+
+    <!-- 更新实时利润预算 -->
+    <update id="updateSettingProfit">
+        update wd_setting_profit
+        <set>
+            budget = #{param.budget},
+            percentage = #{param.percentage},
+            begin_date = #{param.beginDate},
+            end_date = #{param.endDate},
+            update_time =#{param.updateTime}
+        </set>
+        <where>
+            and id = #{param.id}
+            and ente_id = #{param.enteId}
+        </where>
+    </update>
+
+    <!-- 更新经营日报状态 -->
+    <update id="updateSettingProfitStatus">
+        update wd_setting_profit
+        <set>
+            status = #{param.status},
+            update_time =#{param.updateTime}
+        </set>
+        <where>
+            and id = #{param.id}
+            and ente_id = #{param.enteId}
+        </where>
+    </update>
+
+    <!-- 批量新增 -->
+    <insert id="insertDataBatch">
+        INSERT INTO wd_setting_profit
+        (
+        id,
+        brand_id,
+        region_id,
+        shop_id,
+        project_id,
+        budget,
+        percentage,
+        begin_date,
+        end_date,
+        status,
+        ente_id,
+        create_time
+        )
+        VALUES
+        <foreach collection="dataList" index="index" item="item" separator=",">
+            (
+            #{item.id},
+            #{item.brandId},
+            #{item.regionId},
+            #{item.shopId},
+            #{item.projectId},
+            #{item.budget},
+            #{item.percentage},
+            #{item.beginDate},
+            #{item.endDate},
+            1,
+            #{item.enteId},
+            #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

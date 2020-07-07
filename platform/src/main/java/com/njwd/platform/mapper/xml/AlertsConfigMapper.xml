@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.platform.mapper.AlertsConfigMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.platform.vo.AlertsConfigVo">
+    <id column="alerts_config_id" jdbcType="BIGINT" property="alertsConfigId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="alerts_type" jdbcType="INTEGER" property="alertsType" />
+    <result column="warning_threshold" jdbcType="DECIMAL" property="warningThreshold" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="is_del" jdbcType="BIT" property="isDel" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="crm_user_id" jdbcType="VARCHAR" property="crmUserId" />
+    <result column="mobile" jdbcType="VARCHAR" property="mobile" />
+    <result column="company_name" jdbcType="VARCHAR" property="companyName" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    alerts_config_id, user_id, alerts_type, warning_threshold, `status`, create_time, 
+    update_time, is_del
+  </sql>
+
+  <!--依据条件查询预警配置-->
+  <select id="selectAlertsConfig" parameterType="com.njwd.entity.platform.dto.AlertsConfigDto" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from wd_alerts_config
+    where is_del = 0
+    <if test="userId != null">
+      and user_id = #{userId}
+    </if>
+    <if test="alertsType != null">
+      and alerts_type = #{alertsType}
+    </if>
+    <if test="warningThreshold != null">
+      and warning_threshold = #{warningThreshold}
+    </if>
+    <if test="status != null">
+      and `status` = #{status}
+    </if>
+  </select>
+
+  <!--依据条件查询用户的预警配置-->
+  <select id="selectAlertsConfigAndUser" parameterType="com.njwd.entity.platform.dto.AlertsConfigDto" resultMap="BaseResultMap">
+    SELECT
+      ac.alerts_type,
+      ac.`status`,
+      ac.warning_threshold,
+      u.user_id,
+      u.crm_user_id,
+      u.mobile,
+      u.company_name
+    FROM
+      wd_alerts_config ac
+    INNER JOIN wd_user u on ac.user_id = u.user_id
+    WHERE u.is_del = 0 and ac.is_del = 0 and ac.`status` = 1
+    <if test="alertsType != null">
+      and alerts_type = #{alertsType}
+    </if>
+  </select>
+
+
+  <!--依据用户查询某类型预警配置-->
+  <select id="selectAlertsConfigByUser" parameterType="com.njwd.entity.platform.dto.AlertsConfigDto" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from wd_alerts_config
+    where is_del = 0
+    and user_id = #{userId} and alerts_type = #{alertsType}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from wd_alerts_config
+    where alerts_config_id = #{alertsConfigId,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" keyColumn="alerts_config_id" keyProperty="alertsConfigId" parameterType="com.njwd.entity.platform.dto.AlertsConfigDto" useGeneratedKeys="true">
+    insert into wd_alerts_config (user_id, alerts_type, warning_threshold, 
+      `status`, create_time, update_time, 
+      is_del)
+    values (#{userId,jdbcType=VARCHAR}, #{alertsType,jdbcType=INTEGER}, #{warningThreshold,jdbcType=DECIMAL}, 
+      #{status,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}, 
+      #{isDel,jdbcType=BIT})
+  </insert>
+
+  <!--新增预警配置-->
+  <insert id="insertAlertsConfig" keyColumn="alerts_config_id" keyProperty="alertsConfigId" parameterType="com.njwd.entity.platform.dto.AlertsConfigDto" useGeneratedKeys="true">
+    insert into wd_alerts_config
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="alertsType != null">
+        alerts_type,
+      </if>
+      <if test="warningThreshold != null">
+        warning_threshold,
+      </if>
+      <if test="status != null">
+        `status`,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="isDel != null">
+        is_del,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        #{userId,jdbcType=VARCHAR},
+      </if>
+      <if test="alertsType != null">
+        #{alertsType,jdbcType=INTEGER},
+      </if>
+      <if test="warningThreshold != null">
+        #{warningThreshold,jdbcType=DECIMAL},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isDel != null">
+        #{isDel,jdbcType=BIT},
+      </if>
+    </trim>
+  </insert>
+
+  <!--修改预警配置-->
+  <update id="updateAlertsConfig" parameterType="com.njwd.entity.platform.dto.AlertsConfigDto">
+    update wd_alerts_config
+    <set>
+      <if test="userId != null">
+        user_id = #{userId,jdbcType=VARCHAR},
+      </if>
+      <if test="alertsType != null">
+        alerts_type = #{alertsType,jdbcType=INTEGER},
+      </if>
+      <if test="warningThreshold != null">
+        warning_threshold = #{warningThreshold,jdbcType=DECIMAL},
+      </if>
+      <if test="status != null">
+        `status` = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isDel != null">
+        is_del = #{isDel,jdbcType=BIT},
+      </if>
+    </set>
+    where alerts_config_id = #{alertsConfigId}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.njwd.entity.platform.dto.AlertsConfigDto">
+    update wd_alerts_config
+    set user_id = #{userId,jdbcType=VARCHAR},
+      alerts_type = #{alertsType,jdbcType=INTEGER},
+      warning_threshold = #{warningThreshold,jdbcType=DECIMAL},
+      `status` = #{status,jdbcType=INTEGER},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      is_del = #{isDel,jdbcType=BIT}
+    where alerts_config_id = #{alertsConfigId,jdbcType=BIGINT}
+  </update>
+</mapper>

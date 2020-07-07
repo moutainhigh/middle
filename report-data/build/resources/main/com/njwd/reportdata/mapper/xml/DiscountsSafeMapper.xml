@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.DiscountsSafeMapper" >
+
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.vo.DiscountsSafeVo">
+      <result column="discounts_safe_id" property="discountsSafeId" />
+      <result column="ente_id" property="enteId" />
+      <result column="brand_id" property="brandId" />
+      <result column="brand_name" property="brandName" />
+      <result column="region_id" property="regionId" />
+      <result column="region_name" property="regionName" />
+      <result column="shop_id" property="shopId" />
+      <result column="shop_name" property="shopName" />
+      <result column="food_id" property="foodId" />
+      <result column="food_no" property="foodNo" />
+      <result column="food_name" property="foodName" />
+      <result column="unit_id" property="unitId" />
+      <result column="unit_name" property="unitName" />
+      <result column="num" property="num" />
+      <result column="status" property="status" />
+      <result column="update_time" property="updateTime" />
+  </resultMap>
+
+  <sql id="BaseColumnList">
+     `discounts_safe_id`,
+        `ente_id`,
+        `brand_id`,
+        `brand_name`,
+        `region_id`,
+        `region_name`,
+        `shop_id`,
+        `shop_name`,
+        `food_id`,
+        `food_no`,
+        `food_name`,
+        `unit_id`,
+        `unit_name`,
+        `num`,
+        `status`,
+        `update_time`
+  </sql>
+
+  <!--批量新增-->
+  <insert id="addSafeBatch" parameterType="com.njwd.entity.reportdata.dto.DiscountsSafeDto">
+    insert into discounts_safe(
+      `discounts_safe_id`,
+      `ente_id`,
+      `brand_id`,
+      `brand_name`,
+      `region_id`,
+      `region_name`,
+      `shop_id`,
+      `shop_name`,
+      `food_id`,
+      `food_no`,
+      `food_name`,
+      `unit_id`,
+      `unit_name`,
+      `num`
+    )values
+    <foreach collection="list" item="discountsSafe" separator=",">
+      (
+        #{discountsSafe.discountsSafeId},
+        #{discountsSafe.enteId},
+        #{discountsSafe.brandId},
+        #{discountsSafe.brandName},
+        #{discountsSafe.regionId},
+        #{discountsSafe.regionName},
+        #{discountsSafe.shopId},
+        #{discountsSafe.shopName},
+        #{discountsSafe.foodId},
+        #{discountsSafe.foodNo},
+        #{discountsSafe.foodName},
+        #{discountsSafe.unitId},
+        #{discountsSafe.unitName},
+        #{discountsSafe.num}
+      )
+    </foreach>
+  </insert>
+
+  <update id="updateSafeById" parameterType="com.njwd.entity.reportdata.dto.DiscountsSafeDto" >
+    UPDATE discounts_safe
+    SET
+    `num` = #{discountsSafeDto.num}
+    WHERE `discounts_safe_id` = #{discountsSafeDto.discountsSafeId}
+  </update>
+
+  <!--批量-->
+  <update id="updateSafeBatch" parameterType="com.njwd.entity.reportdata.dto.DiscountsSafeDto" >
+        UPDATE discounts_safe
+        SET
+           status = #{discountsSafeDto.status}
+        WHERE `discounts_safe_id` in
+        <foreach collection="discountsSafeDto.idList" item="discountsSafeId" open="(" separator="," close=")">
+           #{discountsSafeId}
+        </foreach>
+    </update>
+
+  <select id="findSafeList" resultType="com.njwd.entity.reportdata.vo.DiscountsSafeVo" parameterType="com.njwd.entity.reportdata.dto.DiscountsSafeDto">
+    select
+      `discounts_safe_id`,
+      `ente_id`,
+      `brand_id`,
+      `brand_name`,
+      `region_id`,
+      `region_name`,
+      `shop_id`,
+      `shop_name`,
+      `food_id`,
+      `food_no`,
+      `food_name`,
+      `unit_id`,
+      `unit_name`,
+      `num`,
+      `status`,
+      `update_time`
+     FROM discounts_safe
+     WHERE
+    ente_id= #{discountsSafeDto.enteId}
+     <if test="discountsSafeDto.idList!=null">
+      and discounts_safe_id in
+       <foreach collection="discountsSafeDto.idList" item="discountsSafeId" open="(" separator="," close=")">
+         #{discountsSafeId}
+       </foreach>
+     </if>
+    <if test="discountsSafeDto.shopId!=null">
+      and shop_id=#{discountsSafeDto.shopId}
+    </if>
+    <if test="discountsSafeDto.brandId!=null">
+      and brand_id=#{discountsSafeDto.brandId}
+    </if>
+    <if test="discountsSafeDto.regionId!=null">
+      and region_id=#{discountsSafeDto.regionId}
+    </if>
+    <if test="discountsSafeDto.status!=null">
+      and status=#{discountsSafeDto.status}
+    </if>
+
+  </select>
+
+  <select id="findSafeById" resultType="com.njwd.entity.reportdata.vo.DiscountsSafeVo" parameterType="com.njwd.entity.reportdata.dto.DiscountsSafeDto">
+     select
+   `discounts_safe_id`,
+            `ente_id`,
+            `brand_id`,
+            `brand_name`,
+            `region_id`,
+            `region_name`,
+            `shop_id`,
+            `shop_name`,
+            `food_id`,
+            `food_no`,
+            `food_name`,
+            `unit_id`,
+            `unit_name`,
+            `num`,
+            `status`,
+            `update_time`
+     FROM discounts_safe
+     WHERE `discounts_safe_id` = #{discountsSafeDto.discountsSafeId}
+  </select>
+
+
+</mapper>

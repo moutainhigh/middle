@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.schedule.mapper.TaskBaseMapper" >
+  <resultMap id="BaseResultMap" type="com.njwd.entity.schedule.TaskBase" >
+    <id column="task_key" property="taskKey" jdbcType="VARCHAR" />
+    <result column="task_name" property="taskName" jdbcType="VARCHAR" />
+    <result column="app_id" property="appId" jdbcType="VARCHAR" />
+    <result column="task_type" property="taskType" jdbcType="VARCHAR" />
+    <result column="target_excute" property="targetExcute" jdbcType="VARCHAR" />
+    <result column="cron" property="cron" jdbcType="VARCHAR" />
+    <result column="runtime_param" property="runtimeParam" jdbcType="VARCHAR" />
+    <result column="job_role" property="jobRole" jdbcType="VARCHAR" />
+    <result column="max_excute_time" property="maxExcuteTime" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    task_key, task_name, app_id, task_type, target_excute, cron, job_role,runtime_param,max_excute_time
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from wd_task_base
+    where task_key = #{taskKey,jdbcType=VARCHAR}
+  </select>
+
+  <select id="getList" resultMap="BaseResultMap" >
+    select
+    <include refid="Base_Column_List" />
+    from wd_task_base
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from wd_task_base
+    where task_key = #{taskKey,jdbcType=VARCHAR}
+  </delete>
+
+  <insert id="insertSelective" parameterType="com.njwd.entity.schedule.TaskBase" >
+    insert into wd_task_base
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="taskKey != null" >
+        task_key,
+      </if>
+      <if test="taskName != null" >
+        task_name,
+      </if>
+      <if test="appId != null" >
+        app_id,
+      </if>
+      <if test="taskType != null" >
+        task_type,
+      </if>
+      <if test="targetExcute != null" >
+        target_excute,
+      </if>
+      <if test="cron != null" >
+        cron,
+      </if>
+      <if test="jobRole != null" >
+        job_role,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="taskKey != null" >
+        #{taskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="taskName != null" >
+        #{taskName,jdbcType=VARCHAR},
+      </if>
+      <if test="appId != null" >
+        #{appId,jdbcType=VARCHAR},
+      </if>
+      <if test="taskType != null" >
+        #{taskType,jdbcType=VARCHAR},
+      </if>
+      <if test="targetExcute != null" >
+        #{targetExcute,jdbcType=VARCHAR},
+      </if>
+      <if test="cron != null" >
+        #{cron,jdbcType=VARCHAR},
+      </if>
+      <if test="jobRole != null" >
+        #{jobRole,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.schedule.TaskBase" >
+    update wd_task_base
+    <set >
+      <if test="taskName != null" >
+        task_name = #{taskName,jdbcType=VARCHAR},
+      </if>
+      <if test="appId != null" >
+        app_id = #{appId,jdbcType=VARCHAR},
+      </if>
+      <if test="taskType != null" >
+        task_type = #{taskType,jdbcType=VARCHAR},
+      </if>
+      <if test="targetExcute != null" >
+        target_excute = #{targetExcute,jdbcType=VARCHAR},
+      </if>
+      <if test="cron != null" >
+        cron = #{cron,jdbcType=VARCHAR},
+      </if>
+      <if test="jobRole != null" >
+        job_role = #{jobRole,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where task_key = #{taskKey,jdbcType=VARCHAR}
+  </update>
+</mapper>

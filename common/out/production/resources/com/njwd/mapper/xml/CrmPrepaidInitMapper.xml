@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.mapper.CrmPrepaidInitMapper">
+
+
+    <!--新增-->
+    <insert id="addCrmCardPrepaidInit" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto" >
+        insert into crm_prepaid_2019(
+        prepaid_id,card_no,money,prepaid_money,largess_money,market_largess_money,prepaid_time,third_shop_id,ente_id,app_id,third_creator_id,
+        pay_info,third_pay_type_id,third_transaction_type_id,is_invoice,remark,create_time,update_time
+        )values
+        <foreach collection="list" item="crmCardPrepaidDto" separator=",">
+            (
+            #{crmCardPrepaidDto.prepaidId}
+            ,#{crmCardPrepaidDto.cardNo}
+            ,#{crmCardPrepaidDto.money}
+            ,#{crmCardPrepaidDto.prepaidMoney}
+            ,#{crmCardPrepaidDto.largessMoney}
+            ,#{crmCardPrepaidDto.marketLargessMoney}
+            ,#{crmCardPrepaidDto.prepaidTime}
+            ,#{crmCardPrepaidDto.thirdShopId}
+            ,#{crmCardPrepaidDto.enteId}
+            ,#{crmCardPrepaidDto.appId}
+            ,#{crmCardPrepaidDto.thirdCreatorId}
+            ,#{crmCardPrepaidDto.payInfo}
+            ,#{crmCardPrepaidDto.thirdPayTypeId}
+            ,#{crmCardPrepaidDto.thirdTransactionTypeId}
+            ,#{crmCardPrepaidDto.isInvoice}
+            ,#{crmCardPrepaidDto.remark}
+            ,#{crmCardPrepaidDto.createTime}
+            ,#{crmCardPrepaidDto.updateTime}
+            )
+        </foreach>
+    </insert>
+
+    <select id="findCrmCardPrepaidBatchInit" resultType="com.njwd.entity.kettlejob.vo.CrmPrepaidVo" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto">
+        select
+        prepaid_id,card_no,money,prepaid_money,largess_money,market_largess_money,prepaid_time,third_shop_id,ente_id,app_id,third_creator_id,
+        pay_info,third_pay_type_id,transaction_type_id,third_transaction_type_id,is_invoice,remark,create_time,update_time
+        from
+        crm_prepaid_2019
+        where
+        prepaid_id in
+        <foreach collection="crmCardPrepaidDto.prepaidIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and app_id=#{crmCardPrepaidDto.appId}
+        and ente_id=#{crmCardPrepaidDto.enteId}
+    </select>
+
+
+    <update id="updateCrmCardPrepaidInit" parameterType="java.util.List">
+        <foreach collection="list" item="crmCardPrepaidDto" index="index" separator=";">
+            update crm_prepaid_2019
+            set
+            card_no=#{crmCardPrepaidDto.cardNo}
+            ,money=#{crmCardPrepaidDto.money}
+            ,prepaid_money=#{crmCardPrepaidDto.prepaidMoney}
+            ,largess_money=#{crmCardPrepaidDto.largessMoney}
+            ,market_largess_money=#{crmCardPrepaidDto.marketLargessMoney}
+            ,prepaid_time=#{crmCardPrepaidDto.prepaidTime}
+            ,third_shop_id=#{crmCardPrepaidDto.thirdShopId}
+            ,creator_id=#{crmCardPrepaidDto.creatorId}
+            ,third_creator_id=#{crmCardPrepaidDto.thirdCreatorId}
+            ,pay_info=#{crmCardPrepaidDto.payInfo}
+            ,third_pay_type_id=#{crmCardPrepaidDto.thirdPayTypeId}
+            ,third_transaction_type_id=#{crmCardPrepaidDto.thirdTransactionTypeId}
+            ,is_invoice=#{crmCardPrepaidDto.isInvoice}
+            ,remark=#{crmCardPrepaidDto.remark}
+            ,create_time=#{crmCardPrepaidDto.createTime}
+            ,update_time=#{crmCardPrepaidDto.updateTime}
+            where
+            prepaid_id=#{crmCardPrepaidDto.prepaidId}
+            and app_id=#{crmCardPrepaidDto.appId}
+            and ente_id=#{crmCardPrepaidDto.enteId}
+        </foreach>
+    </update>
+
+    <select id="findPrepaidPayTypeBatchInit" resultType="com.njwd.entity.kettlejob.vo.CrmPrepaidPayTypeVo" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidDto">
+        select
+        prepaid_pay_type_id,prepaid_id,money,third_shop_id,ente_id,app_id,third_pay_type_id
+        from
+        crm_prepaid_pay_type_2019
+        where
+        prepaid_id in
+        <foreach collection="crmCardPrepaidDto.prepaidIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and app_id=#{crmCardPrepaidDto.appId}
+        and ente_id=#{crmCardPrepaidDto.enteId}
+    </select>
+
+    <insert id="addPrepaidPayTypeInit" parameterType="com.njwd.entity.kettlejob.dto.CrmPrepaidPayTypeDto" >
+        insert into crm_prepaid_pay_type_2019(
+        prepaid_pay_type_id,prepaid_id,money,third_shop_id,ente_id,app_id,third_pay_type_id,prepaid_time,create_time,update_time
+        )values
+        <foreach collection="list" item="prepaidPayTypeDto" separator=",">
+            (
+            #{prepaidPayTypeDto.prepaidPayTypeId}
+            ,#{prepaidPayTypeDto.prepaidId}
+            ,#{prepaidPayTypeDto.money}
+            ,#{prepaidPayTypeDto.thirdShopId}
+            ,#{prepaidPayTypeDto.enteId}
+            ,#{prepaidPayTypeDto.appId}
+            ,#{prepaidPayTypeDto.thirdPayTypeId}
+            ,#{prepaidPayTypeDto.prepaidTime}
+            ,#{prepaidPayTypeDto.createTime}
+            ,#{prepaidPayTypeDto.updateTime}
+            )
+        </foreach>
+    </insert>
+    <update id="updatePrepaidPayTypeInit" parameterType="java.util.List">
+        <foreach collection="list" item="prepaidPayTypeDto" index="index" separator=";">
+            update crm_prepaid_pay_type_2019
+            set
+            money=#{prepaidPayTypeDto.money}
+            ,third_shop_id=#{prepaidPayTypeDto.thirdShopId}
+            ,third_pay_type_id=#{prepaidPayTypeDto.thirdPayTypeId}
+            , prepaid_time = #{prepaidPayTypeDto.prepaidTime}
+            ,update_time=#{prepaidPayTypeDto.updateTime}
+            where prepaid_pay_type_id=#{prepaidPayTypeDto.prepaidPayTypeId}
+        </foreach>
+    </update>
+
+</mapper>

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.kettlejob.mapper.JoyHrOrgChangeMapper">
+
+    <!-- 查询最后更新时间 -->
+    <select id="findLastUpdateTime" resultType="string">
+        select max(last_update_time) last_update_time from hr_org_change
+        where app_id = #{appId}
+          and ente_id = #{enteId}
+    </select>
+
+    <!-- 批量新增或更新数据 -->
+    <insert id="insertOrUpdateBatch">
+        insert into hr_org_change (
+        third_user_id,
+        change_type,
+        change_date,
+        third_old_org_id,
+        old_work_status,
+        old_work_type,
+        third_new_org_id,
+        new_work_status,
+        new_work_type,
+        status,
+        ente_id,
+        app_id,
+        last_update_time
+        )
+        values
+        <foreach collection="sqlParam.dataList" item="item" index="index" separator=",">
+            (
+            #{item.thirdUserId},
+            #{item.changeType},
+            #{item.changeDate},
+            #{item.thirdOldOrgId},
+            #{item.oldWorkStatus},
+            #{item.oldWorkType},
+            #{item.thirdNewOrgId},
+            #{item.newWorkStatus},
+            #{item.newWorkType},
+            #{item.status},
+            #{sqlParam.enteId},
+            #{sqlParam.appId},
+            #{sqlParam.lastUpdateTime}
+            )
+        </foreach>
+        on duplicate key update
+        change_type=values(change_type),
+        third_old_org_id=values(third_old_org_id),
+        old_work_status=values(old_work_status),
+        old_work_type=values(old_work_type),
+        third_new_org_id=values(third_new_org_id),
+        new_work_status=values(new_work_status),
+        new_work_type=values(new_work_type),
+        status=values(status),
+        last_update_time=#{sqlParam.lastUpdateTime}
+    </insert>
+
+    <!-- 批量更新调动老组织信息 -->
+    <update id="updateOrgChangeOld">
+        UPDATE hr_org_change oc
+            LEFT JOIN base_brand_rela br ON oc.third_old_org_id = br.third_brand_id AND oc.app_id = br.app_id
+            LEFT JOIN base_region_rela rr ON oc.third_old_org_id = rr.third_region_id AND oc.app_id = rr.app_id
+            LEFT JOIN base_shop_rela sr ON oc.third_old_org_id = sr.third_shop_id AND oc.app_id = sr.app_id
+            LEFT JOIN base_shop_dept_rela sdr ON oc.third_old_org_id = sdr.third_shop_dept_id AND oc.app_id = sdr.app_id
+        <set>
+            oc.old_org_id = coalesce(br.brand_id,rr.region_id, sr.shop_id,sdr.shop_dept_id)
+            <if test="sqlParam.lastUpdateTime != null">
+                ,oc.last_update_time = #{sqlParam.lastUpdateTime}
+            </if>
+        </set>
+        <where>
+            oc.app_id = #{sqlParam.appId}
+            AND oc.ente_id = #{sqlParam.enteId}
+            AND (
+            oc.last_update_time is null
+            <if test="sqlParam.lastUpdateTime != null">
+                or oc.last_update_time &gt;= #{sqlParam.lastUpdateTime}
+            </if>
+            )
+        </where>
+    </update>
+
+    <!-- 批量更新调动新组织信息 -->
+    <update id="updateOrgChangeNew">
+        UPDATE hr_org_change oc
+        LEFT JOIN base_brand_rela br ON oc.third_new_org_id = br.third_brand_id AND oc.app_id = br.app_id
+        LEFT JOIN base_region_rela rr ON oc.third_new_org_id = rr.third_region_id AND oc.app_id = rr.app_id
+        LEFT JOIN base_shop_rela sr ON oc.third_new_org_id = sr.third_shop_id AND oc.app_id = sr.app_id
+        LEFT JOIN base_shop_dept_rela sdr ON oc.third_new_org_id = sdr.third_shop_dept_id AND oc.app_id = sdr.app_id
+        <set>
+            oc.new_org_id = coalesce(br.brand_id,rr.region_id, sr.shop_id,sdr.shop_dept_id)
+            <if test="sqlParam.lastUpdateTime != null">
+                ,oc.last_update_time = #{sqlParam.lastUpdateTime}
+            </if>
+        </set>
+        <where>
+            oc.app_id = #{sqlParam.appId}
+            AND oc.ente_id = #{sqlParam.enteId}
+            AND (
+            oc.last_update_time is null
+            <if test="sqlParam.lastUpdateTime != null">
+                or oc.last_update_time &gt;= #{sqlParam.lastUpdateTime}
+            </if>
+            )
+        </where>
+    </update>
+
+    <!-- 更新调动组织用户信息 -->
+    <update id="updateOrgChangeUser">
+        update hr_org_change oc
+            left join base_user_rela ur on oc.third_user_id = ur.third_user_id and oc.app_id = ur.app_id and oc.ente_id = ur.ente_id
+        <set>
+            oc.user_id = ur.user_id
+            <if test="sqlParam.lastUpdateTime != null">
+                ,oc.last_update_time = #{sqlParam.lastUpdateTime}
+            </if>
+        </set>
+        <where>
+            and oc.app_id = #{sqlParam.appId}
+            and oc.ente_id = #{sqlParam.enteId}
+            and (
+            oc.last_update_time is null
+            <if test="sqlParam.lastUpdateTime != null">
+                or oc.last_update_time &gt;= #{sqlParam.lastUpdateTime}
+            </if>
+            )
+        </where>
+    </update>
+
+</mapper>

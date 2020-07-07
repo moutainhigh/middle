@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.basedata.mapper.BaseAccountSubjectMapper">
+    <select id="findAccountSubjectBySubjectId" resultType="BaseAccountSubjectVo" parameterType="BaseAccountSubjectDto">
+        SELECT
+            ACCOUNT_SUBJECT_ID,
+            ENTE_ID,
+            COMPANY_ID,
+            SUBJECT_TYPE_ID,
+            SUBJECT_ID,
+            ACCOUNT_ELEMENT_ITEM_ID,
+            UP_ID,
+            ACCOUNT_SUBJECT_CODE,
+            ACCOUNT_SUBJECT_NAME,
+            FULL_NAME,
+            SUBJECT_LEVEL,
+            BALANCE_DIRECTION,
+            IS_CASH,
+            IS_BANK,
+            IS_CASHFLOW,
+            IS_FINAL,
+            CASH_INFLOW_ID,
+            CASH_OUTFLOW_ID
+        FROM
+            BASE_ACCOUNT_SUBJECT
+        WHERE
+            ENTE_ID = #{enteId}
+            <if test="subjectId !=null ">
+                AND SUBJECT_ID = #{subjectId}
+            </if>
+    </select>
+</mapper>

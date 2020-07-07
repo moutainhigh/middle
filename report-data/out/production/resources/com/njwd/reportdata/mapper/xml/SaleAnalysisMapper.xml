@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportdata.mapper.SaleAnalysisMapper">
+    <!--根据条件查询退增统计表-->
+    <select id="findPosOrderFoodByCondition" resultType="PosOrderFoodVo"
+            parameterType="com.njwd.entity.reportdata.dto.PosOrderFoodAnalysisDto">
+        SELECT food_style_name,
+        retreat_give_type,
+        COUNT(DISTINCT order_code) AS count,
+        sum(sum_price) AS amount
+        FROM   rep_pos_retreat_give
+        WHERE ente_id =#{enteId}
+        AND account_date between #{beginDate} and #{endDate}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() > 0">
+            AND shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        GROUP BY food_style_name,retreat_give_type
+        order by food_style_name
+    </select>
+
+    <!--根据条件查询退菜明细-->
+    <select id="findRetreatDetail" resultType="PosRetreatDetailVo"
+            parameterType="PosOrderFoodAnalysisDto">
+        select a.* ,
+        CASE
+        WHEN retreatCount>threshold THEN
+        threshold-retreatCount
+        ELSE
+        0
+        END safetyThreshold
+        from (
+            SELECT rp.shop_name as shopName,
+            rp.desk_no as deskNo,
+            rp.food_no as foodNo,
+            rp.food_name as foodName,
+            rp.food_style_name as foodStyleName,
+            rp.unit_name as unitName,
+            rp.order_id as orderId,
+            rp.order_code as orderCode,
+            ABS(food_num) as retreatCount,
+            original_price as originalPrice,
+            ABS(sum_price) amount,
+            case when tmp1.threshold is not null then tmp1.threshold
+            else tmp2.threshold end threshold,
+            retreat_remark as retreatRemark,
+            retreat_time as retreatTime
+            from
+            rep_pos_retreat_give rp
+            left join (select  t.threshold,t.food_id,t.shop_id from wd_setting_back t where t.shop_id != '0' and t.status=1) tmp1 on tmp1.food_id = rp.food_id
+            and tmp1.shop_id = rp.shop_id
+            left join (select  t.threshold,t.food_id from wd_setting_back t where t.shop_id = '0' and t.status=1) tmp2 on tmp2.food_id = rp.food_id
+            WHERE
+            rp.ente_id =#{posRetreatDetailDto.enteId}
+            and  account_date between #{posRetreatDetailDto.beginDate} and #{posRetreatDetailDto.endDate}
+            <if test="posRetreatDetailDto.shopIdList != null and posRetreatDetailDto.shopIdList.size() > 0 ">
+                and rp.shop_id in
+                <foreach collection="posRetreatDetailDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                    #{shopId}
+                </foreach>
+            </if>
+            <if test="posRetreatDetailDto.shopTypeIdList != null and posRetreatDetailDto.shopTypeIdList.size() > 0">
+                AND rp.shop_type_id in
+                <foreach collection="posRetreatDetailDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                    #{shopTypeId}
+                </foreach>
+            </if>
+            <if test="posRetreatDetailDto.orderTypeIdList != null and posRetreatDetailDto.orderTypeIdList.size() > 0">
+                AND rp.channel_id in
+                <foreach collection="posRetreatDetailDto.orderTypeIdList" item="orderTypeId" separator="," open="(" close=")">
+                    #{orderTypeId}
+                </foreach>
+            </if>
+            AND  rp.retreat_give_type='0'
+            order by rp.shop_name,rp.order_id
+        )a
+
+    </select>
+    <!--汇总-->
+    <select id="sumRetreatDetail" resultType="PosRetreatDetailVo"
+            parameterType="PosOrderFoodAnalysisDto">
+        SELECT
+        '合计' as shopName,
+        sum(ABS(food_num)) as retreatCount,
+        count(*) totalNum,
+        sum(ABS(sum_price)) amount
+        from
+        rep_pos_retreat_give rp
+        WHERE
+        rp.ente_id =#{enteId}
+        and  account_date between #{beginDate} and #{endDate}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and rp.shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() > 0">
+            AND rp.shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        <if test="orderTypeIdList != null and orderTypeIdList.size() > 0">
+            AND rp.channel_id in
+            <foreach collection="orderTypeIdList" item="orderTypeId" separator="," open="(" close=")">
+                #{orderTypeId}
+            </foreach>
+        </if>
+        AND rp.retreat_give_type='0'
+        group by shopName
+    </select>
+
+
+    <!--查询支付方式-->
+    <select id="findPayTypeReportByCondition" resultType="PosCashPayAnalysisVo" parameterType="PosCashPayDto">
+        SELECT
+        a.pay_type_id,
+        a.pay_type_name,
+        sum(a.PAY_COUNT ) AS count,
+        sum(a.money_actual ) AS moneyActualSum
+        from
+        (
+        <include refid="pay_type_list"/>
+        AND money_actual !=0
+        union all
+        <include refid="pay_type_list"/>
+        AND money =0) a
+        group by a.pay_type_id,a.pay_type_name
+        order by a.pay_type_id
+    </select>
+    <sql id="pay_type_list">
+        select pay_type_id,pay_type_name,PAY_COUNT,money_actual
+        FROM
+        rep_pos_detail_pay
+        WHERE
+        account_date between #{beginDate} and #{endDate}
+        AND ente_id =#{enteId}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() > 0">
+            AND shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+    </sql>
+    <!--根据条件查询收款方式分析-->
+    <select id="findPayCategoryReport" resultType="PosPayCategoryVo"
+            parameterType="PosPayCategoryDto">
+        SELECT
+        a.pay_category_id,
+        a.pay_category_name,
+        sum(a.PAY_COUNT ) AS sumCount,
+        sum(a.money_actual ) AS moneyActualSum
+        from
+        (
+        <include refid="pay_Category_list"/>
+        AND money_actual !=0
+        union all
+        <include refid="pay_Category_list"/>
+        AND money =0) a
+        group by a.pay_category_id,a.pay_category_name
+        order by a.pay_category_id
+    </select>
+    <sql id="pay_Category_list">
+        select pay_category_id,pay_category_name,PAY_COUNT,money_actual
+        FROM
+        rep_pos_detail_pay
+        WHERE
+         ente_id =#{enteId}
+         AND account_date between #{beginDate} and #{endDate}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() > 0">
+            AND shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+    </sql>
+    <!--根据条件查询菜品销量分析表-->
+    <select id="findFoodSalesReport" resultType="PosFoodSalesVo" parameterType="PosFoodSalesDto">
+        SELECT
+        food_id,
+        food_name as foodName,
+        sum(case when account_date between #{beginDate} and #{endDate} then food_num else 0 end) as salesCount,
+        sum(case when account_date between #{lastPeriodBegin} and #{lastPeriodEnd} then food_num else 0 end) as upSalesCount,
+        sum(case when account_date between #{lastYearCurrentBegin} and #{lastYearCurrentEnd} then food_num else 0 end) as lastYearSalesCount
+        FROM rep_pos_detail_food
+        WHERE
+        1=1
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() > 0">
+            AND shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        AND is_package ='0'
+        GROUP BY food_id, food_name
+        having sum(food_num)>0
+        order by food_id
+    </select>
+
+    <!--根据条件查询门店台位汇总表-->
+    <select id="findReportDeskByCondition" parameterType="ReportPosDeskDto" resultType="ReportPosDeskVo">
+        SELECT
+        p.shop_id,
+        p.meal_id,
+        sum(p.amount+money_over_charge) as amountSum ,
+        sum(CASE WHEN p.IS_NOOPENTABLE = '1' and p.def1 !='0' THEN p.client_count ELSE 0 END) AS personSum,
+        sum(case when p.IS_NOOPENTABLE = '1' and p.def1 !='0' then p.DESK_COUNT else 0 end) as deskAllCount
+        FROM
+        rep_pos_desk p
+        <where>
+            p.account_date >= #{beginDate}
+            AND p.account_date &lt;= #{endDate}
+            and ente_id = #{enteId}
+            <if test="shopIdList != null and shopIdList.size() != 0">
+                and p.shop_id in
+                <foreach collection="shopIdList" separator="," item="item" open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="shopId != null">
+                and shop_id = #{shopId}
+            </if>
+            <if test="shopTypeIdList != null and shopTypeIdList.size() != 0">
+                and p.shop_type_id in
+                <foreach collection="shopTypeIdList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        group by p.shop_id,
+        p.meal_id
+
+    </select>
+
+    <select id="findReportDeskCountByCondition" resultType="ReportPosDeskVo" parameterType="ReportPosDeskDto">
+        select
+        p.BRAND_ID,
+        p.REGION_ID,
+        p.SHOP_ID,
+        p.ACCOUNT_DATE,
+        sum(p.amount+money_over_charge) as amountSum,
+        sum(p.client_count) as personSum ,
+        sum(case when p.IS_NOOPENTABLE = '1'  and p.def1 !='0'  then p.DESK_COUNT else 0 end) as deskAllCount
+        FROM
+        rep_pos_desk p
+        <where>
+            p.account_date >= #{beginDate}
+            AND p.account_date &lt;= #{endDate}
+            and ente_id = #{enteId}
+            <if test="shopIdList != null and shopIdList.size() != 0">
+                and p.shop_id in
+                <foreach collection="shopIdList" separator="," item="item" open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="shopId != null">
+                and shop_id = #{shopId}
+            </if>
+            <if test="shopTypeIdList != null and shopTypeIdList.size() != 0">
+                and p.shop_type_id in
+                <foreach collection="shopTypeIdList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        group by p.BRAND_ID,p.REGION_ID,p.SHOP_ID,p.ACCOUNT_DATE
+    </select>
+
+    <!--查询台位汇总信息-->
+    <select id="findCountInfoByCondition" parameterType="ReportPosDeskDto" resultType="ReportPosDeskVo">
+        SELECT
+        COALESCE(sum(case when IS_NOOPENTABLE = '1' and def1 !='0' then DESK_COUNT else 0 end),0) deskAllCount,
+        COALESCE(sum( amount + money_over_charge ),0) amountSum,
+        COALESCE(sum(CASE WHEN IS_NOOPENTABLE = '1' and def1 !='0' THEN client_count ELSE 0 END),0) AS personSum,
+        shop_id,
+        REGION_ID,
+        BRAND_ID
+        FROM
+        rep_pos_desk
+        WHERE
+        account_date >= #{beginDate}
+        AND account_date &lt;= #{endDate}
+        <if test="shopIdList != null and shopIdList.size() != 0">
+            and shop_id in
+            <foreach collection="shopIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() !=0">
+            and shop_type_id in
+            <foreach collection="shopTypeIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        AND ente_id = #{enteId}
+        group by shop_id,REGION_ID,BRAND_ID
+    </select>
+
+    <!--查询支付方式明细-->
+    <select id="findRepPosDetailPayByCondition" resultType="RepPosDetailPayVo" parameterType="RepPosDetailPayDto">
+        SELECT
+        shop_id,
+        PAY_TYPE_ID,
+        pay_type_name,
+        COALESCE(sum(money_actual),0) moneyActualSum,
+        COALESCE(sum(money),0) moneySum
+        FROM
+        rep_pos_detail_pay
+        WHERE
+         ente_id = #{enteId}
+        AND account_date >= #{beginDate}
+        AND account_date &lt;= #{endDate}
+        <if test="shopIdList != null and shopIdList.size() != 0">
+            and shop_id in
+            <foreach collection="shopIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() !=0">
+            and shop_type_id in
+            <foreach collection="shopTypeIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        group by shop_id,
+        PAY_TYPE_ID,
+        pay_type_name
+        ORDER BY shop_id,moneyActualSum desc
+    </select>
+    <!--查询开台数信息-->
+    <select id="findDeskCount" parameterType="PosFoodSalesDto" resultType="map">
+        SELECT
+        count( desk_id ) desk_count
+        FROM
+        base_desk d
+        WHERE
+        ente_id =#{enteId}
+        AND is_noopentable = 1
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+    </select>
+    <!--查询 收入折扣-->
+    <select id="findDetailPayList" resultType="PosDiscountDetailPayVo" parameterType="RepPosDetailPayDto">
+        SELECT
+        pay_type_name,
+        COALESCE(PAY_TYPE_CODE,'') as PAY_TYPE_CODE,
+        sum(money - money_actual) AS currentMoney
+        FROM
+        rep_pos_detail_pay
+        WHERE
+         ente_id =#{enteId}
+        AND account_date between #{beginDate} and #{endDate}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() !=0">
+            and shop_type_id in
+            <foreach collection="shopTypeIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        AND money != money_actual
+        GROUP BY
+        pay_type_id,pay_type_name,PAY_TYPE_CODE
+    </select>
+    <select id="findDetailPayListTwo" resultType="PosDiscountDetailPayVo" parameterType="RepPosDetailPayDto">
+        select a.*,
+        COALESCE(MONEY_CHANGE+MONEY_DISCOUNT+MONEY_FREEAMOUNT+MONEY_DAN_DISCOUNT+MONEY_MEMBER_FAVORABLE+MONEY_FAVORABLE,
+        0) as totalMoney FROM (
+        SELECT
+        COALESCE(SUM(MONEY_CHANGE ),0) AS MONEY_CHANGE,
+        COALESCE(SUM ( MONEY_DISCOUNT ),0) AS MONEY_DISCOUNT,
+        COALESCE(SUM ( MONEY_FREEAMOUNT ),0) AS MONEY_FREEAMOUNT,
+        COALESCE(SUM ( MONEY_DAN_DISCOUNT ),0) AS MONEY_DAN_DISCOUNT,
+        COALESCE(SUM ( MONEY_MEMBER_FAVORABLE ),0) as MONEY_MEMBER_FAVORABLE,
+        COALESCE(SUM ( MONEY_FAVORABLE ),0) as MONEY_FAVORABLE
+        FROM rep_pos_desk p
+        WHERE
+         p.ente_id =#{enteId}
+        AND p.account_date between #{beginDate} and #{endDate}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and p.shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() !=0">
+            and p.shop_type_id in
+            <foreach collection="shopTypeIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        )a
+    </select>
+
+    <!--根据门店，日期，物料查询入库单信息-->
+    <select id="findScmInstockEntry" parameterType="com.njwd.entity.reportdata.dto.ScmInstockEntryDto" resultType="com.njwd.entity.reportdata.vo.ScmInstockEntryVo">
+        SELECT
+            e.shop_id,
+            e.material_id,
+            e.supplier_id,
+            m.number as materialNum,
+            SUM(e.realqty) realqtySum
+        FROM
+            scm_instock_entry e
+            JOIN base_material M ON e.material_id = M.material_id
+            <if test="numberIdList != null and numberIdList.size() > 0 ">
+                AND M.NUMBER IN
+                <foreach collection="numberIdList" item="item" separator="," open="(" close=")">
+                    #{item}
+                </foreach>
+            </if>
+            where e.shop_id IS NOT NULL AND e.shop_id != ''
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            AND e.shop_id IN
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        AND e.fdate BETWEEN #{beginDate} and #{endDate}
+        GROUP BY
+            e.shop_id,
+            e.material_id,
+            e.supplier_id,
+            m.number
+    </select>
+
+
+    <!--查询 收入折扣根据门店分组-->
+    <select id="findDetailPayListGpByShopId" resultType="PosDiscountDetailPayVo" parameterType="RepPosDetailPayDto">
+        SELECT
+        shop_id shopId,
+        sum(money - money_actual) AS currentMoney
+        FROM
+        rep_pos_detail_pay
+        WHERE
+        ente_id =#{enteId}
+        AND account_date between #{beginDate} and #{endDate}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() !=0">
+            and shop_type_id in
+            <foreach collection="shopTypeIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        AND money != money_actual
+        GROUP BY
+        shop_id
+    </select>
+
+
+    <select id="findDetailPayListTwoGPByShopId" resultType="PosDiscountDetailPayVo" parameterType="RepPosDetailPayDto">
+        select a.shop_id shopId,
+        COALESCE(MONEY_CHANGE+MONEY_DISCOUNT+MONEY_FREEAMOUNT+MONEY_DAN_DISCOUNT+MONEY_MEMBER_FAVORABLE+MONEY_FAVORABLE,
+        0) as totalMoney FROM (
+        SELECT
+        p.shop_id,
+        COALESCE(SUM(MONEY_CHANGE ),0) AS MONEY_CHANGE,
+        COALESCE(SUM ( MONEY_DISCOUNT ),0) AS MONEY_DISCOUNT,
+        COALESCE(SUM ( MONEY_FREEAMOUNT ),0) AS MONEY_FREEAMOUNT,
+        COALESCE(SUM ( MONEY_DAN_DISCOUNT ),0) AS MONEY_DAN_DISCOUNT,
+        COALESCE(SUM ( MONEY_MEMBER_FAVORABLE ),0) as MONEY_MEMBER_FAVORABLE,
+        COALESCE(SUM ( MONEY_FAVORABLE ),0) as MONEY_FAVORABLE
+        FROM rep_pos_desk p
+        WHERE
+        p.ente_id =#{enteId}
+        AND p.account_date between #{beginDate} and #{endDate}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and p.shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() !=0">
+            and p.shop_type_id in
+            <foreach collection="shopTypeIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+         group by p.shop_id ) a
+    </select>
+
+</mapper>

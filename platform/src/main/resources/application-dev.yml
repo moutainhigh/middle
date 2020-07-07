@@ -1,0 +1,189 @@
+# server配置
+server:
+  port: 8197
+  tomcat:
+    uri-encoding: UTF-8
+  servlet:
+    context-path: /platform
+
+# spring配置
+spring:
+  profiles:
+    active: dev
+  application:
+    name: platform
+  cloud:
+    nacos:
+      config:
+        server-addr: 10.16.1.234:8848
+        file-extension: yaml
+      #        namespace:
+      discovery:
+        server-addr: 10.16.1.234:8848
+        enabled: true
+        namespace: shenhf
+
+  # 数据库配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://10.16.1.237:3306/middle_plateform?useUnicode=true&characterEncoding=utf-8&autoReconnect=true&autoReconnectForPools=true&failOverReadOnly=false&useSSL=false&allowMultiQueries=true&serverTimezone=Asia/Shanghai&tinyInt1isBit=false
+    username: plateform
+    password: sys1234!@#$
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 8
+    tomcat:
+      initialSize: 5
+      minIdle: 5
+      maxActive: 20
+      maxWait: 60000
+      timeBetweenEvictionRunsMillis: 60000
+      minEvictableIdleTimeMillis: 300000
+      validationQuery: SELECT 1 FROM DUAL
+      testWhileIdle: true
+      testOnBorrow: false
+      testOnReturn: false
+  redis:
+    database: 4
+    host: 10.16.1.234
+    port: 6379
+    password: redis123!@#
+    # 使用连接池
+    jedis:
+      pool:
+        max-active: 1024
+        max-idle: 200
+        min-idle: 0
+  rabbitmq:
+    host: 10.16.1.160
+    port: 5672
+    username: guest
+    password: guest
+    publisher-confirms: true    #  消息发送到交换机确认机制,是否确认回调
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    timezone: GMT+8
+    serialization:
+      # false:不使用 true:使用 时间戳
+      write-dates-as-timestamps: true
+
+
+logging:
+  config: classpath:logback.xml
+
+mybatis-plus:
+  mapper-locations:  classpath*:/com/njwd/**/mapper/**/*.xml
+  #mapper-locations: classpath:META-INF/**/mapper/*Mapper.xml
+  typeAliasesPackage: com.njwd.*.entity
+  global-config:
+    db-config:
+      id-type: uuid
+      field-strategy: not_null
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+  type-handlers-package: com.njwd.handler
+
+
+
+#kettle文件库
+kettle:
+  script:
+    path: D:\test\kettle
+
+#自定义常量
+constant:
+  file:
+    #服务端excel的保存路径,模版在该路径下,上传的excle文件在对应文件夹下
+    excelRootPath: /home/middle_end/excel_upload/
+
+swagger:
+  enable: true
+  authorization:
+    name: Authorization
+    key-name: authorization-token
+
+#hystrix的超时时间
+hystrix:
+  command:
+    default:
+      execution:
+        timeout:
+          enabled: true
+        isolation:
+          thread:
+            timeoutInMilliseconds: 30000
+#ribbon的超时时间
+ribbon:
+  ReadTimeout: 30000
+  ConnectTimeout: 30000
+
+#njwd_sys访问地址
+njwdmss:
+#  server: http://10.16.1.34:8188/njwd_sys/
+  crm_server: http://10.16.1.86:8188/njwd_crm/
+  clm_server: http://mss.clianmeng.cn/
+#  crm_server: http://49.232.23.231:38080/njwd_crm/
+#  pay_online_server: http://10.16.1.27:18113/njwd_pay_online/
+  pay_online_server: http://wechat.clianmeng.cn/njwd_pay_online/
+  server: http://mss.clianmeng.cn/
+  url:
+    list_goods: MSSGoods.do?method=toListGoods&ajaxUrl=y
+    find_goods: MSSGoods.do?method=toFindGoods&ajaxUrl=y
+    list_orders: MSSGoods.do?method=toFindListOrder&ajaxUrl=y
+    probation_goods: MSSGoods.do?method=doAddForProbation&ajaxUrl=y
+    end_goods: MSSGoods.do?method=doEnd&ajaxUrl=y
+    open_goods: MSSGoods.do?method=doAddForOpen&ajaxUrl=y
+    goods_and_type: MSSGoods.do?method=toFindGoodsAndType&ajaxUrl=y
+    list_bill: MSSGoods.do?method=toFindListBill&ajaxUrl=y
+    bill_some_month: MSSGoods.do?method=toFindCustomerBillForMonth&ajaxUrl=y
+    customer_bill_month_goods: MSSGoods.do?method=toFindCustomerBillForMonthGoods&ajaxUrl=y
+    index_data: MSSGoods.do?method=toFindIndexData&ajaxUrl=y
+    list_customer_invoice: invoiceTitle.do?method=toListForCustomer&ajaxUrl=y
+    add_invoice_rise: invoiceTitle.do?method=doAdd&ajaxUrl=y
+    update_invoice_rise: invoiceTitle.do?method=doUpdate&ajaxUrl=y
+    delete_invoice_rise: invoiceTitle.do?method=doDelete&ajaxUrl=y
+    list_for_customer_address: invoiceAddress.do?method=toListForCustomer&ajaxUrl=y
+    add_address: invoiceAddress.do?method=doAdd&ajaxUrl=y
+    update_address: invoiceAddress.do?method=doUpdate&ajaxUrl=y
+    update_address_default: invoiceAddress.do?method=doUpdateDefault&ajaxUrl=y
+    delete_address: invoiceAddress.do?method=doDelete&ajaxUrl=y
+    bill_for_invoice: invoice.do?method=toListBill&ajaxUrl=y
+    list_invoice_for_customer: invoice.do?method=toListForCustomer&ajaxUrl=y
+    find_bill_sum: invoice.do?method=toFindBillSum&ajaxUrl=y
+    find_detail_invoice: invoice.do?method=tofindDetailData&ajaxUrl=y
+    add_invoice: invoice.do?method=doAdd&ajaxUrl=y
+    update_invoice_status: invoice.do?method=doUpdateStatus&ajaxUrl=y
+    add_member: member.do?method=doDealAddMember
+    pay_entrance: payOnline.do?method=doDealWechatpayOnlineNew
+    member_prepaid: memberPrepaid.do?method=toFindPrepaidPayOnlineByPayCode
+    find_prepaid_record: memberPrepaid.do?method=toFindPrepaidRecordByUserId
+    find_prepaid_balance: memberPrepaid.do?method=toFindPrepaidBalanceByUserId
+    find_expire_order_goods: MSSGoods.do?method=toFindExpireOrderGoods&ajaxUrl=y
+    do_deal_update_member: member.do?method=doDealUpdateMember
+    do_crm_cash: member.do?method=doDealCashOut
+    send_verification_code: sms.do?method=toSendVerificationCode&ajaxUrl=y
+    mss_apply_cash: applyCash.do?method=doAddCash&ajaxUrl=y
+
+
+
+dubbo:
+  registry:
+    address: 10.16.1.222:2181
+    protocol: zookeeper
+    timeout: 3000
+  application:
+    name: njwd-mss
+    logger: slf4j
+  scan:
+    base-packages: com.njwd.other.api.SmsRpcSyncService
+#openfire地址
+#openfire:
+#  server: 192.168.1.215
+#  domainName: njwdopenfire
+#  port: 5222
+#  #配置用发送消息的账号信息
+#  loginAccount: admin
+#  loginPassword: admin
+#系统参数

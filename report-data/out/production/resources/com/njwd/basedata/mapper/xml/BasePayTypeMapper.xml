@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.basedata.mapper.BasePayTypeMapper">
+    <select id="findBasePayTypeInfoByEnteId" parameterType="BasePayTypeDto" resultType="BasePayTypeVo">
+        SELECT
+	pay_type_id,
+	pay_category_id,
+	pay_type_code,
+	pay_type_name,
+	money_actual,
+	MONEY,
+	ente_id
+FROM
+	base_pay_type
+	WHERE ente_id = #{enteId}
+    </select>
+</mapper>

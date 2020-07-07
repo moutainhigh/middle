@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.schedule.mapper.TaskReflexLogMapper" >
+  <resultMap id="BaseResultMap" type="com.njwd.entity.schedule.TaskReflexLog" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="ente_id" property="enteId" jdbcType="VARCHAR" />
+    <result column="task_key" property="taskKey" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, ente_id, task_key, create_time
+  </sql>
+  <insert id="insertSelective" parameterType="com.njwd.entity.schedule.TaskReflexLog" >
+    insert into wd_task_reflex_log
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="enteId != null" >
+        ente_id,
+      </if>
+      <if test="taskKey != null" >
+        task_key,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=VARCHAR},
+      </if>
+      <if test="enteId != null" >
+        #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="taskKey != null" >
+        #{taskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+</mapper>

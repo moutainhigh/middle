@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportjob.mapper.BenchmarkMapper">
+
+    <select id="testSql" parameterType="map" resultType="String">
+        ${sql}
+    </select>
+
+    <sql id="Benchmark_Column_List">
+        `benchmark_id`,
+          `benchmark_code`,
+          `benchmark_name`,
+          `ente_id`,
+          `expression`,
+          `expression_desc`,
+          `create_time`,
+          `update_time`
+    </sql>
+
+
+    <select id="getBenchmarkByCode" resultType="com.njwd.entity.admin.vo.BenchmarkVo">
+        select
+        <include refid="Benchmark_Column_List"/>
+        from
+        wd_benchmark
+        <where>
+            <if test="transferReportSimpleDto.enteId != null and transferReportSimpleDto.enteId  != ''">
+                and ente_id = #{transferReportDto.enteId }
+            </if>
+            <if test="transferReportSimpleDto.benchmarkCode != null and transferReportSimpleDto.benchmarkCode != ''">
+                and benchmark_code = #{transferReportDto.benchmarkCode}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="getConfigByEnterpriseConfig" resultType="com.njwd.entity.admin.vo.BenchmarkConfigVo">
+        SELECT
+            `ente_id`,
+            `config_code`,
+            `config_name`,
+            `metrics_code`,
+            `metrics_name`,
+            `category_code`,
+            `category_name`,
+            `config_sql`,
+            `create_time`,
+            `update_time`
+        FROM
+            wd_benchmark_config
+        where
+                ente_id = #{enteId }
+                and config_code = #{configCode}
+    </select>
+
+
+</mapper>

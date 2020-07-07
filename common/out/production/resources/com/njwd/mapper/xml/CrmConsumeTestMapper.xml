@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.mapper.CrmConsumeTestMapper">
+
+
+    <!--新增-->
+    <insert id="addCrmCardConsumeTest" parameterType="com.njwd.entity.kettlejob.dto.CrmConsumeDto" >
+        insert into crm_consume_2019(
+        consume_id,member_id,card_id,card_no,total_money,actual_money,consume_money,consume_prepaid_money,consume_largess_money,coupon_money
+        ,coupon_gift_money,use_integral,integral_money ,integral_gain,consume_time,third_shop_id,ente_id,app_id
+        ,third_pay_type_id,transaction_type_id,third_transaction_type_id,remark,create_time,update_time
+        )values
+        <foreach collection="list" item="crmCardConsumeDto" separator=",">
+            (
+            #{crmCardConsumeDto.consumeId}
+            ,#{crmCardConsumeDto.memberId}
+            ,#{crmCardConsumeDto.cardId}
+            ,#{crmCardConsumeDto.cardNo}
+            ,#{crmCardConsumeDto.totalMoney}
+            ,#{crmCardConsumeDto.actualMoney}
+            ,#{crmCardConsumeDto.consumeMoney}
+            ,#{crmCardConsumeDto.consumePrepaidMoney}
+            ,#{crmCardConsumeDto.consumeLargessMoney}
+            ,#{crmCardConsumeDto.couponMoney}
+            ,#{crmCardConsumeDto.couponGiftMoney}
+            ,#{crmCardConsumeDto.useIntegral}
+            ,#{crmCardConsumeDto.integralMoney}
+            ,#{crmCardConsumeDto.integralGain}
+            ,#{crmCardConsumeDto.consumeTime}
+            ,#{crmCardConsumeDto.thirdShopId}
+            ,#{crmCardConsumeDto.enteId}
+            ,#{crmCardConsumeDto.appId}
+            ,#{crmCardConsumeDto.thirdPayTypeId}
+            ,#{crmCardConsumeDto.transactionTypeId}
+            ,#{crmCardConsumeDto.thirdTransactionTypeId}
+            ,#{crmCardConsumeDto.remark}
+            ,#{crmCardConsumeDto.createTime}
+            ,#{crmCardConsumeDto.updateTime}
+            )
+        </foreach>
+    </insert>
+
+    <!--根据appid和企业ID查询门店-->
+    <select id="findCrmCardConsumeBatchTest" resultType="com.njwd.entity.kettlejob.vo.CrmConsumeVo" parameterType="com.njwd.entity.kettlejob.dto.CrmConsumeDto">
+        select
+        consume_id,card_no,consume_money,consume_prepaid_money,consume_largess_money,coupon_money
+        ,coupon_gift_money,use_integral,integral_money ,integral_gain,consume_time,third_shop_id,ente_id,app_id
+        ,transaction_type_id,third_transaction_type_id,remark,create_time,update_time
+        from
+        crm_consume_2019
+        where
+        consume_id in
+        <foreach collection="crmCardConsumeDto.consumeIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and  app_id=#{crmCardConsumeDto.appId}
+        and ente_id=#{crmCardConsumeDto.enteId}
+    </select>
+
+
+    <update id="updateCrmCardConsumeTest" parameterType="java.util.List">
+        <foreach collection="list" item="crmCardConsumeDto" index="index" separator=";">
+            update crm_consume_2019
+            set
+            card_no=#{crmCardConsumeDto.cardNo}
+            ,total_money=#{crmCardConsumeDto.totalMoney}
+            ,actual_money=#{crmCardConsumeDto.actualMoney}
+            ,consume_money=#{crmCardConsumeDto.consumeMoney}
+            ,consume_prepaid_money=#{crmCardConsumeDto.consumePrepaidMoney}
+            ,consume_largess_money=#{crmCardConsumeDto.consumeLargessMoney}
+            ,coupon_money=#{crmCardConsumeDto.couponMoney}
+            ,coupon_gift_money=#{crmCardConsumeDto.couponGiftMoney}
+            ,use_integral=#{crmCardConsumeDto.useIntegral}
+            ,integral_money =#{crmCardConsumeDto.integralMoney}
+            ,integral_gain=#{crmCardConsumeDto.integralGain}
+            ,consume_time=#{crmCardConsumeDto.consumeTime}
+            ,third_shop_id=#{crmCardConsumeDto.thirdShopId}
+            ,third_pay_type_id=#{crmCardConsumeDto.thirdPayTypeId}
+            ,third_transaction_type_id=#{crmCardConsumeDto.thirdTransactionTypeId}
+            ,remark=#{crmCardConsumeDto.remark}
+            ,update_time=#{crmCardConsumeDto.updateTime}
+            where
+            consume_id=#{crmCardConsumeDto.consumeId}
+            and app_id=#{crmCardConsumeDto.appId}
+            and ente_id=#{crmCardConsumeDto.enteId}
+        </foreach>
+    </update>
+
+    <update id="updateCleanConsumeTest" parameterType="com.njwd.entity.kettlejob.dto.CrmConsumeDto">
+        UPDATE crm_consume_2019 c
+        LEFT JOIN base_shop_rela s ON c.third_shop_id = s.third_shop_id and c.app_id=s.app_id and c.ente_id=s.ente_id
+        LEFT JOIN base_pay_type_rela p ON c.app_id=p.app_id and  c.ente_id=p.ente_id and c.third_pay_type_id=p.third_pay_type_id
+        LEFT JOIN base_transaction_type_rela t ON  c.app_id=t.app_id and c.third_transaction_type_id=t.third_transaction_type_id
+        SET c.shop_id = s.shop_id, c.pay_type_id = p.pay_type_id,c.transaction_type_id = t.transaction_type_id
+        where  ((c.shop_id is null or c.shop_id='' or c.shop_id='-1') or (c.pay_type_id is null or c.pay_type_id='' or c.pay_type_id='-1')
+        or (c.transaction_type_id is null or c.transaction_type_id='' or c.transaction_type_id='-1'))
+        and c.consume_time>=#{consumeDto.consumeTime}
+        and c.app_id = #{consumeDto.appId} and c.ente_id =#{consumeDto.enteId}
+    </update>
+
+    <select id="findUnCleanConsumeNumTest" resultType="Integer" parameterType="com.njwd.entity.kettlejob.dto.CrmConsumeDto">
+        select count(1) from crm_consume_2019 c
+        where ((c.shop_id is null or c.shop_id='' or c.shop_id='-1') or (c.pay_type_id is null or c.pay_type_id='' or c.pay_type_id='-1')
+        or (c.transaction_type_id is null or c.transaction_type_id='' or c.transaction_type_id='-1'))
+        and  app_id=#{crmCardConsumeDto.appId}
+        and ente_id=#{crmCardConsumeDto.enteId}
+    </select>
+
+    <select id="findUnCleanCodeTest" resultType="map" parameterType="com.njwd.entity.kettlejob.dto.CrmConsumeDto">
+            select DISTINCT
+            (case when (c.shop_id is null or c.shop_id='' or c.shop_id ='-1') then 'shop' else '' end) shop,
+			(case when (c.pay_type_id is null or c.pay_type_id='' or c.pay_type_id ='-1') then 'payType' else '' end) payType,
+			(case when (c.transaction_type_id is null or c.transaction_type_id='' or c.transaction_type_id='-1') then 'transactionType' else '' end) transactionType
+            from crm_consume_2019 c
+            where  c.consume_time>=#{crmCardConsumeDto.consumeTime}
+            and ((c.shop_id is null or c.shop_id='' or c.shop_id ='-1') or (c.pay_type_id is null or c.pay_type_id='' or c.pay_type_id ='-1')
+            or (c.transaction_type_id is null or c.transaction_type_id='' or c.transaction_type_id='-1'))
+            and	app_id=#{crmCardConsumeDto.appId} and ente_id=#{crmCardConsumeDto.enteId}
+            group by c.shop_id,c.pay_type_id,c.transaction_type_id
+    </select>
+
+    <select id="findMaxConsumeTimeTest" resultType="string" parameterType="com.njwd.entity.kettlejob.dto.CrmConsumeDto">
+        select consume_time from crm_consume_2019 order by consume_time desc limit 1
+    </select>
+
+</mapper>

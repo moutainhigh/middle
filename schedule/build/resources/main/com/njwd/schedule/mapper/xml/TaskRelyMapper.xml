@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.schedule.mapper.TaskRelyMapper" >
+  <resultMap id="BaseResultMap" type="com.njwd.entity.schedule.TaskRely" >
+    <id column="rely_id" property="relyId" jdbcType="VARCHAR" />
+    <result column="ente_id" property="enteId" jdbcType="VARCHAR" />
+    <result column="source_task_key" property="sourceTaskKey" jdbcType="VARCHAR" />
+    <result column="target_task_key" property="targetTaskKey" jdbcType="VARCHAR" />
+    <result column="expression" property="expression" jdbcType="VARCHAR" />
+    <result column="expression_param" property="expressionParam" jdbcType="VARCHAR" />
+    <result column="rely_type" property="relyType" jdbcType="VARCHAR" />
+    <result column="max_refuse_count" property="maxRefuseCount" jdbcType="INTEGER" />
+    <result column="current_refuse_count" property="currentRefuseCount" jdbcType="INTEGER" />
+    <result column="sum_refuse_count" property="sumRefuseCount" jdbcType="INTEGER" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    rely_id, ente_id, source_task_key, target_task_key, expression, expression_param, rely_type, 
+    max_refuse_count, current_refuse_count, sum_refuse_count, create_time
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from wd_task_rely
+    where rely_id = #{relyId,jdbcType=VARCHAR}
+  </select>
+  <select id="selectByBase" resultMap="BaseResultMap" parameterType="java.lang.String">
+   select
+     #{enteId} as ente_id,
+     t1.source_task_key as source_task_key,
+     t1.target_task_key as target_task_key,
+     t1.expression,
+     t1.expression_param,
+     t1.max_refuse_count,
+     t1.rely_type
+    from wd_task_rely_base t1
+  </select>
+
+    <select id="selectListBySource" resultType="com.njwd.entity.schedule.vo.TaskRelyVo" parameterType="com.njwd.entity.schedule.TaskRely" >
+    select
+     t1.rely_id as relyId,
+     t1.source_task_key as sourceTaskKey,
+     t1.target_task_key as targetTaskKey,
+     t1.expression as expression,
+     t1.ente_id as enteId,
+     t1.create_time as createTime,
+     t1.rely_type as relyType,
+     t1.expression_param as expressionParam,
+     t1.max_refuse_count as maxRefuseCount,
+     t1.current_refuse_count as currentRefuseCount,
+     t1.sum_refuse_count as sumRefuseCount,
+     t2.task_name as targetTaskName
+    from wd_task_rely t1
+    left join wd_task t2 on t1.target_task_key=t2.task_key and t1.enteId=t2.enteId
+    where t1.source_task_key = #{sourceTaskKey,jdbcType=VARCHAR}
+    and t1.ente_id=#{enteId}
+  </select>
+
+    <select id="excuteExpression" resultType="boolean" parameterType="java.lang.String" >
+        select
+        ${_parameter}
+        from dual
+  </select>
+
+
+  <select id="selectBySourceWithoutStoped" resultMap="BaseResultMap" parameterType="com.njwd.entity.schedule.TaskRely" >
+    select
+    t1.rely_id,
+    t1.ente_id,
+    t1.source_task_key,
+    t1.target_task_key,
+    t1.expression,
+    t1.expression_param,
+    t1.rely_type,
+    t1.max_refuse_count,
+    t1.current_refuse_count,
+    t1.sum_refuse_count,
+    t1.create_time
+    from wd_task_rely t1,wd_task t2
+    where t1.source_task_key = #{sourceTaskKey}
+    and t1.target_task_key=t2.task_key
+    and t1.ente_id=#{enteId}
+    and t1.ente_id=t2.ente_id
+    and t2.switch_status='ON'
+    and t2.task_status != 'ERROR'
+  </select>
+
+    <select id="selectByEnteSourceTargetType" resultMap="BaseResultMap" parameterType="com.njwd.entity.schedule.TaskRely" >
+        select
+        <include refid="Base_Column_List" />
+        from wd_task_rely
+        where ente_id=#{enteId}
+        and source_task_key=#{sourceTaskKey}
+        and target_task_key=#{targetTaskKey}
+        and rely_type=#{relyType}
+    </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from wd_task_rely
+    where rely_id = #{relyId,jdbcType=VARCHAR}
+  </delete>
+
+  <delete id="deleteByEnteId" parameterType="java.lang.String" >
+    delete from wd_task_rely
+    where ente_id = #{enteId,jdbcType=VARCHAR}
+  </delete>
+
+
+    <insert id="insertByList" parameterType="list" >
+        insert into wd_task_rely(rely_id,ente_id,source_task_key,target_task_key,expression,expression_param,rely_type,max_refuse_count)
+        values
+        <foreach collection="list" item="rely" separator=",">
+            (#{rely.relyId},#{rely.enteId},#{rely.sourceTaskKey},#{rely.targetTaskKey},#{rely.expression},#{rely.expressionParam},#{rely.relyType},#{rely.maxRefuseCount})
+        </foreach>
+    </insert>
+
+  <insert id="insertSelective" parameterType="com.njwd.entity.schedule.TaskRely" >
+    insert into wd_task_rely
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="relyId != null" >
+        rely_id,
+      </if>
+      <if test="enteId != null" >
+        ente_id,
+      </if>
+      <if test="sourceTaskKey != null" >
+        source_task_key,
+      </if>
+      <if test="targetTaskKey != null" >
+        target_task_key,
+      </if>
+      <if test="expression != null" >
+        expression,
+      </if>
+      <if test="expressionParam != null" >
+        expression_param,
+      </if>
+      <if test="relyType != null" >
+        rely_type,
+      </if>
+      <if test="maxRefuseCount != null" >
+        max_refuse_count,
+      </if>
+      <if test="currentRefuseCount != null" >
+        current_refuse_count,
+      </if>
+      <if test="sumRefuseCount != null" >
+        sum_refuse_count,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="relyId != null" >
+        #{relyId,jdbcType=VARCHAR},
+      </if>
+      <if test="enteId != null" >
+        #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceTaskKey != null" >
+        #{sourceTaskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="targetTaskKey != null" >
+        #{targetTaskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="expression != null" >
+        #{expression,jdbcType=VARCHAR},
+      </if>
+      <if test="expressionParam != null" >
+        #{expressionParam,jdbcType=VARCHAR},
+      </if>
+      <if test="relyType != null" >
+        #{relyType,jdbcType=VARCHAR},
+      </if>
+      <if test="maxRefuseCount != null" >
+        #{maxRefuseCount,jdbcType=INTEGER},
+      </if>
+      <if test="currentRefuseCount != null" >
+        #{currentRefuseCount,jdbcType=INTEGER},
+      </if>
+      <if test="sumRefuseCount != null" >
+        #{sumRefuseCount,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.schedule.TaskRely" >
+    update wd_task_rely
+    <set >
+      <if test="enteId != null" >
+        ente_id = #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceTaskKey != null" >
+        source_task_key = #{sourceTaskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="targetTaskKey != null" >
+        target_task_key = #{targetTaskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="expression != null" >
+        expression = #{expression,jdbcType=VARCHAR},
+      </if>
+      <if test="expressionParam != null" >
+        expression_param = #{expressionParam,jdbcType=VARCHAR},
+      </if>
+      <if test="relyType != null" >
+        rely_type = #{relyType,jdbcType=VARCHAR},
+      </if>
+      <if test="maxRefuseCount != null" >
+        max_refuse_count = #{maxRefuseCount,jdbcType=INTEGER},
+      </if>
+      <if test="currentRefuseCount != null" >
+        current_refuse_count = #{currentRefuseCount,jdbcType=INTEGER},
+      </if>
+      <if test="sumRefuseCount != null" >
+        sum_refuse_count = #{sumRefuseCount,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where rely_id = #{relyId,jdbcType=VARCHAR}
+  </update>
+
+</mapper>

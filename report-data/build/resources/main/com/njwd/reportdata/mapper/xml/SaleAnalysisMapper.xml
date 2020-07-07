@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportdata.mapper.SaleAnalysisMapper">
+    <!--根据条件查询退增统计表-->
+    <select id="findPosOrderFoodByCondition" resultType="PosOrderFoodVo"
+            parameterType="com.njwd.entity.reportdata.dto.PosOrderFoodAnalysisDto">
+        SELECT
+            s.food_style_id,
+            s.food_style_name,
+            f.is_grive,
+            f.is_retreat,
+            count( order_food_id ) as count,
+            abs(sum(f.original_price * f.retreat_count)) as amount
+        FROM
+            pos_order_food f
+            LEFT JOIN base_food b ON b.food_id = f.food_id
+            AND b.ente_id = #{enteId}
+            LEFT JOIN base_food_style s ON b.food_style_id = s.food_style_id
+            AND s.ente_id = #{enteId}
+            INNER JOIN base_shop h ON f.shop_id = h.shop_id
+            AND h.ente_id = #{enteId}
+        WHERE
+            f.is_retreat = '1'
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and f.shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        AND f.account_date >= #{beginDate}
+        and f.account_date &lt;= #{endDate}
+        <if test="shopTypeIdList != null and shopTypeIdList.size() > 0">
+            AND h.shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+            AND f.ente_id = #{enteId}
+        GROUP BY
+            s.food_style_id
+        UNION ALL
+        SELECT
+            s.food_style_id,
+            s.food_style_name,
+            f.is_grive,
+            f.is_retreat,
+            count( order_food_id ) as count,
+            abs(sum(f.original_price * f.grive_count)) as amount
+        FROM
+            pos_order_food f
+            INNER JOIN base_food b ON b.food_id = f.food_id
+            AND b.ente_id = #{enteId}
+            INNER JOIN base_food_style s ON b.food_style_id = s.food_style_id
+            AND s.ente_id = #{enteId}
+            INNER JOIN base_shop h ON f.shop_id = h.shop_id
+            AND h.ente_id = #{enteId}
+        WHERE
+            f.is_grive = '1'
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and f.shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        AND f.account_date >= #{beginDate}
+        AND f.account_date &lt;= #{endDate}
+        <if test="shopTypeIdList != null and shopTypeIdList.size() > 0">
+            AND h.shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+            AND f.ente_id = #{enteId}
+        GROUP BY
+            s.food_style_id
+    </select>
+
+    <!--根据条件查询退款明细-->
+    <select id="findRetreatDetail" resultType="PosRetreatDetailVo"
+            parameterType="PosOrderFoodAnalysisDto">
+       SELECT
+            bs.shop_name as shopName,
+            bd.desk_no as deskNo,
+            bf.food_no as foodNo,
+            bf.food_name as foodName,
+            bfs.food_style_name as foodStyleName,
+            bu.unit_name as unitName,
+            pof.order_id as orderId,
+            pof.order_code as orderCode,
+            ABS(pof.retreat_count)  as retreatCount,
+            pof.original_price as originalPrice,
+            ABS(pof.retreat_count * pof.original_price) amount,
+            pof.retreat_remark as retreatRemark,
+            pof.retreat_time as retreatTime
+        FROM
+            pos_order_food pof
+        LEFT JOIN base_shop bs on bs.shop_id= pof.shop_id
+        LEFT JOIN pos_order po ON pof.ente_id = po.ente_id
+                  AND pof.shop_id = po.shop_id
+                  AND pof.app_id = po.app_id
+                  AND pof.order_id = po.order_id
+        LEFT JOIN base_desk bd ON bd.desk_id= po.desk_id
+        LEFT JOIN base_food bf ON bf.food_id = pof.food_id
+        LEFT JOIN base_food_style bfs ON bfs.food_style_id = bf.food_style_id
+        LEFT JOIN base_unit bu on pof.unit_id = bu.unit_id
+        WHERE
+            pof.account_date between #{beginDate} and #{endDate}
+            and is_retreat = 1
+            AND pof.ente_id =#{enteId}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and pof.shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+    </select>
+
+    <!--查询支付方式-->
+    <select id="findPayTypeReportByCondition" resultType="PosCashPayAnalysisVo" parameterType="PosCashPayDto">
+        SELECT
+            p.pay_type_id,
+            t.pay_type_name,
+            count( p.pay_type_id ) AS count,
+            sum( p.money_actual ) AS  moneyActualSum
+        FROM
+            pos_cash_pay p
+            INNER JOIN base_pay_type t ON p.pay_type_id = t.pay_type_id
+            INNER JOIN base_shop h ON h.shop_id = p.shop_id
+        <where>
+            p.ente_id = #{enteId}
+            <if test="shopIdList != null and shopIdList.size() > 0 ">
+                and p.shop_id in
+                <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                    #{shopId}
+                </foreach>
+            </if>
+            AND p.account_date >= #{beginDate}
+            AND p.account_date &lt;= #{endDate}
+        </where>
+        group by p.pay_type_id
+    </select>
+    <!--根据条件查询收款方式分析-->
+    <select id="findPayCategoryReport" resultType="PosPayCategoryVo"
+            parameterType="PosPayCategoryDto">
+        SELECT
+            c.pay_category_id,
+            c.pay_category_name,
+            COUNT( p.pay_type_id) AS sumCount,
+            sum( p.money_actual ) AS moneyActualSum
+        FROM
+            pos_cash_pay p
+        INNER JOIN base_pay_type t ON p.pay_type_id = t.pay_type_id
+        INNER JOIN base_pay_category c ON t.pay_category_id=c.pay_category_id
+        WHERE
+            p.account_date between #{beginDate} and #{endDate}
+
+            AND p.ente_id =#{enteId}
+            AND p.money_actual !=0
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and p.shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        group by c.pay_category_id
+    </select>
+    <select id="findFoodSalesReport" resultType="PosFoodSalesVo" parameterType="PosFoodSalesDto">
+        SELECT
+                bf.food_name as foodName,
+                COUNT(1) salesCount
+        FROM pos_order_food pof
+        LEFT JOIN base_food bf ON pof.food_id = bf.food_id
+        WHERE
+            pof.account_date between #{beginDate} and #{endDate}
+            AND pof.ente_id =#{enteId}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and pof.shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        GROUP BY pof.food_id
+    </select>
+
+    <!--根据条件查询门店台位汇总表-->
+    <select id="findReportDeskByCondition" parameterType="ReportPosDeskDto" resultType="ReportPosDeskVo">
+        SELECT
+            p.ente_id,
+            p.brand_id,
+            p.brand_name,
+            p.region_id,
+            p.region_name,
+            p.shop_id,
+            p.shop_name,
+            p.shop_type_id,
+            p.desk_id,
+            p.desk_no,
+            p.desk_area_id,
+            p.desk_area_name,
+            p.desk_type_id,
+            p.desk_type_name,
+            p.desk_area_type_no,
+            p.desk_area_type_name,
+            p.meal_id,
+            p.meal_name,
+            p.amount,
+            p.client_count,
+            p.desk_count,
+            p.channel_id,
+            p.account_date
+        FROM
+            rep_pos_desk p
+        <where>
+            p.account_date >= #{beginDate}
+            AND p.account_date &lt;= #{endDate}
+            and p.shop_id = #{shopId}
+            and ente_id = #{enteId}
+        </where>
+    </select>
+
+    <!--查询台位汇总信息-->
+    <select id="findCountInfoByCondition" parameterType="ReportPosDeskDto" resultType="ReportPosDeskVo">
+        SELECT
+            count( desk_id ) deskAllCount,
+            sum( amount ) amountSum,
+            sum( client_count ) personSum
+        FROM
+            rep_pos_desk
+        WHERE
+            account_date >= #{beginDate}
+            AND account_date &lt;= #{endDate}
+        <if test="shopTypeIdList != null and shopTypeIdList.size() != 0">
+            shop_id in
+            <foreach collection="shopIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() !=0">
+            shop_type_id in
+            <foreach collection="shopTypeIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+        AND ente_id = #{enteId}
+    </select>
+
+    <!--查询支付方式明细-->
+    <select id="findRepPosDetailPayByCondition" resultType="RepPosDetailPayVo" parameterType="RepPosDetailPayDto">
+        SELECT
+            brand_id,
+            region_id,
+            shop_id,
+            pay_category_id,
+            pay_type_id,
+            pay_type_name,
+            pay_type_code,
+            money_actual,
+            money,
+            account_date
+        FROM
+            rep_pos_detail_pay
+        WHERE
+            account_date >= #{beginDate}
+            AND account_date &lt;= #{endDate}
+            AND ente_id = #{enteId}
+        <if test="shopTypeIdList != null and shopTypeIdList.size() != 0">
+            shop_id in
+            <foreach collection="shopIdList" item="item" separator="," open="(" close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+    <!--查询开台数信息-->
+    <select id="findDeskCount" parameterType="PosFoodSalesDto" resultType="map">
+        SELECT
+        count( desk_id ) deskCount
+        FROM
+        rep_pos_desk
+        WHERE
+         account_date between #{beginDate} and #{endDate}
+        AND ente_id =#{enteId}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+    </select>
+    <!--查询 收入折扣-->
+    <select id="findDetailPayList" resultType="PosDiscountDetailPayVo" parameterType="RepPosDetailPayDto">
+        SELECT
+        `pay_type_name`,
+        sum(money - money_actual) AS currentMoney
+        FROM
+        rep_pos_detail_pay
+        WHERE
+        account_date between #{beginDate} and #{endDate}
+        AND money != money_actual
+        AND ente_id =#{enteId}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        GROUP BY
+        pay_type_id
+    </select>
+</mapper>

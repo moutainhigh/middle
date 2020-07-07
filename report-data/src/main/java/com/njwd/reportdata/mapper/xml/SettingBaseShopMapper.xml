@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.SettingBaseShopMapper" >
+
+    <!-- 查询门店基础信息 -->
+    <select id="findSettingBaseShop" resultType="com.njwd.entity.reportdata.vo.SettingBaseShopVo">
+        SELECT
+            bs.id,
+            bs.brand_id,
+            bs.region_id,
+            bs.shop_id,
+            bs.shop_area,
+            bs.add_profit,
+            bs.opening_date,
+            bs.shutdown_date,
+            bs.status,
+            bs.ente_id,
+            bs.create_time,
+            bs.update_time
+        FROM
+            wd_setting_base_shop bs
+        <where>
+            AND bs.id = #{param.id}
+        </where>
+    </select>
+
+    <!-- 查询门店基础信息列表 -->
+    <select id="findSettingBaseShopList" resultType="com.njwd.entity.reportdata.vo.SettingBaseShopVo">
+        SELECT
+            s.id,
+            s.brand_id,
+            b.brand_code,
+            b.brand_name,
+            s.region_id,
+            r.region_code,
+            r.region_name,
+            s.shop_id,
+            ss.shop_no,
+            ss.shop_name,
+            s.shop_area,
+            s.add_profit,
+            s.opening_date openingDateStr,
+            s.shutdown_date shutdownDateStr,
+            s.opening_date||' - '||s.shutdown_date dateStr,
+            ss.status shop_status,
+            s.status,
+            s.ente_id
+        FROM
+            wd_setting_base_shop s
+                LEFT JOIN base_brand b ON s.brand_id = b.brand_id
+                LEFT JOIN base_region r ON s.region_id = r.region_id
+                LEFT JOIN base_shop ss ON s.shop_id = ss.shop_id
+        <where>
+            AND s.ente_id||'' = #{param.enteId}
+            <if test="param.query != null and param.query != ''">
+                AND (
+                b.brand_name LIKE CONCAT('%',#{param.query},'%')
+                OR r.region_name LIKE CONCAT('%',#{param.query},'%')
+                OR ss.shop_name LIKE CONCAT('%',#{param.query},'%')
+                <!-- 数字 -->
+                <if test="param.queryType ==1">
+                    OR s.shop_area = ${param.query}
+                    OR s.add_profit = ${param.query}
+                </if>
+                <!-- 日期 -->
+                <if test="param.queryType ==2">
+                    OR s.opening_date = '${param.query}'
+                    OR s.shutdown_date = '${param.query}'
+                </if>
+                <!-- 状态 -->
+                <if test="param.query == '关停'">
+                    OR ss.status = 0
+                </if>
+                <if test="param.query == '营业'">
+                    OR ss.status = 1
+                </if>
+                )
+            </if>
+        </where>
+        order by s.create_time desc,s.id desc
+    </select>
+
+    <!-- 获取对应转化值 -->
+    <select id="findConvertDataList" resultType="com.njwd.entity.reportdata.ConvertData">
+        SELECT * FROM (
+            SELECT '0' "index", brand_id convert_data,brand_name  old_data
+                FROM base_brand
+                WHERE ente_id = #{enteId}||''
+            UNION ALL
+                SELECT '1' "index", region_id convert_data ,region_name old_data
+                FROM base_region
+                WHERE ente_id = #{enteId}||''
+            UNION ALL
+                SELECT '2' "index",shop_id convert_data,shop_name old_data
+                FROM base_shop
+                WHERE ente_id = #{enteId}||''
+            )tab
+        ORDER BY "index",convert_data
+    </select>
+
+    <!-- 查询重复的数据 -->
+    <select id="findDuplicateDataList" resultType="java.util.HashMap">
+        SELECT shop_id "2"
+        FROM wd_setting_base_shop
+        WHERE ente_id = #{enteId}
+        AND(
+        <foreach collection="valueList" index="index" item="item" separator="or">
+            (shop_id = #{item.shopId})
+        </foreach>
+        )
+    </select>
+
+    <!-- 更新门店基础信息 -->
+    <update id="updateSettingBaseShop">
+        update wd_setting_base_shop
+        <set>
+            shop_area = #{param.shopArea},
+            opening_date = #{param.openingDate},
+            shutdown_date = #{param.shutdownDate},
+            update_time = #{param.updateTime}
+        </set>
+        <where>
+            and id = #{param.id}
+            and ente_id = #{param.enteId}
+        </where>
+    </update>
+
+    <!-- 更新门店基础信息状态 -->
+    <update id="updateSettingBaseShopStatus">
+        update wd_setting_base_shop
+        <set>
+            status = #{param.status},
+            update_time = #{param.updateTime}
+        </set>
+        <where>
+            and id = #{param.id}
+            and ente_id = #{param.enteId}
+        </where>
+    </update>
+
+    <!-- 批量新增 -->
+    <insert id="insertDataBatch">
+        INSERT INTO wd_setting_base_shop
+        (
+        id,
+        brand_id,
+        region_id,
+        shop_id,
+        shop_area,
+        add_profit,
+        opening_date,
+        shutdown_date,
+        status,
+        ente_id,
+        create_time
+        )
+        VALUES
+        <foreach collection="dataList" index="index" item="item" separator=",">
+            (
+            #{item.id},
+            #{item.brandId},
+            #{item.regionId},
+            #{item.shopId},
+            #{item.shopArea},
+            #{item.addProfit},
+            #{item.openingDate},
+            #{item.shutdownDate},
+            1,
+            #{item.enteId},
+            #{item.createTime}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

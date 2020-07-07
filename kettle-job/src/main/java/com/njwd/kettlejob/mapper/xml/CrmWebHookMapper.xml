@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.kettlejob.mapper.CrmWebHookMapper">
+
+    <!-- 查询对应的秘钥 -->
+    <select id="findCrmWebHookList" resultType="com.njwd.entity.kettlejob.vo.CrmWebHookVo">
+        select
+            `secret`,
+            `key`,
+            `ente_id`,
+            `app_id`
+        from
+            crm_web_hook
+    </select>
+</mapper>

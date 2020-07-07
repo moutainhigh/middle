@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.kettlejob.mapper.JoyHrLeaveMapper">
+
+    <!-- 查询最后更新时间 -->
+    <select id="findLastUpdateTime" resultType="date">
+        select max(last_update_time) last_update_time from hr_leave
+        where app_id = #{appId}
+          and ente_id = #{enteId}
+    </select>
+
+    <!-- 批量新增或更新数据 -->
+    <insert id="insertOrUpdateBatch">
+        insert into hr_leave (
+        leave_id,
+        third_user_id,
+        start_time,
+        end_time,
+        leave_hour,
+        leave_type_id,
+        status,
+        ente_id,
+        app_id,
+        create_time,
+        last_update_time
+        )
+        values
+        <foreach
+                collection="sqlParam.dataList"
+                item="item"
+                index="index"
+                separator=",">
+            (
+            #{item.leaveId},
+            #{item.thirdUserId},
+            #{item.startTime},
+            #{item.endTime},
+            #{item.leaveHour},
+            #{item.leaveTypeId},
+            #{item.status},
+            #{sqlParam.enteId},
+            #{sqlParam.appId},
+            #{sqlParam.createTime},
+            #{sqlParam.lastUpdateTime}
+            )
+        </foreach>
+        on duplicate key update
+        start_time = values(start_time),
+        end_time = values(end_time),
+        leave_hour = values(leave_hour),
+        leave_type_id = values(leave_type_id),
+        status = values(status),
+        update_time = #{sqlParam.updateTime},
+        last_update_time = #{sqlParam.lastUpdateTime}
+    </insert>
+
+    <!-- 批量更新请假数据用户信息 -->
+    <update id="updateLeaveUserBatch">
+        update hr_leave l
+        left join base_user_rela ur on l.third_user_id = ur.third_user_id and l.app_id = ur.app_id and l.ente_id = ur.ente_id
+        <set>
+            l.user_id = ur.user_id
+        </set>
+        <where>
+            l.app_id = #{appId}
+            and l.ente_id = #{enteId}
+        </where>
+    </update>
+
+    <!-- 刪除請假數據 -->
+    <delete id="deleteLeave">
+        delete from hr_leave
+        where last_update_time >= #{lastUpdateTime}
+          and ente_id = #{enteId}
+          and app_id  = #{appId}
+    </delete>
+
+</mapper>

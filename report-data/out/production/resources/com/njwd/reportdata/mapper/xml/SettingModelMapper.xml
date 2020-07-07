@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.SettingModelMapper" >
+
+    <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.SettingModel">
+    </resultMap>
+
+    <sql id="sampleSettingModel">
+        id,model_name,model_title,can_import,can_update,can_forbidden,can_enable,status,sort
+    </sql>
+
+    <resultMap id="SettingModelMap" type="com.njwd.entity.reportdata.vo.SettingModelVo">
+        <id column="id" property="id"/>
+        <result  column="ente_id" property="enteId"/>
+        <result column="model_name" property="modelName"/>
+        <result column="model_title" property="modelTitle"/>
+        <result column="table_name" property="tableName"/>
+        <result column="template_name" property="templateName"/>
+        <result column="status" property="status"/>
+        <collection property="settingModelContentVoList" ofType="com.njwd.entity.reportdata.vo.SettingModelContentVo">
+            <id column="content_id" property="id"/>
+            <result column="col_name" property="colName"/>
+            <result column="col_title" property="colTitle"/>
+            <result column="table_col_name" property="tableColName"/>
+            <result column="format" property="format" />
+            <result column="min_length" property="minLength" />
+            <result column="max_length" property="maxLength" />
+            <result column="decimal" property="decimal" />
+            <result column="duplicate" property="duplicate" />
+            <result column="regular" property="regular" />
+            <result column="symbol" property="symbol" />
+            <result column="symbol_location" property="symbolLocation" />
+            <result column="is_show" property="isShow" />
+            <result column="can_update" property="canUpdate" />
+            <result column="is_query"  property="isQuery"/>
+            <result column="option" property="option" />
+            <result column="sort" property="sort" />
+            <result column="join_table" property="joinTable" />
+            <result column="join_col_id" property="joinColId" />
+            <result column="join_col_name" property="joinColName" />
+            <result column="join_more_col" property="joinMoreCol" />
+            <result column="is_import" property="isImport" />
+            <result column="default_value" property="defaultValue" />
+            <result column="can_null" property="canNull" />
+            <result column="condition" property="condition" />
+        </collection>
+    </resultMap>
+
+    <!-- 查询设置模块 -->
+    <select id="findSettingModel" resultMap="SettingModelMap">
+        select sm.id,sm.ente_id,sm.model_name,sm.model_title,sm.table_name,sm.template_name,sm.status,
+			 smc.id "content_id",smc.col_name,smc.col_title,smc.table_col_name,smc.format,smc.min_length,smc.max_length,
+			 smc.decimal,smc.duplicate,smc.regular,smc.symbol,smc.symbol_location,smc.is_show,smc.can_update,smc.is_query,smc.option,smc.sort,
+			 smc.join_table,smc,join_col_id,smc.join_col_name,smc.is_import,smc.default_value,smc.can_null,smc.join_more_col,smc.condition
+        from wd_setting_model sm
+        left join wd_setting_model_content smc on sm.id = smc.setting_model_id
+        <where>
+            and sm.ente_id = #{param.enteId}
+            <if test="param.id != null">
+                and sm.id = #{param.id}
+            </if>
+            <if test="param.modelName != null">
+                and sm.model_name = #{param.modelName}
+            </if>
+        </where>
+        ORDER BY smc.sort
+    </select>
+
+    <!-- 查询简单设置模块列表 -->
+    <select id="findSampleSettingModelList" resultType="com.njwd.entity.reportdata.vo.SettingModelVo">
+        select
+        <include refid="sampleSettingModel"/>
+        from WD_SETTING_MODEL sm
+        <where>
+            and sm.ENTE_ID = #{param.enteId}
+            <if test="param.modelName != null and param.modelName != ''">
+                and sm.MODEL_NAME like '%'||#{param.modelName}||'%'
+            </if>
+            <if test="param.status != null">
+                and sm.status = #{param.status}
+            </if>
+        </where>
+        order by sort
+    </select>
+
+    <!-- 查询设置模块对应数据 -->
+    <select id="findSettingModelData" resultType="java.util.HashMap">
+        select
+        <foreach collection="param.settingModelContentVoList" index="index" item="item" separator=",">
+            <!-- 需要展示的列 -->
+            <if test="item.isShow != null and item.isShow == 1">
+                ${param.tableName}.${item.tableColName}
+                <!-- 关联的列 -->
+                <if test="item.joinTable!=null and item.joinColName!=null">
+                    ,${item.joinTable}.${item.joinColName}
+                    <if test="item.joinMoreCol!=null">
+                        ,${item.joinTable}.${item.joinMoreCol}
+                    </if>
+                </if>
+            </if>
+        </foreach>
+        from ${param.tableName} ${param.tableName}
+        <!-- 关联查询 -->
+        <foreach collection="param.settingModelContentVoList" index="index" item="item">
+            <!-- 关联的列 -->
+            <if test="item.joinTable!=null and item.joinColName!=null">
+                left join ${item.joinTable} ${item.joinTable} on ${param.tableName}.${item.tableColName}||'' = ${item.joinTable}.${item.joinColId}||''
+                <if test="item.condition!=null and item.condition!=null">
+                    and ${item.joinTable}.${item.condition}
+                </if>
+            </if>
+        </foreach>
+        <where>
+            <if test="query != null and query != ''">
+                <foreach collection="param.settingModelContentVoList" index="index" item="item" separator="or">
+                    <!-- 如果是需要查询的列 -->
+                    <if test="item.isQuery!=null and item.isQuery == 1 ">
+                        <!-- 文本 -->
+                        <if test="item.format != 0 and item.format != 1 and item.format != 2 and item.format != 3 and item.format != 4">
+                            <if test="item.joinColName !=null">
+                                ${item.joinTable}.${item.joinColName} like CONCAT('%',#{query},'%')
+                            </if>
+                            <if test="item.joinColName == null">
+                                ${param.tableName}.${item.tableColName} like CONCAT('%',#{query},'%')
+                            </if>
+                        </if>
+                        <!-- 数字 -->
+                        <if test="item.format == 0 and queryType ==1">
+                            ${param.tableName}.${item.tableColName} = ${query}
+                        </if>
+                        <!-- 日期 -->
+                        <if test="(item.format == 2 or item.format == 3 or item.format = 4) and queryType == 2">
+                            ${param.tableName}.${item.tableColName} = '${query}'
+                        </if>
+                    </if>
+                </foreach>
+            </if>
+        </where>
+        order by
+        <foreach collection="param.settingModelContentVoList" index="index" item="item" separator=",">
+            <if test="index > 0">
+                <if test="item.isShow!=null and item.isShow == 1">
+                    <if test="item.joinColName !=null">
+                        ${item.joinTable}.${item.joinColName}
+                    </if>
+                    <if test="item.joinColName == null">
+                        ${param.tableName}.${item.tableColName}
+                    </if>
+                </if>
+            </if>
+        </foreach>
+    </select>
+
+    <!-- 查询设置模块对应数据(查重用) -->
+    <select id="findSettingModelData2" resultType="java.util.HashMap">
+        select
+        <foreach collection="conditionMap.entrySet()" index="key" item="value" separator=",">
+            ${key}
+        </foreach>
+        from ${tableName}
+        <where>
+            <foreach collection="conditionMap.entrySet()" index="key" item="value" separator="and">
+                ${key} in (#{value})
+            </foreach>
+        </where>
+        order by id
+    </select>
+
+    <!-- 查询需要转化的列 -->
+    <select id="findConvertDataList" resultType="com.njwd.entity.reportdata.ConvertData">
+        select * from(
+        <foreach collection="tableMap.entrySet()" index="key" item="value" separator="union all" >
+            select '${key}' index,${value.joinColId} id,${value.joinColName} name
+            from ${value.joinTable}
+            where
+            ente_id = '${enteId}'
+            and ${value.joinColName} in (${nameMap.get(key)})
+        </foreach>
+        )tab
+        order by index,id
+    </select>
+
+    <!-- 查询是否存在重复数据 -->
+    <select id="findDuplicateData" resultType="java.util.HashMap">
+        select
+        <foreach collection="titleList" index="index" item="item" separator=",">
+            ${item.tableColName} ${item.colName}
+        </foreach>
+        from ${tableName}
+        WHERE
+        ente_id = '${enteId}'
+        AND(
+        <foreach collection="valueList" index="index" item="item" separator="or">
+            (
+            <foreach collection="item.entrySet()" index="key" item="value" separator="and">
+                ${key} = '${value}'
+            </foreach>
+            )
+        </foreach>
+        )
+    </select>
+
+    <!-- 查询设置模块表是否存在 -->
+    <select id="findSettingModelTable" resultType="integer">
+        select sum(
+            (select count(*) from pg_class where relname = #{param.tableName}) +
+            (select count(*) from wd_setting_model sm where sm.table_name = #{param.tableName}))
+        as "COUNT"
+    </select>
+
+    <!-- 查询门店对应的品牌和区域 -->
+    <select id="findShopBrandRegionInfo" resultType="com.njwd.entity.reportdata.vo.SettingBaseShopVo">
+        SELECT
+        brand_id,
+        region_id,
+        shop_id
+        FROM base_shop
+        WHERE ente_id = #{enteId}||''
+        AND(
+        <foreach collection="shopIdList" index="index" item="item" separator="or">
+            (shop_id = #{item})
+        </foreach>
+        )
+    </select>
+
+    <!-- 新增设置模块 -->
+    <insert id="insectSettingModel">
+        insert into wd_setting_model
+        (id,ente_id,model_name,model_title,table_name,can_import,can_update,can_forbidden,can_enable,status,sort)
+        values
+        (#{param.id},#{param.enteId},#{param.modelName},#{param.modelTitle},#{param.tableName},
+        #{param.canImport},#{param.canUpdate},#{param.canForbidden},#{param.canEnable},#{param.status},#{param.sort})
+    </insert>
+
+    <!-- 批量新增模块内容数据 -->
+    <insert id="insectSettingModelDataBatch">
+        insert into ${tableName}
+        <foreach collection="titleList" index="index" item="item" open="(" separator="," close=")">
+            ${item}
+        </foreach>
+        values
+        <foreach collection="rowList" index="index" item="row" separator=",">
+            <foreach  collection="row" item="cell" index="index" open="(" close=")" separator=",">
+                <if test="cell != null">
+                    '${cell}'
+                </if>
+                <if test="cell ==null">
+                    null
+                </if>
+            </foreach>
+        </foreach>
+    </insert>
+
+    <!-- 更新设置模块状态信息 -->
+    <update id="updateSettingModelStatus">
+        update wd_setting_model
+        set status = #{param.status},
+            template_name = #{param.templateName}
+        where id = #{param.id}
+    </update>
+
+    <!-- 动态创建表 -->
+    <update id="createNewTable">
+        create table ${tableName} (
+            <foreach collection="contentList" item="list" index="index" separator=",">
+                <if test="list.isImport != 3">
+                    ${list.tableColName}
+                    ${list.tableFormat}
+                    <if test="list.isImport == 2">
+                        primary key not null
+                    </if>
+                </if>
+            </foreach>
+            ,ente_id varchar(50)
+        )
+    </update>
+
+    <!-- 修改表数据 -->
+    <update id="updateSettingModelData">
+        update ${tableName}
+        <set>
+            <foreach collection="changeMap.entrySet()" index="key" item="value" separator=",">
+                ${key} = '${value}'
+            </foreach>
+        </set>
+        <where>
+            <!-- 特殊表格 -->
+            <if test="tableName == 'base_shop'">
+                shop_id = #{id}
+            </if>
+            <if test="tableName == 'daily_indic_id'">
+                daily_indic_id = #{id}
+            </if>
+            <if test="tableName != 'base_shop'">
+                id = #{id}
+            </if>
+        </where>
+    </update>
+
+    <!-- 动态修改表状态 -->
+    <update id="updateSettingModelDataStatus">
+        update ${tableName}
+        set status = #{status}
+        where
+        <!-- 特殊表格 -->
+        <if test="tableName == 'base_shop'">
+            shop_id = #{id}
+        </if>
+        <if test="tableName == 'daily_indic_id'">
+            daily_indic_id = #{id}
+        </if>
+        <if test="tableName != 'base_shop'">
+            id = #{id}
+        </if>
+        and status != #{status}
+    </update>
+
+
+
+</mapper>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.kettlejob.mapper.JoyHrShiftMapper">
+
+    <!-- 查询最后更新时间 -->
+    <select id="findLastUpdateTime" resultType="string">
+        select max(last_update_time) last_update_time from hr_shift
+        where app_id = #{appId}
+          and ente_id = #{enteId}
+    </select>
+
+    <!-- 批量新增或更新数据 -->
+    <insert id="insertOrUpdateBatch">
+        insert into hr_shift (
+        shift_id,
+        shift_name,
+        short_name,
+        scope,
+        nature,
+        shift_type,
+        subsidy,
+        ente_id,
+        app_id,
+        last_update_time
+        )
+        values
+        <foreach collection="sqlParam.dataList" item="item" index="index" separator=",">
+            (
+            #{item.shiftId},
+            #{item.shiftName},
+            #{item.shortName},
+            #{item.scope},
+            #{item.nature},
+            #{item.shiftType},
+            #{item.subsidy},
+            #{sqlParam.enteId},
+            #{sqlParam.appId},
+            #{sqlParam.lastUpdateTime}
+            )
+        </foreach>
+        on duplicate key update
+        shift_name=values(shift_name),
+        short_name=values(short_name),
+        scope=values(scope),
+        nature=values(nature),
+        shift_type=values(shift_type),
+        subsidy=values(subsidy),
+        last_update_time=#{sqlParam.lastUpdateTime}
+    </insert>
+
+</mapper>

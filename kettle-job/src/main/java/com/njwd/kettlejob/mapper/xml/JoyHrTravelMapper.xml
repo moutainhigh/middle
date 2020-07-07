@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.kettlejob.mapper.JoyHrTravelMapper">
+
+    <!-- 最后更新时间 -->
+    <select id="findLastUpdateTime" resultType="java.lang.String">
+        select max(last_update_time) last_update_time from hr_travel
+        where app_id = #{appId}
+          and ente_id = #{enteId}
+    </select>
+
+    <!-- 批量新增或更新数据 -->
+    <insert id="insertOrUpdateBatch">
+        insert into hr_travel (
+        travel_id,
+        third_user_id,
+        start_city,
+        end_city,
+        start_time,
+        end_time,
+        travel_days,
+        status,
+        ente_id,
+        app_id,
+        create_time,
+        last_update_time
+        )
+        values
+        <foreach
+                collection="sqlParam.dataList"
+                item="item"
+                index="index"
+                separator=",">
+            (
+            #{item.travelId},
+            #{item.thirdUserId},
+            #{item.startCity},
+            #{item.endCity},
+            #{item.startTime},
+            #{item.endTime},
+            #{item.travelDays},
+            #{item.status},
+            #{sqlParam.enteId},
+            #{sqlParam.appId},
+            #{sqlParam.createTime},
+            #{sqlParam.lastUpdateTime}
+            )
+        </foreach>
+        on duplicate key update
+        start_city = values(start_city),
+        end_city = values(end_city),
+        start_time = values(start_time),
+        end_time = values(end_time),
+        travel_days = values(travel_days),
+        status = values(status),
+        update_time = #{sqlParam.updateTime},
+        last_update_time =  #{sqlParam.lastUpdateTime}
+    </insert>
+
+    <!-- 批量更新出差数据用户信息 -->
+    <update id="updateTravelUserBatch">
+        update hr_travel t
+        left join base_user_rela ur on t.third_user_id = ur.third_user_id and t.app_id = ur.app_id and t.ente_id = ur.ente_id
+        <set>
+            t.user_id = ur.user_id
+        </set>
+        <where>
+            t.app_id = #{appId}
+            and t.ente_id = #{enteId}
+        </where>
+    </update>
+
+</mapper>

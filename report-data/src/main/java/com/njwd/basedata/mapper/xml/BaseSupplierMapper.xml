@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.basedata.mapper.BaseSupplierMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.basedata.BaseSupplier">
+    <!--@mbg.generated-->
+    <!--@Table base_supplier-->
+    <id column="supplier_id" jdbcType="VARCHAR" property="supplierId" />
+    <result column="ente_id" jdbcType="VARCHAR" property="enteId" />
+    <result column="supplier_name" jdbcType="VARCHAR" property="supplierName" />
+    <result column="create_org_id" jdbcType="VARCHAR" property="createOrgId" />
+    <result column="use_org_id" jdbcType="VARCHAR" property="useOrgId" />
+    <result column="document_status" jdbcType="CHAR" property="documentStatus" />
+    <result column="forbit_status" jdbcType="CHAR" property="forbitStatus" />
+    <result column="number" jdbcType="VARCHAR" property="number" />
+    <result column="primary_group" jdbcType="INTEGER" property="primaryGroup" />
+    <result column="correspond_org_id" jdbcType="VARCHAR" property="correspondOrgId" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
+    <result column="bank_type" jdbcType="VARCHAR" property="bankType" />
+    <result column="open_bank_name" jdbcType="VARCHAR" property="openBankName" />
+    <result column="open_bank_code" jdbcType="VARCHAR" property="openBankCode" />
+    <result column="bank_code" jdbcType="INTEGER" property="bankCode" />
+    <result column="base_bank_id" jdbcType="INTEGER" property="baseBankId" />
+    <result column="create_date" jdbcType="TIMESTAMP" property="createDate" />
+    <result column="modify_date" jdbcType="TIMESTAMP" property="modifyDate" />
+  </resultMap>
+  <!--根据门店id和供应商编码查询供应商信息-->
+  <select id="findBaseSupplierByShopIdAndSupplierCode" parameterType="com.njwd.entity.basedata.dto.BaseSupplierDto" resultType="com.njwd.entity.basedata.vo.BaseSupplierVo">
+    SELECT
+        s.supplier_id,
+        s.ente_id,
+        s.supplier_name,
+        s.create_org_id,
+        s.use_org_id,
+        c.brand_id,
+        c.brand_name,
+        c.region_id,
+        c.region_name,
+        c.shop_id,
+        c.shop_name,
+        s.document_status,
+        s.forbit_status,
+        s.NUMBER,
+        s.primary_group,
+        s.correspond_org_id,
+        s.description,
+        s.bank_type,
+        s.open_bank_name,
+        s.open_bank_code,
+        s.bank_code,
+        s.base_bank_id
+    FROM
+        base_company c
+        JOIN base_supplier s ON s.use_org_id = C.company_id
+        and s.ente_id = c.ente_id
+        <if test="numberList !=null and numberList.size()>0">
+          and s.number in
+          <foreach collection="numberList" item="item" open="(" close=")" separator=",">
+            #{item}
+          </foreach>
+        </if>
+    WHERE
+        c.ente_id = #{enteId}
+        and c.shop_id is not null
+        <if test="shopIdList !=null and shopIdList.size()>0">
+          and shop_id in
+          <foreach collection="shopIdList" item="item" open="(" close=")" separator=",">
+            #{item}
+          </foreach>
+        </if>
+  </select>
+</mapper>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.mapper.HrOrgMapper">
+
+    <!--新增-->
+    <insert id="addHrOrgList" parameterType="com.njwd.entity.kettlejob.dto.HrOrgDto" >
+        insert into hr_org(
+            org_id,
+            org_name,
+            short_name,
+            org_code,
+            up_org_id,
+            up_org_code,
+            org_type,
+            layer,
+            province,
+            city,
+            county,
+            manager_id,
+            manager_name,
+            manager_mobile,
+            area,
+            address,
+            ente_id,
+            app_id,
+            status,
+            weixin_org_id,
+            ding_talk_org_id,
+            create_time,
+            update_time
+        )values
+        <foreach collection="list" item="hrOrgDto" separator=",">
+            (
+            #{hrOrgDto.orgId},
+            #{hrOrgDto.orgName},
+            #{hrOrgDto.shortName},
+            #{hrOrgDto.orgCode},
+            #{hrOrgDto.upOrgId},
+            #{hrOrgDto.upOrgCode},
+            #{hrOrgDto.orgType},
+            #{hrOrgDto.layer},
+            #{hrOrgDto.province},
+            #{hrOrgDto.city},
+            #{hrOrgDto.county},
+            #{hrOrgDto.managerId},
+            #{hrOrgDto.managerName},
+            #{hrOrgDto.managerMobile},
+            #{hrOrgDto.area},
+            #{hrOrgDto.address},
+            #{hrOrgDto.enteId},
+            #{hrOrgDto.appId},
+            #{hrOrgDto.status},
+            #{hrOrgDto.weixinOrgId},
+            #{hrOrgDto.dingTalkOrgId},
+            #{hrOrgDto.createTime},
+            #{hrOrgDto.updateTime}
+            )
+        </foreach>
+    </insert>
+
+    <!--新增并修改-->
+    <insert id="replaceHrOrgList" parameterType="com.njwd.entity.kettlejob.dto.HrOrgDto" >
+        replace into hr_org(
+            org_id,
+            org_name,
+            short_name,
+            org_code,
+            up_org_id,
+            up_org_code,
+            org_type,
+            layer,
+            province,
+            city,
+            county,
+            manager_id,
+            manager_name,
+            manager_mobile,
+            area,
+            address,
+            ente_id,
+            app_id,
+            status,
+            weixin_org_id,
+            ding_talk_org_id,
+            create_time,
+            update_time
+        )values
+        <foreach collection="list" item="hrOrgDto" separator=",">
+            (
+            #{hrOrgDto.orgId},
+            #{hrOrgDto.orgName},
+            #{hrOrgDto.shortName},
+            #{hrOrgDto.orgCode},
+            #{hrOrgDto.upOrgId},
+            #{hrOrgDto.upOrgCode},
+            #{hrOrgDto.orgType},
+            #{hrOrgDto.layer},
+            #{hrOrgDto.province},
+            #{hrOrgDto.city},
+            #{hrOrgDto.county},
+            #{hrOrgDto.managerId},
+            #{hrOrgDto.managerName},
+            #{hrOrgDto.managerMobile},
+            #{hrOrgDto.area},
+            #{hrOrgDto.address},
+            #{hrOrgDto.enteId},
+            #{hrOrgDto.appId},
+            #{hrOrgDto.status},
+            #{hrOrgDto.weixinOrgId},
+            #{hrOrgDto.dingTalkOrgId},
+            #{hrOrgDto.createTime},
+            #{hrOrgDto.updateTime}
+            )
+        </foreach>
+    </insert>
+
+    <!--根据appid和企业ID查询门店-->
+    <select id="findHrOrgBatch" resultType="com.njwd.entity.kettlejob.vo.HrOrgVo" parameterType="com.njwd.entity.kettlejob.dto.HrOrgDto">
+         select  org_id,org_name,short_name,org_code,up_org_id,up_org_code,org_type,layer,province,city,county,
+            manager_id,manager_name,manager_mobile,area,address,ente_id,app_id,status,weixin_org_id,ding_talk_org_id,
+            create_time,update_time
+	     from hr_org where  app_id=#{hrOrgDto.appId} and ente_id=#{hrOrgDto.enteId}
+    </select>
+
+    <!--根据appid和企业ID和第三方ID修改门店-->
+    <update id="updateHrOrgList" parameterType="java.util.List">
+        <foreach collection="list" item="hrOrgDto" index="index" separator=";">
+            update base_shop_rela
+            set
+            org_id = #{hrOrgDto.orgId},
+            org_name = #{hrOrgDto.orgName},
+            short_name = #{hrOrgDto.shortName},
+            org_code = #{hrOrgDto.orgCode},
+            up_org_id = #{hrOrgDto.upOrgId},
+            up_org_code = #{hrOrgDto.upOrgCode},
+            org_type = #{hrOrgDto.orgType},
+            layer = #{hrOrgDto.layer},
+            province = #{hrOrgDto.province},
+            city = #{hrOrgDto.city},
+            county = #{hrOrgDto.county},
+            manager_id = #{hrOrgDto.managerId},
+            manager_name = #{hrOrgDto.managerName},
+            manager_mobile = #{hrOrgDto.managerMobile},
+            area = #{hrOrgDto.area},
+            address = #{hrOrgDto.address},
+            ente_id = #{hrOrgDto.enteId},
+            app_id = #{hrOrgDto.appId},
+            status = #{hrOrgDto.status},
+            weixin_org_id = #{hrOrgDto.weixinOrgId},
+            ding_talk_org_id = #{hrOrgDto.dingTalkOrgId},
+            create_time = #{hrOrgDto.createTime},
+            update_time = #{hrOrgDto.updateTime}
+            where
+            app_id=#{hrOrgDto.appId}
+            and ente_id=#{hrOrgDto.enteId}
+            and third_shop_id=#{hrOrgDto.thirdShopId}
+        </foreach>
+    </update>
+
+</mapper>

@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.platform.mapper.UserMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.platform.dto.UserDto">
+    <id column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="crm_user_id" jdbcType="VARCHAR" property="crmUserId" />
+    <result column="crm_user_name" jdbcType="VARCHAR" property="crmUserName" />
+    <result column="mobile" jdbcType="VARCHAR" property="mobile" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="company_name" jdbcType="VARCHAR" property="companyName" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="email" jdbcType="VARCHAR" property="email" />
+    <result column="file_code" jdbcType="VARCHAR" property="fileCode" />
+    <result column="file_url" jdbcType="VARCHAR" property="fileUrl" />
+    <result column="province" jdbcType="VARCHAR" property="province" />
+    <result column="city" jdbcType="VARCHAR" property="city" />
+    <result column="county" jdbcType="VARCHAR" property="county" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="is_del" jdbcType="BIT" property="isDel" />
+  </resultMap>
+
+  <resultMap id="UserResultMap" type="com.njwd.entity.platform.vo.UserVO">
+    <id column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="crm_user_id" jdbcType="VARCHAR" property="crmUserId" />
+    <result column="crm_user_name" jdbcType="VARCHAR" property="crmUserName" />
+    <result column="mobile" jdbcType="VARCHAR" property="mobile" />
+    <result column="user_name" jdbcType="VARCHAR" property="userName" />
+    <result column="company_name" jdbcType="VARCHAR" property="companyName" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="email" jdbcType="VARCHAR" property="email" />
+    <result column="file_code" jdbcType="VARCHAR" property="fileCode" />
+    <result column="file_url" jdbcType="VARCHAR" property="fileUrl" />
+    <result column="province" jdbcType="VARCHAR" property="province" />
+    <result column="city" jdbcType="VARCHAR" property="city" />
+    <result column="county" jdbcType="VARCHAR" property="county" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="is_del" jdbcType="BIT" property="isDel" />
+    <collection property="userRoleDtoList" ofType="com.njwd.entity.platform.dto.UserRoleDto"
+                select="selectUserRoleByUserId" column="user_id"></collection>
+  </resultMap>
+  <sql id="Base_Column_List">
+    user_id, crm_user_id, crm_user_name,mobile, user_name, company_name, `password`, email, file_code,
+    file_url, province, city, county, create_time, update_time, is_del
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from wd_user
+    where user_id = #{userId,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from wd_user
+    where user_id = #{userId,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" keyColumn="user_id" keyProperty="userId" parameterType="com.njwd.entity.platform.dto.UserDto" useGeneratedKeys="true">
+    insert into wd_user (crm_user_id, crm_user_name,mobile, user_name,
+      company_name, `password`, email, 
+      file_code, file_url, province, 
+      city, county, create_time, 
+      update_time, is_del)
+    values (#{crmUserId,jdbcType=VARCHAR},#{crmUserName,jdbcType=VARCHAR}, #{mobile,jdbcType=VARCHAR}, #{userName,jdbcType=VARCHAR},
+      #{companyName,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, 
+      #{fileCode,jdbcType=VARCHAR}, #{fileUrl,jdbcType=VARCHAR}, #{province,jdbcType=VARCHAR}, 
+      #{city,jdbcType=VARCHAR}, #{county,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{updateTime,jdbcType=TIMESTAMP}, #{isDel,jdbcType=BIT})
+  </insert>
+
+  <!--注册成功时添加用户-->
+  <insert id="insertAddUser" keyColumn="user_id" keyProperty="userId" parameterType="com.njwd.entity.platform.dto.AddUserDto" useGeneratedKeys="true">
+    insert into wd_user
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="crmUserId != null">
+        crm_user_id,
+      </if>
+      <if test="crmUserName != null">
+        crm_user_name,
+      </if>
+      <if test="mobile != null">
+        mobile,
+      </if>
+      <if test="userName != null">
+        user_name,
+      </if>
+      <if test="companyName != null">
+        company_name,
+      </if>
+      <if test="password != null">
+        `password`,
+      </if>
+      <if test="email != null">
+        email,
+      </if>
+      <if test="fileCode != null">
+        file_code,
+      </if>
+      <if test="fileUrl != null">
+        file_url,
+      </if>
+      <if test="province != null">
+        province,
+      </if>
+      <if test="city != null">
+        city,
+      </if>
+      <if test="county != null">
+        county,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="isDel != null">
+        is_del,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        #{userId,jdbcType=VARCHAR},
+      </if>
+      <if test="crmUserId != null">
+        #{crmUserId,jdbcType=VARCHAR},
+      </if>
+      <if test="crmUserName != null">
+        #{crmUserName,jdbcType=VARCHAR},
+      </if>
+      <if test="mobile != null">
+        #{mobile,jdbcType=VARCHAR},
+      </if>
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="companyName != null">
+        #{companyName,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null">
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="fileCode != null">
+        #{fileCode,jdbcType=VARCHAR},
+      </if>
+      <if test="fileUrl != null">
+        #{fileUrl,jdbcType=VARCHAR},
+      </if>
+      <if test="province != null">
+        #{province,jdbcType=VARCHAR},
+      </if>
+      <if test="city != null">
+        #{city,jdbcType=VARCHAR},
+      </if>
+      <if test="county != null">
+        #{county,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isDel != null">
+        #{isDel,jdbcType=BIT},
+      </if>
+    </trim>
+  </insert>
+
+  <!--修改用户信息-->
+  <update id="updateUser" parameterType="com.njwd.entity.platform.dto.UserDto">
+    update wd_user
+    <set>
+      <if test="crmUserId != null">
+        crm_user_id = #{crmUserId,jdbcType=VARCHAR},
+      </if>
+      <if test="crmUserName != null">
+        crm_user_name = #{crmUserName,jdbcType=VARCHAR},
+      </if>
+      <if test="mobile != null">
+        mobile = #{mobile,jdbcType=VARCHAR},
+      </if>
+      <if test="userName != null">
+        user_name = #{userName,jdbcType=VARCHAR},
+      </if>
+      <if test="companyName != null">
+        company_name = #{companyName,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        `password` = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="email != null">
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="fileCode != null">
+        file_code = #{fileCode,jdbcType=VARCHAR},
+      </if>
+      <if test="fileUrl != null">
+        file_url = #{fileUrl,jdbcType=VARCHAR},
+      </if>
+      <if test="province != null">
+        province = #{province,jdbcType=VARCHAR},
+      </if>
+      <if test="city != null">
+        city = #{city,jdbcType=VARCHAR},
+      </if>
+      <if test="county != null">
+        county = #{county,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isDel != null">
+        is_del = #{isDel,jdbcType=BIT},
+      </if>
+    </set>
+    where user_id = #{userId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.njwd.entity.platform.dto.UserDto">
+    update wd_user
+    set crm_user_id = #{crmUserId,jdbcType=VARCHAR},
+      crm_user_name = #{crmUserName,jdbcType=VARCHAR},
+      mobile = #{mobile,jdbcType=VARCHAR},
+      user_name = #{userName,jdbcType=VARCHAR},
+      company_name = #{companyName,jdbcType=VARCHAR},
+      `password` = #{password,jdbcType=VARCHAR},
+      email = #{email,jdbcType=VARCHAR},
+      file_code = #{fileCode,jdbcType=VARCHAR},
+      file_url = #{fileUrl,jdbcType=VARCHAR},
+      province = #{province,jdbcType=VARCHAR},
+      city = #{city,jdbcType=VARCHAR},
+      county = #{county,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      is_del = #{isDel,jdbcType=BIT}
+    where user_id = #{userId,jdbcType=VARCHAR}
+  </update>
+
+  <!--用户表一般需查询的字段集合-->
+  <sql id="CommomSelect">
+    select
+      user_id, mobile, user_name, company_name, email, file_code,crm_user_id, crm_user_name ,
+      file_url, province, city, county, create_time, update_time,password
+    from wd_user u
+  </sql>
+  <!--依据用户账号（一般为手机号查询用户信息）-->
+  <select id="selectUserByMobile" parameterType="com.njwd.entity.platform.dto.LoginDto" resultMap="UserResultMap">
+    <include refid="CommomSelect"></include>
+    where u.is_del = 0 and u.mobile = #{mobile}
+  </select>
+  <!--利用用户id或账号（一般为手机号）查询用户信息-->
+  <select id="selectUserById" parameterType="com.njwd.entity.platform.dto.UserDto" resultMap="UserResultMap">
+    <include refid="CommomSelect"></include>
+    where u.user_id = #{userId}
+  </select>
+  <!--利用用户id或账号（一般为手机号）查询用户信息-->
+  <select id="selectUserByCondition" parameterType="com.njwd.entity.platform.dto.UserDto" resultMap="UserResultMap">
+    <include refid="CommomSelect"></include>
+    where 1=1 and u.is_del = 0
+    <if test="mobile != null and mobile !=''">
+      and u.mobile  = #{mobile}
+    </if>
+  </select>
+  <!--人员角色的关联表的映射-->
+  <resultMap id="UseRoleMap" type="com.njwd.entity.platform.vo.UserRoleVo">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="role_name" jdbcType="VARCHAR" property="roleName" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+  </resultMap>
+  <!--依据user_id查询该人员担任的角色-->
+  <select id="selectUserRoleByUserId" parameterType="java.lang.String" resultMap="UseRoleMap">
+    select
+     ur.role_name,ur.user_id
+    from wd_user_role ur
+    where ur.user_id = #{userId}
+  </select>
+
+
+
+</mapper>

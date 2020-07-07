@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.schedule.mapper.TaskMapper" >
+  <resultMap id="BaseResultMap" type="com.njwd.entity.schedule.Task" >
+    <result column="task_key" property="taskKey" jdbcType="VARCHAR" />
+    <result column="ente_id" property="enteId" jdbcType="VARCHAR" />
+    <result column="task_name" property="taskName" jdbcType="VARCHAR" />
+    <result column="task_key" property="taskKey" jdbcType="VARCHAR" />
+    <result column="ente_id" property="enteId" jdbcType="VARCHAR" />
+    <result column="app_id" property="appId" jdbcType="VARCHAR" />
+    <result column="task_type" property="taskType" jdbcType="VARCHAR" />
+    <result column="target_excute" property="targetExcute" jdbcType="VARCHAR" />
+    <result column="task_status" property="taskStatus" jdbcType="VARCHAR" />
+    <result column="error_reason" property="errorReason" jdbcType="VARCHAR" />
+    <result column="cron" property="cron" jdbcType="VARCHAR" />
+    <result column="last_excute_time" property="lastExcuteTime" jdbcType="TIMESTAMP" />
+    <result column="next_excute_time" property="nextExcuteTime" jdbcType="TIMESTAMP" />
+    <result column="switch_status" property="switchStatus" jdbcType="VARCHAR" />
+    <result column="runtime_param" property="runtimeParam" jdbcType="VARCHAR" />
+    <result column="job_role" property="jobRole" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="max_excute_time" property="maxExcuteTime" jdbcType="VARCHAR" />
+    <result column="business_type" property="businessType" jdbcType="VARCHAR" />
+    <result column="data_type" property="dataType" jdbcType="VARCHAR" />
+    <result column="open_type" property="openType" jdbcType="VARCHAR" />
+    <result column="delete_status" property="deleteStatus" jdbcType="VARCHAR" />
+    <result column="trigger_count" property="triggerCount" jdbcType="INTEGER" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    task_name, task_key, ente_id, app_id, task_type, target_excute,task_status, error_reason, cron, last_excute_time, next_excute_time,
+    switch_status,runtime_param, job_role, create_time,max_excute_time,business_type,data_type,open_type,delete_status,trigger_count
+  </sql>
+
+
+
+  <select id="selectByEnteIdAndDeleteStatus" resultType="String" parameterType="com.njwd.entity.schedule.Task" >
+    select task_key
+    from wd_task
+    where ente_id = #{enteId,jdbcType=VARCHAR}
+    and delete_status=#{deleteStatus}
+    and business_type !='DATA_UNIFY'
+    and (app_id is null or app_id='')
+  </select>
+
+  <select id="getDeletedCountTaskByRely" resultType="int" parameterType="com.njwd.entity.schedule.Task" >
+     SELECT count(1)
+    FROM wd_task_rely t1
+    LEFT JOIN wd_task t2 ON t2.ente_id=#{enteId,jdbcType=VARCHAR} AND t1.`source_task_key`=t2.`task_key`
+    WHERE t1.ente_id=#{enteId,jdbcType=VARCHAR}
+    AND t1.target_task_key=#{taskKey}
+    AND t2.delete_status='1'
+  </select>
+
+
+  <select id="getUnOpenTaskByEnteId" resultType="String" parameterType="java.lang.String" >
+    select task_key
+    from wd_task
+    where ente_id = #{enteId,jdbcType=VARCHAR}
+    and switch_status='OFF'
+    and open_type='AUTO'
+    and delete_status='0'
+  </select>
+
+  <select id="getOpenedTaskByEnteId" resultType="String" parameterType="java.lang.String" >
+    select task_key
+    from wd_task
+    where ente_id = #{enteId,jdbcType=VARCHAR}
+    and switch_status='ON'
+    and open_type='AUTO'
+    and delete_status='0'
+  </select>
+
+
+  <select id="getListByKeys" resultMap="BaseResultMap" parameterType="com.njwd.entity.schedule.dto.HandleTaskSwitchDto" >
+    select
+     <include refid="Base_Column_List" />
+    from wd_task
+    where ente_id = #{enteId,jdbcType=VARCHAR}
+    and delete_status='0'
+    and task_key in
+    <foreach collection="taskKeys" item="taskKey"  open="(" separator="," close=")">
+      #{taskKey}
+    </foreach>
+  </select>
+
+  <select id="getUnOpenTaskByRely" resultType="String" parameterType="com.njwd.entity.schedule.TaskKey" >
+    SELECT t1.source_task_key AS task_key
+    FROM wd_task_rely t1
+    LEFT JOIN wd_task t2 ON t2.ente_id=#{enteId,jdbcType=VARCHAR} AND t1.`source_task_key`=t2.`task_key`
+    WHERE t1.ente_id=#{enteId,jdbcType=VARCHAR}
+    AND t1.target_task_key=#{taskKey}
+    AND t2.`switch_status`='OFF'
+    AND t2.delete_status='0'
+  </select>
+
+
+  <select id="getCurrentTime" resultType="Date"  >
+    select now() from dual;
+  </select>
+  <select id="selectByEnteIdAndTaskKey" resultMap="BaseResultMap" parameterType="com.njwd.entity.schedule.TaskKey" >
+    select
+    <include refid="Base_Column_List" />
+    from wd_task
+    where ente_id=#{enteId}
+    and task_key=#{taskKey}
+  </select>
+
+
+  <select id="selectOverTimeTask" resultMap="BaseResultMap">
+    SELECT
+    t1.ente_id,t1.task_key,t1.cron,t1.trigger_count
+    FROM wd_task t1
+    LEFT JOIN wd_task_config t2 ON t1.ente_id=t2.ente_id
+    WHERE
+    t1.task_status='EXCUTING'
+    AND t1.switch_status = 'ON'
+    AND t1.delete_status='0'
+    AND t2.reflex_status='ON'
+    AND TIMESTAMPDIFF(SECOND,t1.last_excute_time,NOW())>(t1.max_excute_time*t2.reflex_ratio)
+  </select>
+
+  <select id="selectNeedToExcuteByRole" resultType="com.njwd.entity.schedule.vo.TaskVo" parameterType="com.njwd.entity.schedule.Task" >
+    select
+      t1.task_name, t1.task_key, t1.ente_id, t1.app_id, t1.task_type, t1.target_excute,t1.task_status, t1.error_reason, t1.cron, t1.last_excute_time,
+      t1.next_excute_time, t1.switch_status,t1.runtime_param, t1.job_role, t1.create_time,t1.max_excute_time,t1.trigger_count,t1.business_type,t1.data_type
+    from wd_task t1
+    left join wd_task_config t2 on t1.ente_id=t2.ente_id
+    where 1=1
+    and t1.switch_status = 'ON'
+    and t1.delete_status='0'
+    and t1.task_status='WAITING'
+    and t1.next_excute_time &lt;= now()
+    <if test=" jobRole != null and jobRole != ''">
+      and t1.job_role =#{jobRole}
+    </if>
+    and t2.valid_status='ON'
+    order by t1.next_excute_time asc
+    limit 1
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="com.njwd.entity.schedule.TaskKey" >
+    delete from wd_task
+    where ente_id=#{enteId}
+    and task_key=#{taskKey}
+  </delete>
+
+
+
+  <insert id="insertSelective" parameterType="com.njwd.entity.schedule.Task" >
+    insert into wd_task
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+
+      <if test="taskName != null" >
+        task_name,
+      </if>
+      <if test="taskKey != null" >
+        task_key,
+      </if>
+      <if test="enteId != null" >
+        ente_id,
+      </if>
+      <if test="appId != null" >
+        app_id,
+      </if>
+      <if test="taskType != null" >
+        task_type,
+      </if>
+
+      <if test="targetExcute != null" >
+        target_excute,
+      </if>
+      <if test="taskStatus != null" >
+        task_status,
+      </if>
+      <if test="errorReason != null" >
+        error_reason,
+      </if>
+      <if test="cron != null" >
+        cron,
+      </if>
+      <if test="lastExcuteTime != null" >
+        last_excute_time,
+      </if>
+      <if test="nextExcuteTime != null" >
+        next_excute_time,
+      </if>
+
+      <if test="switchStatus != null" >
+        switch_status,
+      </if>
+      <if test="jobRole != null" >
+        job_role,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="businessType != null" >
+            business_type,
+      </if>
+      <if test="dataType != null" >
+        data_type,
+      </if>
+      <if test="maxExcuteTime != null and maxExcuteTime!=0" >
+        max_excute_time,
+      </if>
+      <if test="runtimeParam != null" >
+        runtime_param,
+      </if>
+      <if test="openType != null" >
+            open_type,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+
+      <if test="taskName != null" >
+        #{taskName,jdbcType=VARCHAR},
+      </if>
+      <if test="taskKey != null" >
+        #{taskKey,jdbcType=VARCHAR},
+      </if>
+      <if test="enteId != null" >
+        #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="appId != null" >
+        #{appId,jdbcType=VARCHAR},
+      </if>
+      <if test="taskType != null" >
+        #{taskType,jdbcType=VARCHAR},
+      </if>
+
+      <if test="targetExcute != null" >
+        #{targetExcute,jdbcType=VARCHAR},
+      </if>
+      <if test="taskStatus != null" >
+        #{taskStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="errorReason != null" >
+        #{errorReason,jdbcType=VARCHAR},
+      </if>
+      <if test="cron != null" >
+        #{cron,jdbcType=VARCHAR},
+      </if>
+      <if test="lastExcuteTime != null" >
+        #{lastExcuteTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="nextExcuteTime != null" >
+        #{nextExcuteTime,jdbcType=TIMESTAMP},
+      </if>
+
+      <if test="switchStatus != null" >
+        #{switchStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="jobRole != null" >
+        #{jobRole,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="businessType != null" >
+         #{businessType,jdbcType=VARCHAR},
+      </if>
+      <if test="dataType != null" >
+        #{dataType,jdbcType=VARCHAR},
+      </if>
+      <if test="maxExcuteTime != null and maxExcuteTime!=0" >
+        #{maxExcuteTime},
+      </if>
+      <if test="runtimeParam != null" >
+        #{runtimeParam},
+      </if>
+        <if test="openType != null" >
+            #{openType,jdbcType=VARCHAR},
+        </if>
+    </trim>
+  </insert>
+
+
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.schedule.Task" >
+    update wd_task
+    <set >
+      <if test="taskName != null" >
+        task_name = #{taskName,jdbcType=VARCHAR},
+      </if>
+      <if test="appId != null" >
+        app_id = #{appId,jdbcType=VARCHAR},
+      </if>
+      <if test="taskType != null" >
+        task_type = #{taskType,jdbcType=VARCHAR},
+      </if>
+      <if test="targetExcute != null" >
+        target_excute = #{targetExcute,jdbcType=VARCHAR},
+      </if>
+      <if test="taskStatus != null" >
+        task_status = #{taskStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="errorReason != null" >
+        error_reason = #{errorReason,jdbcType=VARCHAR},
+      </if>
+      <if test="cron != null" >
+        cron = #{cron,jdbcType=VARCHAR},
+      </if>
+      <if test="lastExcuteTime != null" >
+        last_excute_time = #{lastExcuteTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="nextExcuteTime != null" >
+        next_excute_time = #{nextExcuteTime,jdbcType=TIMESTAMP},
+      </if>
+
+      <if test="switchStatus != null" >
+        switch_status = #{switchStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="jobRole != null" >
+        job_role = #{jobRole,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="runtimeParam != null" >
+        runtime_param = #{runtimeParam,jdbcType=TIMESTAMP},
+      </if>
+      <if test="maxExcuteTime != null and maxExcuteTime!=0" >
+        max_excute_time = #{maxExcuteTime},
+      </if>
+      <if test="businessType != null" >
+        business_type = #{businessType},
+      </if>
+      <if test="dataType != null" >
+        data_type = #{dataType},
+      </if>
+      <if test="openType != null" >
+         open_type = #{openType},
+      </if>
+      <if test="deleteStatus != null" >
+        delete_status = #{deleteStatus},
+      </if>
+      <if test="triggerCount != null" >
+          trigger_count = #{triggerCount},
+      </if>
+    </set>
+    where ente_id=#{enteId}
+    and task_key=#{taskKey}
+  </update>
+
+  <update id="updateToTriggerTask" parameterType="map" >
+       update wd_task
+       set next_excute_time = #{nextExcuteTime,jdbcType=TIMESTAMP},trigger_count=trigger_count+1
+       where ente_id=#{enteId}
+       and task_key=#{taskKey}
+  </update>
+
+
+  <update id="updateDeleteStatusToOne" parameterType="string" >
+    update wd_task
+    set delete_status='1'
+    where ente_id=#{enteId}
+  </update>
+
+
+  <update id="createTaskByKeys" parameterType="com.njwd.entity.schedule.dto.HandleTaskSwitchDto" >
+    UPDATE wd_task
+    SET delete_status=#{deleteStatus}
+    WHERE ente_id=#{enteId}
+    AND task_key IN
+    <foreach collection="taskKeys" item="taskKey"  open="(" separator="," close=")">
+    #{taskKey}
+   </foreach>
+  </update>
+
+
+  <update id="createTaskForBusiness" parameterType="string" >
+    UPDATE wd_task
+    SET delete_status='0'
+    WHERE ente_id=#{enteId}
+    AND app_id IN(SELECT app_id FROM wd_ente_app WHERE ente_id=#{enteId})
+    AND business_type NOT IN ('DATA_UNIFY','PULL_PRI')
+    AND app_id IS NOT NULL
+    AND app_id !=''
+  </update>
+
+  <!-- 如果是开启自动开启的任务，则下次执行时间延后1小时，靠其他任务触发，避免该任务空跑 -->
+  <update id="updateAutoSwitchStatusByKeys" parameterType="com.njwd.entity.schedule.dto.HandleTaskSwitchDto" >
+    update wd_task
+    set
+    <if test=" switchStatus=='ON'">
+      next_excute_time =DATE_ADD(NOW(),INTERVAL 1 HOUR),
+    </if>
+    switch_status=#{switchStatus}
+    where ente_id=#{enteId}
+    and delete_status='0'
+    and task_key IN
+    <foreach collection="taskKeys" item="taskKey"  open="(" separator="," close=")">
+      #{taskKey}
+    </foreach>
+  </update>
+
+
+    <update id="updateBatchSwitchStatusByKeys" parameterType="com.njwd.entity.schedule.dto.HandleTaskSwitchDto" >
+        <foreach collection="tasks" item="bean" index="index" open="" close="" separator=";">
+            update wd_task
+            set
+            <if test=" bean.switchStatus=='ON'">
+                next_excute_time =now(),
+            </if>
+            switch_status=#{bean.switchStatus}
+            where ente_id=#{enteId}
+            and delete_status='0'
+            and open_type='HANDLE'
+            and task_key =#{bean.taskKey}
+        </foreach>
+    </update>
+
+  <update id="updateBatchSwitchStatusTaskByTypes" parameterType="com.njwd.entity.schedule.dto.HandleTaskSwitchDto" >
+    <foreach collection="tasks" item="bean" index="index" open="" close="" separator=";">
+      UPDATE wd_task
+      <set>
+        <if test="bean.switchStatus=='ON'">
+          next_excute_time =now(),
+        </if>
+        switch_status=#{bean.switchStatus},
+      </set>
+      <where>
+        ente_id = #{enteId}
+        and  delete_status='0'
+        and app_id = #{bean.appId}
+        and data_type = #{bean.dataType}
+        and business_type = #{bean.businessType}
+        and open_type='HANDLE'
+      </where>
+    </foreach>
+  </update>
+
+  <update id="updateForReflexTask" parameterType="com.njwd.entity.schedule.Task" >
+    update wd_task
+    set
+    <if test="nextExcuteTime != null" >
+      next_excute_time = #{nextExcuteTime,jdbcType=TIMESTAMP},
+    </if>
+    task_status='WAITING'
+    where ente_id=#{enteId}
+     and task_key=#{taskKey}
+  </update>
+
+    <!--查看任务关系图相关 -->
+  <select id="getTaskKeys" resultType="String" parameterType="String" >
+        select task_key
+        from wd_task
+        where ente_id=#{enteId}
+        and delete_status='0'
+  </select>
+
+  <select id="getRelyData" resultType="com.njwd.entity.schedule.TaskRely" parameterType="map" >
+        select a.source_task_key,a.target_task_key
+        from wd_task_rely a
+        left join wd_task b on a.source_task_key=b.task_key and b.ente_id=#{enteId}
+        left join wd_task c on a.target_task_key=c.task_key and c.ente_id=#{enteId}
+        where a.ente_id=#{enteId}
+        and b.delete_status='0'
+        and c.delete_status='0'
+        <if test="taskKeys != null">
+          and (
+            a.source_task_key in
+            <foreach collection="taskKeys" item="taskKey"  open="(" separator="," close=")">
+              #{taskKey}
+            </foreach>
+          or
+            a.target_task_key in
+            <foreach collection="taskKeys" item="taskKey"  open="(" separator="," close=")">
+              #{taskKey}
+            </foreach>
+          )
+        </if>
+
+
+  </select>
+  <select id="getTaskKeysByRela" resultType="String" parameterType="com.njwd.entity.schedule.TaskKey" >
+    SELECT DISTINCT  task_key FROM(
+        SELECT a.target_task_key AS task_key
+        FROM wd_task_rely a
+        LEFT JOIN wd_task c ON a.target_task_key=c.task_key AND c.ente_id=#{enteId}
+        WHERE a.ente_id=#{enteId}
+        AND a.source_task_key=#{taskKey}
+        AND c.delete_status='0'
+        UNION ALL
+        SELECT a.source_task_key AS task_key
+        FROM wd_task_rely a
+        LEFT JOIN wd_task b ON a.source_task_key=b.task_key AND b.ente_id=#{enteId}
+        WHERE a.ente_id=#{enteId}
+        AND a.target_task_key=#{taskKey}
+        AND b.delete_status='0'
+    ) t
+  </select>
+
+
+  <select id="getTaskKeysBySouce" resultType="String" parameterType="com.njwd.entity.schedule.TaskKey" >
+      SELECT a.target_task_key AS task_key
+      FROM wd_task_rely a
+      LEFT JOIN wd_task c ON a.target_task_key=c.task_key AND c.ente_id=#{enteId}
+      WHERE a.ente_id=#{enteId}
+      AND a.source_task_key=#{taskKey}
+      AND c.delete_status='0'
+  </select>
+
+  <select id="getTaskKeysByTarget" resultType="String" parameterType="com.njwd.entity.schedule.TaskKey" >
+      SELECT a.source_task_key AS task_key
+        FROM wd_task_rely a
+        LEFT JOIN wd_task b ON a.source_task_key=b.task_key AND b.ente_id=#{enteId}
+        WHERE a.ente_id=#{enteId}
+        AND a.target_task_key=#{taskKey}
+        AND b.delete_status='0'
+  </select>
+</mapper>

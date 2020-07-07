@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.mapper.PsItemScoreMapper">
+    <resultMap id="BaseResultMap" type="com.njwd.entity.kettlejob.PsItemScore">
+        <!--@mbg.generated-->
+        <id column="item_score_id" jdbcType="VARCHAR" property="itemScoreId"/>
+        <result column="item_id" jdbcType="VARCHAR" property="itemId"/>
+        <result column="item_name" jdbcType="VARCHAR" property="itemName"/>
+        <result column="shop_id" jdbcType="VARCHAR" property="shopId"/>
+        <result column="score" jdbcType="DECIMAL" property="score"/>
+        <result column="score_day" jdbcType="DECIMAL" property="scoreDay"/>
+        <result column="real_score" jdbcType="DECIMAL" property="realScore"/>
+        <result column="ente_id" jdbcType="VARCHAR" property="enteId"/>
+
+    </resultMap>
+
+    <!--新增-->
+    <insert id="addPsItemScore" parameterType="com.njwd.entity.kettlejob.dto.PsItemScoreDto" >
+        insert into ps_item_score(
+        app_id,
+        item_score_id,
+        item_id,
+        item_name,
+        third_shop_id,
+        score_day,
+        score,
+        real_score,
+        ente_id,
+        last_update_time
+        )values
+        <foreach collection="list" item="psItemScoreDto" separator=",">
+           (
+            #{psItemScoreDto.appId},
+            #{psItemScoreDto.itemScoreId},
+            #{psItemScoreDto.itemId},
+            #{psItemScoreDto.itemName},
+            #{psItemScoreDto.thirdShopId},
+            #{psItemScoreDto.scoreDay},
+            #{psItemScoreDto.score},
+            #{psItemScoreDto.realScore},
+            #{psItemScoreDto.enteId},
+            #{psItemScoreDto.lastUpdateTime}
+        )
+        </foreach>
+    </insert>
+
+    <!--根据企业ID和时间查询巡店项目打分-->
+    <select id="findPsItemScoreBatch" resultType="com.njwd.entity.kettlejob.vo.PsItemScoreVo" parameterType="com.njwd.entity.kettlejob.dto.PsItemScoreDto">
+         select
+        item_score_id,
+        item_id,
+        item_name,
+        shop_id,
+        third_shop_id,
+        score_day,
+        score,
+        real_score,
+        ente_id
+	     from
+	     ps_item_score
+	     where
+	     ente_id=#{psItemScoreDto.enteId}
+	     and
+	     app_id=#{psItemScoreDto.appId}
+	     and
+	     score_day>=#{psItemScoreDto.startDay}
+	     and
+	     score_day&lt;=#{psItemScoreDto.endDay}
+    </select>
+
+
+    <!--根据企业ID和第三方ID修改巡店项目打分-->
+    <update id="updatePsItemScore" parameterType="java.util.List">
+        <foreach collection="list" item="psItemScoreDto" index="index" separator=";">
+        update ps_item_score
+        set
+        item_id = #{psItemScoreDto.itemId},
+        item_name=#{psItemScoreDto.itemName},
+        third_shop_id=#{psItemScoreDto.thirdShopId},
+        score=#{psItemScoreDto.score},
+        real_score = #{psItemScoreDto.realScore},
+        score_day=#{psItemScoreDto.scoreDay}
+        where
+        item_score_id=#{psItemScoreDto.itemScoreId}
+	    and ente_id=#{psItemScoreDto.enteId}
+        and app_id=#{psItemScoreDto.appId}
+        </foreach>
+    </update>
+
+    <!--新增并修改-->
+    <insert id="replaceScore" parameterType="com.njwd.entity.kettlejob.dto.PsItemScoreDto">
+        replace into ps_item_score(
+        app_id,
+        item_score_id,
+        item_id,
+        item_name,
+        third_shop_id,
+        score_day,
+        score,
+        real_score,
+        ente_id,
+        last_update_time
+        )values
+        <foreach collection="list" item="psItemScoreDto" separator=",">
+            (
+            #{psItemScoreDto.appId},
+            #{psItemScoreDto.itemScoreId},
+            #{psItemScoreDto.itemId},
+            #{psItemScoreDto.itemName},
+            #{psItemScoreDto.thirdShopId},
+            #{psItemScoreDto.scoreDay},
+            #{psItemScoreDto.score},
+            #{psItemScoreDto.realScore},
+            #{psItemScoreDto.enteId},
+            #{psItemScoreDto.lastUpdateTime}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateCleanScore" parameterType="com.njwd.entity.kettlejob.dto.PsItemScoreDto">
+        UPDATE ps_item_score pis
+        LEFT JOIN base_shop_rela bsr ON pis.third_shop_id = bsr.third_shop_id
+        AND pis.app_id = bsr.app_id
+        AND pis.ente_id = bsr.ente_id
+        SET pis.shop_id = bsr.shop_id
+        WHERE pis.score_day>=#{psItemScoreDto.scoreDay}
+        AND pis.app_id = #{psItemScoreDto.appId}
+        AND pis.ente_id=#{psItemScoreDto.enteId}
+        and pis.shop_id =''
+    </update>
+
+</mapper>

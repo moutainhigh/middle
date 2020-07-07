@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.schedule.mapper.EnteServerMapper" >
+  <resultMap id="BaseResultMap" type="com.njwd.entity.schedule.EnteServer" >
+    <id column="config_id" property="configId" jdbcType="VARCHAR" />
+    <result column="ente_id" property="enteId" jdbcType="VARCHAR" />
+    <result column="type" property="type" jdbcType="VARCHAR" />
+    <result column="network_type" property="networkType" jdbcType="VARCHAR" />
+    <result column="connect_config" property="connectConfig" jdbcType="VARCHAR" />
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    config_id, ente_id, type, network_type, connect_config, remark, create_time
+  </sql>
+
+  <select id="selectByEnteIdAndType" resultMap="BaseResultMap" parameterType="String" >
+    select
+    <include refid="Base_Column_List" />
+    from wd_ente_server
+    where ente_id = #{enteId,jdbcType=VARCHAR}
+    and type != 'SERVER'
+  </select>
+</mapper>

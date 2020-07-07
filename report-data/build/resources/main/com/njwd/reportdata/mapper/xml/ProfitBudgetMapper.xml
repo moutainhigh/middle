@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.ProfitBudgetMapper" >
+
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.vo.ProfitBudgetVo">
+      <result column="profit_budget_id" property="profitBudgetId" />
+      <result column="ente_id" property="enteId" />
+      <result column="brand_id" property="brandId" />
+      <result column="brand_name" property="brandName" />
+      <result column="region_id" property="regionId" />
+      <result column="region_name" property="regionName" />
+      <result column="shop_id" property="shopId" />
+      <result column="shop_name" property="shopName" />
+      <result column="project_id" property="projectId" />
+      <result column="project_name" property="projectName" />
+      <result column="num" property="num" />
+      <result column="proportion" property="proportion" />
+      <result column="begin_date" property="beginDate" />
+      <result column="end_date" property="endDate" />
+      <result column="status" property="status" />
+      <result column="update_time" property="updateTime" />
+  </resultMap>
+
+  <sql id="BaseColumnList">
+   `profit_budget_id`,
+        `ente_id`,
+        `brand_id`,
+        `brand_name`,
+        `region_id`,
+        `region_name`,
+        `shop_id`,
+        `shop_name`,
+        `project_id`,
+        `project_name`,
+        `num`,
+        `proportion`,
+        `begin_date`,
+        `end_date`,
+        `status`,
+        `update_time`
+  </sql>
+
+  <!--批量新增-->
+  <insert id="addBudgetBatch" parameterType="com.njwd.entity.reportdata.dto.ProfitBudgetDto">
+    insert into profit_budget(
+      `profit_budget_id`,
+      `ente_id`,
+      `brand_id`,
+      `brand_name`,
+      `region_id`,
+      `region_name`,
+      `shop_id`,
+      `shop_name`,
+      `project_id`,
+      `project_name`,
+      `num`,
+      `proportion`,
+      `begin_date`,
+      `end_date`
+    )values
+    <foreach collection="list" item="profitBudgetDto" separator=",">
+      (
+      #{profitBudgetDto.profitBudgetId},
+      #{profitBudgetDto.enteId},
+      #{profitBudgetDto.brandId},
+      #{profitBudgetDto.brandName},
+      #{profitBudgetDto.regionId},
+      #{profitBudgetDto.regionName},
+      #{profitBudgetDto.shopId},
+      #{profitBudgetDto.shopName},
+      #{profitBudgetDto.projectId},
+      #{profitBudgetDto.projectName},
+      #{profitBudgetDto.num},
+      #{profitBudgetDto.proportion},
+      #{profitBudgetDto.beginDate},
+      #{profitBudgetDto.endDate}
+      )
+    </foreach>
+  </insert>
+
+  <update id="updateBudgetById" parameterType="com.njwd.entity.reportdata.dto.ProfitBudgetDto" >
+    UPDATE profit_budget
+    SET
+    profit_budget_id=#{profitBudgetDto.profitBudgetId}
+    <if test="profitBudgetDto.num!=null">
+    ,num = #{profitBudgetDto.num}
+    </if>
+    <if test="profitBudgetDto.proportion!=null">
+      ,proportion = #{profitBudgetDto.proportion}
+    </if>
+    <if test="profitBudgetDto.beginDate!=null">
+      ,begin_date = #{profitBudgetDto.beginDate}
+    </if>
+    <if test="profitBudgetDto.endDate!=null">
+      ,end_date = #{profitBudgetDto.endDate}
+    </if>
+    WHERE `profit_budget_id` = #{profitBudgetDto.profitBudgetId}
+  </update>
+
+  <!--批量-->
+  <update id="updateBudgetBatch" parameterType="com.njwd.entity.reportdata.dto.ProfitBudgetDto" >
+        UPDATE profit_budget
+        SET
+           status = #{profitBudgetDto.status}
+        WHERE `profit_budget_id` in
+        <foreach collection="profitBudgetDto.idList" item="profitBudgetId" open="(" separator="," close=")">
+           #{profitBudgetId}
+        </foreach>
+    </update>
+
+  <select id="findBudgetList" resultType="com.njwd.entity.reportdata.vo.ProfitBudgetVo" parameterType="com.njwd.entity.reportdata.dto.ProfitBudgetDto">
+    select
+      `profit_budget_id`,
+      `ente_id`,
+      `brand_id`,
+      `brand_name`,
+      `region_id`,
+      `region_name`,
+      `shop_id`,
+      `shop_name`,
+      `project_id`,
+      `project_name`,
+      `num`,
+      `proportion`,
+      `begin_date`,
+      `end_date`,
+      `status`,
+      `update_time`
+     FROM profit_budget
+     WHERE
+    ente_id= #{profitBudgetDto.enteId}
+     <if test="profitBudgetDto.idList!=null">
+      and profit_budget_id in
+       <foreach collection="profitBudgetDto.idList" item="profitBudgetId" open="(" separator="," close=")">
+         #{profitBudgetId}
+       </foreach>
+     </if>
+    <if test="profitBudgetDto.shopId!=null">
+      and shop_id=#{profitBudgetDto.shopId}
+    </if>
+    <if test="profitBudgetDto.brandId!=null">
+      and brand_id=#{profitBudgetDto.brandId}
+    </if>
+    <if test="profitBudgetDto.regionId!=null">
+      and region_id=#{profitBudgetDto.regionId}
+    </if>
+    <if test="profitBudgetDto.status!=null">
+      and status=#{profitBudgetDto.status}
+    </if>
+
+  </select>
+
+  <select id="findBudgetById" resultType="com.njwd.entity.reportdata.vo.ProfitBudgetVo" parameterType="com.njwd.entity.reportdata.dto.ProfitBudgetDto">
+     select
+     `profit_budget_id`,
+        `ente_id`,
+        `brand_id`,
+        `brand_name`,
+        `region_id`,
+        `region_name`,
+        `shop_id`,
+        `shop_name`,
+        `project_id`,
+        `project_name`,
+        `num`,
+        `proportion`,
+        `begin_date`,
+        `end_date`,
+        `status`,
+        `update_time`
+     FROM profit_budget
+     WHERE `profit_budget_id` = #{profitBudgetDto.profitBudgetId}
+  </select>
+
+
+</mapper>

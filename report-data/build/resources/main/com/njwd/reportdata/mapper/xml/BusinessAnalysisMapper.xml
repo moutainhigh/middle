@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.BusinessAnalysisMapper">
+    <resultMap id="BaseResultMap" type="com.njwd.entity.kettlejob.PsItem">
+        <!--@mbg.generated-->
+        <id column="project_id" jdbcType="VARCHAR" property="projectId"/>
+        <result column="project_name" jdbcType="VARCHAR" property="projectName"/>
+        <result column="ente_id" jdbcType="VARCHAR" property="enteId"/>
+        
+    </resultMap>
+
+
+
+
+    <!--查询门店评分-->
+        <select id="findPsItemScoreAvg" resultType="com.njwd.entity.reportdata.vo.ShopScoreVo" parameterType="com.njwd.entity.reportdata.dto.ShopScoreDto">
+            select
+            b.type_id,
+            b.item_name,
+            b.shop_id,
+            b.shop_name,
+            b.regionId,
+            b.brandId,
+            b.score,
+            b.ente_id
+            from(
+            select
+            pi.type_id,
+            pis.item_name,
+            pis.shop_id,
+            bs.shop_name,
+            bs.region_id as regionId,
+            bs.brand_id as brandId,
+            avg(pis.score) AS score,
+            pis.ente_id
+	      from
+	      ps_item_score pis
+	      left join ps_item pi on pi.project_id=pis.item_id
+          left join ps_item_show s on s.type_id=pi.type_id
+          and s.app_id=pi.app_id
+          and s.ente_id=pi.ente_id
+          left join base_shop bs on bs.shop_id=pis.shop_id
+	      where
+	      s.is_show=1
+          and pis.shop_id in
+         <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+         </foreach>
+	      and
+	      pis.ente_id=#{enteId}
+	      and
+	      score_day>=#{beginDate}
+	      and
+	      score_day&lt;=#{endDate}
+          group by pis.shop_id,pi.type_id
+            union all
+            select
+            '1' AS type_id,
+            '总和' AS item_name,
+            a.shop_id,
+            a.shop_name,
+            a.regionId,
+            a.brandId,
+            SUM(a.score) AS score,
+            a.ente_id
+            from
+            (
+            select
+            pi.type_id,
+            pis.item_name,
+            pis.shop_id,
+            bs.shop_name,
+            bs.region_id as regionId,
+            bs.brand_id as brandId,
+            avg(pis.score) AS score,
+            pis.ente_id
+            from
+            ps_item_score pis
+            left join ps_item pi on pi.project_id = pis.item_id
+            left join ps_item_show s on s.type_id=pi.type_id
+            and s.app_id=pi.app_id
+            and s.ente_id=pi.ente_id
+            left join base_shop bs on bs.shop_id = pis.shop_id
+            where
+            s.is_show=1
+            and pis.shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+            and
+            pis.ente_id=#{enteId}
+            and
+            score_day>=#{beginDate}
+            and
+            score_day&lt;=#{endDate}
+            group by
+            pis.shop_id,
+            pi.type_id
+            ) a
+            group by
+            a.shop_id
+            )b order by b.shop_id,b.type_id
+
+    </select>
+
+
+
+
+</mapper>

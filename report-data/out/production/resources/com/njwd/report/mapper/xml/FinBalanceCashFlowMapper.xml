@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.report.mapper.FinBalanceCashFlowMapper">
+    <select id="findFinBalanceCashFlowList" resultType="com.njwd.entity.reportdata.vo.FinBalanceCashFlowVo">
+        SELECT
+            fbcf.app_id,
+            fbcf.ente_id,
+            fbcf.account_book_id,
+            fbcf.PERIOD_YEAR_NUM,
+            fbcf.ITEM_ID,
+            bcfi.CASH_FLOW_ITEM_CODE,
+            sum(fbcf.OCCUR_AMOUNT) OCCUR_AMOUNT
+        FROM
+            FIN_BALANCE_CASH_FLOW fbcf
+        LEFT JOIN
+            BASE_CASH_FLOW_ITEM bcfi
+            ON fbcf.ITEM_ID = bcfi.CASH_FLOW_ITEM_ID
+        WHERE
+            fbcf.account_book_id = #{accountBookId}
+            AND fbcf.ente_id = #{enteId}
+             <if test="flag == null">
+                 AND fbcf.period_year_num >=#{periodYearNum}||''
+             </if>
+            <if test="flag != null">
+                AND fbcf.period_year_num = #{periodYearNum}||''
+            </if>
+        GROUP BY
+            fbcf.app_id,
+            fbcf.ente_id,
+            fbcf.account_book_id,
+            fbcf.PERIOD_YEAR_NUM,
+            fbcf.ITEM_ID,
+            bcfi.CASH_FLOW_ITEM_CODE
+    </select>
+</mapper>

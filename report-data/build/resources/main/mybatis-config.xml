@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <settings>
+        <setting name="logImpl" value="SLF4J"/>
+        <!-- 字段和实体采用去下划线驼峰命名方式匹配 -->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!-- 字段为空时仍调用model的set方法或map的put方法 -->
+        <setting name="callSettersOnNulls" value="true"/>
+    </settings>
+
+    <typeAliases>
+        <typeAlias alias="PosFoodSalesVo" type="com.njwd.entity.reportdata.vo.PosFoodSalesVo"/>
+        <typeAlias alias="PosFoodSalesDto" type="com.njwd.entity.reportdata.dto.PosFoodSalesDto"/>
+        <typeAlias alias="PosPayCategoryVo" type="com.njwd.entity.reportdata.vo.PosPayCategoryVo"/>
+        <typeAlias alias="PosPayCategoryDto" type="com.njwd.entity.reportdata.dto.PosPayCategoryDto"/>
+        <typeAlias alias="PosRetreatDetailVo" type="com.njwd.entity.reportdata.vo.PosRetreatDetailVo"/>
+        <typeAlias alias="PosOrderFoodAnalysisDto" type="com.njwd.entity.reportdata.dto.PosOrderFoodAnalysisDto"/>
+        <typeAlias alias="PosOrderFoodVo" type="com.njwd.entity.reportdata.vo.PosOrderFoodAnalysisVo"/>
+        <typeAlias alias="PosCashPayDto" type="com.njwd.entity.reportdata.dto.PosCashPayDto"/>
+        <typeAlias alias="PosCashPayAnalysisVo" type="com.njwd.entity.reportdata.vo.PosCashPayAnalysisVo"/>
+        <typeAlias alias="BaseShopAllInfoDto" type="com.njwd.entity.basedata.dto.BaseShopAllInfoDto"/>
+        <typeAlias alias="BaseShopAllInfoVo" type="com.njwd.entity.basedata.vo.BaseShopAllInfoVo"/>
+        <typeAlias alias="BasePayTypeDto"  type="com.njwd.entity.basedata.dto.BasePayTypeDto"/>
+        <typeAlias alias="BasePayTypeVo"  type="com.njwd.entity.basedata.vo.BasePayTypeVo"/>
+        <typeAlias alias="BaseDateUtilInfoDto" type="com.njwd.entity.basedata.dto.BaseDateUtilInfoDto"/>
+        <typeAlias alias="BaseDateUtilInfoVo" type="com.njwd.entity.basedata.vo.BaseDateUtilInfoVo"/>
+        <typeAlias alias="ReportPosDeskDto" type="com.njwd.entity.reportdata.dto.ReportPosDeskDto"/>
+        <typeAlias alias="ReportPosDeskVo" type="com.njwd.entity.reportdata.vo.ReportPosDeskVo"/>
+        <typeAlias alias="BaseDeskDto" type="com.njwd.entity.basedata.dto.BaseDeskDto"/>
+        <typeAlias alias="BaseDeskVo" type="com.njwd.entity.basedata.vo.BaseDeskVo"/>
+        <typeAlias alias="BasePayCategoryDto" type="com.njwd.entity.basedata.dto.BasePayCategoryDto"/>
+        <typeAlias alias="BasePayCategoryVo" type="com.njwd.entity.basedata.vo.BasePayCategoryVo"/>
+        <typeAlias alias="RepPosDetailPayDto" type="com.njwd.entity.reportdata.dto.RepPosDetailPayDto"/>
+        <typeAlias alias="RepPosDetailPayVo" type="com.njwd.entity.reportdata.vo.RepPosDetailPayVo"/>
+        <typeAlias alias="PosDiscountDetailPayVo" type="com.njwd.entity.reportdata.vo.PosDiscountDetailPayVo"/>
+
+    </typeAliases>
+
+</configuration>

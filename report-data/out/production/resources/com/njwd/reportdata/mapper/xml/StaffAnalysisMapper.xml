@@ -1,0 +1,651 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportdata.mapper.StaffAnalysisMapper">
+
+    <sql id="Base_Column_List">
+        <!--@mbg.generated-->
+        user_id, user_name, job_code, mobile, sex, identity_card,
+        birthday,email,edu_level,
+        marriage, address, hiredate, positive_time, work_type,work_status,status,leavedate,ente_id
+    </sql>
+    <!--根据条件查询在职员工数据-->
+    <select id="findOnJobStaffList"  parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto"
+            resultType="com.njwd.entity.basedata.vo.BaseUserVo">
+        SELECT
+        us.* ,
+        bs.shop_name shopName,
+        bs.brand_id brandId,
+        bs.brand_name brandName,
+        bs.region_id regionId,
+        bs.region_name regionName
+        FROM
+        (
+        SELECT
+        bu.user_name,
+        bu.sex,
+        bu.birthday,
+        bu.hiredate,
+        bu.leavedate,
+        bu.ente_id enteId,
+        CASE
+        WHEN bsd.shop_dept_no IS NULL THEN
+        1 ELSE 0
+        END isManager,
+        bu.edu_level eduLevelType,
+        COALESCE ( bsd.shop_id, bs.shop_id ) shopId
+        FROM
+        base_user bu
+        LEFT JOIN base_shop_dept bsd ON bu.org_id = bsd.shop_dept_id
+        LEFT JOIN base_shop bs ON bu.org_id = bs.shop_id
+        where
+        (bsd.shop_id is not null and bsd.shop_id !='') or (bs.shop_id  is not null and bs.shop_id !='')
+        ) us,
+         base_shop bs
+        where us.enteId = #{staffAnalysisDto.enteId}
+        and us.shopId = bs.shop_id
+        <if test="staffAnalysisDto.shopIdList != null and staffAnalysisDto.shopIdList.size() > 0 ">
+            and us.shopId in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="staffAnalysisDto.shopTypeIdList != null and staffAnalysisDto.shopTypeIdList.size() > 0 ">
+            and bs.shop_type_id in
+            <foreach collection="staffAnalysisDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        and us.hiredate &lt;= #{staffAnalysisDto.endDate}
+        and (us.leavedate is null or us.leavedate > #{staffAnalysisDto.endDate})
+    </select>
+
+    <!--根据条件查询离职员工数据-->
+    <select id="findSeparatedStaffList"  parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto"
+            resultType="com.njwd.entity.basedata.vo.BaseUserVo">
+        SELECT
+        us.* ,
+        bs.shop_name shopName,
+        bs.brand_id brandId,
+        bs.brand_name brandName,
+        bs.region_id regionId,
+        bs.region_name regionName
+        FROM
+        (
+        SELECT
+        bu.user_name,
+        bu.sex,
+        bu.birthday,
+        bu.hiredate,
+        bu.leavedate,
+        bu.ente_id enteId,
+        CASE
+        WHEN bsd.shop_dept_no IS NULL THEN
+        1 ELSE 0
+        END isManager,
+        bu.edu_level eduLevelType,
+        COALESCE ( bsd.shop_id, bs.shop_id ) shopId
+        FROM
+        base_user bu
+        LEFT JOIN base_shop_dept bsd ON bu.org_id = bsd.shop_dept_id
+        LEFT JOIN base_shop bs ON bu.org_id = bs.shop_id
+        where
+        (bsd.shop_id is not null and bsd.shop_id !='') or (bs.shop_id  is not null and bs.shop_id !='')
+        ) us,
+        base_shop bs
+        where us.enteId = #{staffAnalysisDto.enteId}
+        and us.shopId = bs.shop_id
+        <if test="staffAnalysisDto.shopIdList != null and staffAnalysisDto.shopIdList.size() > 0 ">
+            and us.shopId in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="staffAnalysisDto.shopTypeIdList != null and staffAnalysisDto.shopTypeIdList.size() > 0 ">
+            and bs.shop_type_id in
+            <foreach collection="staffAnalysisDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        and us.leavedate &lt;= #{staffAnalysisDto.endDate}
+    </select>
+
+    <!--根据条件查询员工人数，试用期人数，当期入职人数，离职人数数据-->
+    <select id="findStaffNumList"  parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto"
+            resultType="com.njwd.entity.reportdata.vo.StaffTypeInfoVo">
+        SELECT
+        sum( case when us.hiredate &lt;= #{staffAnalysisDto.endDate}
+        and (us.leavedate is null or us.leavedate >= #{staffAnalysisDto.beginDate})  then 1 else  0 end ) hireNum,
+        sum( case when  us.leavedate between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate} then 1 else  0 end ) leaveNum,
+        sum( case when   (us.hiredate between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate})
+                      or (us.hiredate &lt; #{staffAnalysisDto.beginDate} and us.positive_time >= #{staffAnalysisDto.beginDate})  then 1 else  0 end ) positiveNum,
+        sum( case when  us.hiredate between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate} then 1 else  0 end ) currentNum
+        FROM
+        (
+        SELECT
+        bu.hiredate,
+        bu.positive_time ,
+        bu.leavedate,
+        bu.ente_id enteId,
+        COALESCE ( bsd.shop_id, bs.shop_id ) shopId
+        FROM
+        base_user bu
+        LEFT JOIN base_shop_dept bsd ON bu.org_id = bsd.shop_dept_id
+        LEFT JOIN base_shop bs ON bu.org_id = bs.shop_id
+        where
+        (bsd.shop_id is not null and bsd.shop_id !='') or (bs.shop_id  is not null and bs.shop_id !='')
+        ) us,
+        base_shop bs
+        where us.enteId = #{staffAnalysisDto.enteId}
+        and us.shopId = bs.shop_id
+        <if test="staffAnalysisDto.shopIdList != null and staffAnalysisDto.shopIdList.size() > 0 ">
+            and us.shopId in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="staffAnalysisDto.shopTypeIdList != null and staffAnalysisDto.shopTypeIdList.size() > 0 ">
+            and bs.shop_type_id in
+            <foreach collection="staffAnalysisDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+    </select>
+
+    <!--根据条件查询员工人数，试用期人数，当期入职人数，离职人数数据 根据门店-->
+    <select id="findStaffNumListShop"  parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto"
+            resultType="com.njwd.entity.reportdata.vo.StaffTypeInfoVo">
+        SELECT
+        us.shopId,
+        sum( case when us.hiredate &lt;= #{staffAnalysisDto.endDate}
+        and (us.leavedate is null or us.leavedate >= #{staffAnalysisDto.beginDate})  then 1 else  0 end ) hireNum,
+        sum( case when  us.leavedate between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate} then 1 else  0 end ) leaveNum,
+        sum( case when   (us.hiredate between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate})
+        or (us.hiredate &lt; #{staffAnalysisDto.beginDate} and us.positive_time >= #{staffAnalysisDto.beginDate})  then 1 else  0 end ) positiveNum,
+        sum( case when  us.hiredate between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate} then 1 else  0 end ) currentNum
+        FROM
+        (
+        SELECT
+        bu.hiredate,
+        bu.positive_time ,
+        bu.leavedate,
+        bu.ente_id enteId,
+        COALESCE ( bsd.shop_id, bs.shop_id ) shopId
+        FROM
+        base_user bu
+        LEFT JOIN base_shop_dept bsd ON bu.org_id = bsd.shop_dept_id
+        LEFT JOIN base_shop bs ON bu.org_id = bs.shop_id
+        where
+        (bsd.shop_id is not null and bsd.shop_id !='') or (bs.shop_id  is not null and bs.shop_id !='')
+        ) us,
+        base_shop bs
+        where us.enteId = #{staffAnalysisDto.enteId}
+        and us.shopId = bs.shop_id
+        <if test="staffAnalysisDto.shopIdList != null and staffAnalysisDto.shopIdList.size() > 0 ">
+            and us.shopId in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="staffAnalysisDto.shopTypeIdList != null and staffAnalysisDto.shopTypeIdList.size() > 0 ">
+            and bs.shop_type_id in
+            <foreach collection="staffAnalysisDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        group by us.shopId
+    </select>
+
+    <!--根据条件查询门店员工工作时长数据-->
+    <select id="findStaffWorkHoursList"  parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto"
+            resultType="com.njwd.entity.reportdata.vo.StaffWorkHoursVo">
+      SELECT
+           count(ha.user_id) peopleNum ,
+            bs.shop_id ,
+            sum( ha.attend_hour)  workHours
+        FROM
+        (
+        SELECT
+        bu.user_id,
+        COALESCE ( bsd.shop_id, bs.shop_id ) shopId
+        FROM
+        base_user bu
+        LEFT JOIN base_shop_dept bsd ON bu.org_id = bsd.shop_dept_id
+        LEFT JOIN base_shop bs ON bu.org_id = bs.shop_id
+        where
+        (bsd.shop_id is not null and bsd.shop_id !='') or (bs.shop_id  is not null and bs.shop_id !='')
+        ) us,
+         hr_attend ha ,
+         base_shop bs
+        where bs.ente_id = #{staffAnalysisDto.enteId}
+        and us.shopId = bs.shop_id
+        and  us.user_id = ha.user_id
+        and  ha.attend_hour > 0
+        and shift_id != '0'
+        and ha.attend_date between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate}
+        <if test="staffAnalysisDto.shopIdList != null and staffAnalysisDto.shopIdList.size() > 0 ">
+            and bs.shop_id in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="staffAnalysisDto.shopTypeIdList != null and staffAnalysisDto.shopTypeIdList.size() > 0 ">
+            and bs.shop_type_id in
+            <foreach collection="staffAnalysisDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        group by shop_id
+    </select>
+
+    <!--根据条件查询前厅后厨员工人数数据-->
+    <select id="findStaffListByNo"  parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto"
+            resultType="com.njwd.entity.reportdata.vo.EfficiencyPerCapitaVo">
+        SELECT
+        bsd.shop_id shopId,
+        SUM ( CASE WHEN bsd.shop_dept_no = '0' and ha.attend_date between #{staffAnalysisDto.beginDate} and  #{staffAnalysisDto.endDate} and ha.attend_hour>0 THEN 1 ELSE 0 END ) staffNum,
+        SUM ( CASE WHEN bsd.shop_dept_no = '1'  and ha.attend_date between #{staffAnalysisDto.beginDate} and  #{staffAnalysisDto.endDate} and ha.attend_hour>0 THEN 1 ELSE 0 END ) backStaffNum,
+        SUM ( CASE WHEN bsd.shop_dept_no = '0'  and ha.attend_date between #{staffAnalysisDto.lastYearBeginDate} and  #{staffAnalysisDto.lastYearEndDate} and ha.attend_hour>0  THEN 1 ELSE 0 END ) lastStaffNum,
+        SUM ( CASE WHEN bsd.shop_dept_no = '1'  and ha.attend_date between #{staffAnalysisDto.lastYearBeginDate} and  #{staffAnalysisDto.lastYearEndDate} and ha.attend_hour>0 THEN 1 ELSE 0 END ) lastBackStaffNum
+        FROM
+        hr_attend ha,
+        base_user bu,
+        base_shop_dept bsd,
+        base_shop	bs
+        where bs.ente_id = #{staffAnalysisDto.enteId}
+        and ha.user_id = bu.user_id
+        and bu.org_id = bsd.shop_dept_id
+        and bsd.shop_dept_no is not null
+        and bsd.shop_id = bs.shop_id
+        <if test="staffAnalysisDto.shopIdList != null and staffAnalysisDto.shopIdList.size() > 0 ">
+            and bs.shop_id in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="staffAnalysisDto.shopTypeIdList != null and staffAnalysisDto.shopTypeIdList.size() > 0 ">
+            and bs.shop_type_id in
+            <foreach collection="staffAnalysisDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        group by shopId
+    </select>
+
+    <!--根据条件查询客流人数数据-->
+    <select id="findCustomNumByShop" resultType="com.njwd.entity.reportdata.vo.EfficiencyPerCapitaVo" parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto" >
+        SELECT
+        SUM ( CASE
+        WHEN account_date between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate}  THEN client_count
+        ELSE 0
+        END ) customNum,
+        SUM ( CASE
+        WHEN account_date between #{staffAnalysisDto.lastYearBeginDate} and #{staffAnalysisDto.lastYearEndDate}  THEN client_count
+        ELSE 0
+        END ) lastCustomNum,
+        shop_id shopId
+        FROM
+        rep_pos_desk
+        WHERE
+        ente_id = #{staffAnalysisDto.enteId}
+        and is_noopentable = 1
+        and def1 = '1'
+        <if test="staffAnalysisDto.shopIdList != null and staffAnalysisDto.shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="staffAnalysisDto.shopTypeIdList != null and staffAnalysisDto.shopTypeIdList.size() > 0 ">
+            and shop_type_id in
+            <foreach collection="staffAnalysisDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        GROUP BY
+        shop_id
+    </select>
+
+    <!--根据条件查询菜品数量数据-->
+    <select id="findDishesNumByShop" resultType="com.njwd.entity.reportdata.vo.EfficiencyPerCapitaVo" parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto" >
+        SELECT
+        SUM ( CASE
+        WHEN account_date between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate}  THEN food_num
+        ELSE 0
+        END ) dishesNum,
+        SUM ( CASE
+        WHEN account_date between #{staffAnalysisDto.lastYearBeginDate} and #{staffAnalysisDto.lastYearEndDate}   THEN food_num
+        ELSE 0
+        END ) lastDishesNum,
+        shop_id shopId
+        FROM
+        rep_pos_detail_food
+        WHERE
+        ente_id = #{staffAnalysisDto.enteId}
+        AND is_package ='0'
+        <if test="staffAnalysisDto.shopIdList != null and staffAnalysisDto.shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="staffAnalysisDto.shopTypeIdList != null and staffAnalysisDto.shopTypeIdList.size() > 0 ">
+            and shop_type_id in
+            <foreach collection="staffAnalysisDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        GROUP BY
+       shop_id
+    </select>
+
+    <!--人效分析
+    <select id="findEffectAnalysis" resultType="com.njwd.entity.reportdata.vo.EffectAnalysisVo" parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto" >
+        select s.brand_id,s.brand_name,s.region_id,s.region_name,s.shop_id,s.shop_name
+        ,(select count(DISTINCT user_id) from hr_attend h where h.user_id in (select user_id from base_user u
+        where u.org_id in (select d.shop_dept_id from base_shop s, base_shop_dept d where s.shop_id=d.shop_id
+        and s.shop_id in
+        <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+        and s.ente_id=#{staffAnalysisDto.enteId}))
+        and h.attend_date between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate} and h.ente_id=#{staffAnalysisDto.enteId}) user_num
+        ,sum(COALESCE(d.amount,0)) currAmount
+        from base_shop s
+        left join rep_pos_desk d on s.shop_id=d.shop_id and s.ente_id=d.ente_id
+        and d.account_date between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate}
+        and d.shop_id in
+        <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+        and d.ente_id=#{staffAnalysisDto.enteId}
+        where s.shop_id in
+        <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+        and s.ente_id=#{staffAnalysisDto.enteId}
+        group by s.brand_id,s.brand_name,s.region_id,s.region_name,s.shop_id,s.shop_name
+    </select>-->
+    <!--人效分析-->
+    <!-- 查询门店员工信息-->
+    <select id="findUserInfoByShopIds" resultType="com.njwd.entity.basedata.vo.BaseUserVo" parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto">
+        select u.user_id,u.user_name,t.shop_id shop_id,u.ente_id  from base_user u,base_shop_dept t where u.org_id=t.shop_dept_id and u.ente_id=t.ente_id
+        and u.org_id in
+        (select d.shop_dept_id from base_shop_dept d  where  d.shop_id in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        )
+        union all
+        select u.user_id,u.user_name,t.shop_id shop_id,u.ente_id  from base_user u,base_shop t where u.org_id=t.shop_id and u.ente_id=t.ente_id
+        and t.shop_id in
+        <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+    </select>
+    <!--<select id="findUserNumByShopIds" resultType="com.njwd.entity.reportdata.vo.EffectAnalysisVo" parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto">
+        select COALESCE(sum(currStaffNum),0) currStaffNum, COALESCE(sum(prevStaffNum),0)
+        prevStaffNum,COALESCE(sum(lastYearStaffNum),0) lastYearStaffNum, shopId from
+        (
+            select count(h.user_id) currStaffNum,0 prevStaffNum,0 lastYearStaffNum,u.shop_id shopId from hr_attend h
+            inner join (
+                select u.user_id,u.user_name,t.shop_id shop_id,u.ente_id from base_user u,base_shop_dept t where
+                u.org_id=t.shop_dept_id and u.ente_id=t.ente_id
+                and u.org_id in
+                (select d.shop_dept_id from base_shop_dept d where d.shop_id in
+                <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                    #{shopId}
+                </foreach>
+                )
+                union all
+                select u.user_id,u.user_name,t.shop_id shop_id,u.ente_id from base_user u,base_shop t where u.org_id=t.shop_id
+                and u.ente_id=t.ente_id
+                and t.shop_id in
+                <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                    #{shopId}
+                </foreach>
+            ) u on h.user_id=u.user_id
+            where attend_hour>0 and h.attend_date between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate}  and h.ente_id=#{staffAnalysisDto.enteId}
+            group by shop_id
+            union all
+            select 0 currStaffNum,count(h.user_id) prevStaffNum,0 lastYearStaffNum,u.shop_id shopId from hr_attend h
+            inner join (
+            select u.user_id,u.user_name,t.shop_id shop_id,u.ente_id from base_user u,base_shop_dept t where
+            u.org_id=t.shop_dept_id and u.ente_id=t.ente_id
+            and u.org_id in
+            (select d.shop_dept_id from base_shop_dept d where d.shop_id in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+            )
+            union all
+            select u.user_id,u.user_name,t.shop_id shop_id,u.ente_id from base_user u,base_shop t where u.org_id=t.shop_id
+            and u.ente_id=t.ente_id
+            and t.shop_id in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+            ) u on h.user_id=u.user_id
+            where  attend_hour>0 and h.attend_date between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate}  and h.ente_id=#{staffAnalysisDto.enteId}
+            group by shop_id
+            union all
+            select 0 currStaffNum,0 prevStaffNum,count(h.user_id) lastYearStaffNum,u.shop_id shopId from hr_attend h
+            inner join (
+            select u.user_id,u.user_name,t.shop_id shop_id,u.ente_id from base_user u,base_shop_dept t where
+            u.org_id=t.shop_dept_id and u.ente_id=t.ente_id
+            and u.org_id in
+            (select d.shop_dept_id from base_shop_dept d where d.shop_id in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+            )
+            union all
+            select u.user_id,u.user_name,t.shop_id shop_id,u.ente_id from base_user u,base_shop t where u.org_id=t.shop_id
+            and u.ente_id=t.ente_id
+            and t.shop_id in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+            ) u on h.user_id=u.user_id
+            where attend_hour>0 and h.attend_date between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate}  and h.ente_id=#{staffAnalysisDto.enteId}
+            group by shop_id
+        ) t
+        group by shopId;
+    </select>-->
+    <select id="findUserNumByShopIds" resultType="com.njwd.entity.reportdata.vo.EffectAnalysisVo" parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto">
+        select
+        count(case when attend_date between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate} then user_id else null end) as currStaffNum,
+        count(case when attend_date between #{staffAnalysisDto.prevBeginDate} and #{staffAnalysisDto.prevEndDate} then user_id else null end) as prevStaffNum,
+        count(case when attend_date between #{staffAnalysisDto.lastYearBeginDate} and #{staffAnalysisDto.lastYearEndDate} then user_id else null end) as lastYearStaffNum,
+        user_Id AS userId
+        from hr_attend
+        WHERE
+        user_id in
+        <foreach collection="staffAnalysisDto.userIdList" item="userId" separator="," open="(" close=")">
+            #{userId}
+        </foreach>
+        and  attend_hour>0
+        and  ente_id=#{staffAnalysisDto.enteId}
+        and shift_id != '0'
+        group by
+        user_id
+        ORDER BY
+        USER_ID
+    </select>
+    <select  id="findUserIdListByShopIds" resultType="String" parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto">
+        select  user_id from base_user u where  u.org_id in (
+            select d.shop_dept_id from base_shop_dept d  where  d.shop_id in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+              #{shopId}
+            </foreach>
+          )
+        and u.ente_id=#{staffAnalysisDto.enteId}
+    </select>
+    <select id="findEffectAnalysis" resultType="com.njwd.entity.reportdata.vo.EffectAnalysisVo" parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto" >
+        select  'shop' "type",
+        s.shop_id typeId,
+        s.brand_id brandId,
+        s.brand_name brandName,
+        s.region_id regionId,
+        s.region_name regionName,
+        s.shop_id shopId,
+        s.shop_name shopName ,
+        sum(case when account_date between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate} then (coalesce(s.amount,0)+coalesce(s.money_over_charge,0)) else 0 end) as currAmount,
+        sum(case when account_date between #{staffAnalysisDto.prevBeginDate} and #{staffAnalysisDto.prevEndDate} then (coalesce(s.amount,0)+coalesce(s.money_over_charge,0)) else 0 end) as prevAmount,
+        sum(case when account_date between #{staffAnalysisDto.lastYearBeginDate} and #{staffAnalysisDto.lastYearEndDate} then (coalesce(s.amount,0)+coalesce(s.money_over_charge,0)) else 0 end) as lastYearAmount
+        from rep_pos_desk s
+        where s.shop_id in
+        <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+        group by s.shop_id,s.brand_id,s.brand_name,s.region_id,s.region_name,s.shop_name
+        order by
+        s.shop_id;
+    </select>
+    <!--品牌奖金-->
+    <select  id="findUserInfoListByShopIds" resultType="com.njwd.entity.reportdata.vo.BrandBonusVo" parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto">
+        select u.user_id,u.user_name,u.positive_time,org_id region_id,u.hiredate  from base_user u
+        where post_id in (select post_id from base_post where post_name like  #{staffAnalysisDto.postName} and ente_id=#{staffAnalysisDto.enteId})
+        <!--union all
+        select u.user_name,u.positive_time,t.shop_id shop_id  from base_user u,base_shop_dept t where u.org_id=t.shop_dept_id and u.ente_id=t.ente_id
+        and u.post_id in (select post_id from base_post where post_name like #{staffAnalysisDto.postName} and ente_id=#{staffAnalysisDto.enteId})
+        and u.org_id in (select d.shop_dept_id from base_shop_dept d  where  d.shop_id in
+        <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+        )-->
+    </select>
+
+    <select id="findShopInfo" resultType="com.njwd.entity.reportdata.vo.BrandBonusVo" parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto">
+        select
+        'shop' "type",
+        bs.shop_id type_id,
+        bs.shop_id ,
+        bs.shop_name ,
+        bs.status ,
+        bb.brand_name ,
+        bs.region_name ,
+        bs.region_id ,
+        bs.brand_id ,
+        bb.brand_code
+        from base_shop bs,base_brand bb
+        where bs.ente_id = #{staffAnalysisDto.enteId}
+        and bs.status = 0
+        <if test="staffAnalysisDto.shopIdList != null and staffAnalysisDto.shopIdList.size() > 0 ">
+            and bs.shop_id in
+            <foreach collection="staffAnalysisDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="staffAnalysisDto.shopTypeIdList!=null and staffAnalysisDto.shopTypeIdList.size()>0">
+            and bs.shop_type_id in
+            <foreach collection="staffAnalysisDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        and bb.ente_id = bs.ente_id
+        and bs.brand_id = bb.brand_id
+        order by brand_code,region_name
+    </select>
+    <select id="findDictListByModelName" parameterType="map" resultType="com.njwd.entity.reportdata.vo.DictVo">
+        select * from wd_dict where model_name in
+        <foreach collection="modelNameList" item="modelName" separator="," open="(" close=")">
+            #{modelName}
+        </foreach>
+        and ente_id = #{enteId}
+    </select>
+
+    <select id="findUserAttendHour"  resultType="com.njwd.entity.reportdata.vo.BrandBonusVo" parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto">
+        select h.user_id ,sum(attend_hour) attend_hour from hr_attend h
+        where h.attend_date between to_date(#{staffAnalysisDto.beginDate},'yyyy-MM-dd') and to_date(#{staffAnalysisDto.endDate},'yyyy-MM-dd')
+        and user_id in
+        <foreach collection="staffAnalysisDto.userIdList" item="userId" separator="," open="(" close=")">
+            #{userId}
+        </foreach>
+        and h.ente_id=#{staffAnalysisDto.enteId}
+        group by h.user_id
+    </select>
+    <select id="findUserLeaveHour"  resultType="com.njwd.entity.reportdata.vo.BrandBonusVo" parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto">
+        select h.user_id ,sum(leave_hour) leave_hour from hr_leave h ,hr_leave_type t
+        where h.leave_type_id=t.leave_type_id and h.ente_id=t.ente_id and h.status in (2,11)
+        and h.start_time between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate}
+        and h.end_time between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate}
+        and user_id in
+        <foreach collection="staffAnalysisDto.userIdList" item="userId" separator="," open="(" close=")">
+            #{userId}
+        </foreach>
+        and h.ente_id=#{staffAnalysisDto.enteId}
+        group by h.user_id
+    </select>
+    <select id="findNetProfitList"  parameterType="com.njwd.entity.reportdata.dto.SalaryAnalysisDto"  resultType="com.njwd.entity.reportdata.vo.BrandBonusVo">
+        SELECT
+        shop_id shopId,
+        sum(case when period_year_num >= #{queryDto.beginNum} and period_year_num &lt;= #{queryDto.endNum} then amount_balance else 0 end) as netProfit
+        FROM
+        fin_report_table
+        WHERE
+        ente_id = #{queryDto.enteId}
+        and  report_id = 2
+        and  item_name = '五、净利润'
+        <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="queryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size() > 0 ">
+            and shop_type_id in
+            <foreach collection="queryDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        GROUP BY
+        shop_id
+    </select>
+
+    <select id="findUserStandardHour"  resultType="com.njwd.entity.reportdata.vo.BrandBonusVo" parameterType="com.njwd.entity.reportdata.dto.StaffAnalysisDto">
+        select s.user_id, (s.attend_hour + s.leave_hour + s.overtime_hour) as standardHour
+        from (
+            select
+            s.user_id,
+            COALESCE(sum(s.attend_hour),0) attend_hour,
+            COALESCE(sum(s.leave_hour),0) leave_hour,
+            COALESCE(sum(s.overtime_hour),0) overtime_hour
+            from (
+            select user_id,COALESCE(sum(a.attend_hour),0) attend_hour,0 leave_hour,0 overtime_hour from  hr_attend a
+            where attend_date between to_date(#{staffAnalysisDto.beginDate},'yyyy-MM-dd') and to_date(#{staffAnalysisDto.endDate},'yyyy-MM-dd')
+            and a.shift_id != '1'
+            and a.user_id in
+            <foreach collection="staffAnalysisDto.userIdList" item="userId" separator="," open="(" close=")">
+                #{userId}
+            </foreach>
+            and ente_id=#{staffAnalysisDto.enteId}
+            group by a.user_id
+            union all
+            select user_id,0 attend_hour,COALESCE(sum(l.leave_hour),0) leave_hour,0 overtime_hour from hr_leave l,hr_leave_type t
+            where l.leave_type_id=t.leave_type_id and l.ente_id=t.ente_id
+            and l.start_time between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate}
+            and l.end_time between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate}
+            and l.status in (2, 11)
+            and user_id in
+            <foreach collection="staffAnalysisDto.userIdList" item="userId" separator="," open="(" close=")">
+                #{userId}
+            </foreach>
+            and l.ente_id=#{staffAnalysisDto.enteId}
+            group by  l.user_id
+            union all
+            select user_id,0 attend_hour,0 leave_hour,COALESCE(sum(o.hour),0) overtime_hour from hr_overtime o
+            where
+            o.start_time between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate}
+            and o.end_time between #{staffAnalysisDto.beginDate} and #{staffAnalysisDto.endDate}
+            and o.status in (2, 11) and o.overtime_type_id in ('1788724')
+            and user_id in
+            <foreach collection="staffAnalysisDto.userIdList" item="userId" separator="," open="(" close=")">
+                #{userId}
+            </foreach>
+            and ente_id=#{staffAnalysisDto.enteId}
+            group by o.user_id
+            ) s group by user_id
+        ) s
+    </select>
+</mapper>

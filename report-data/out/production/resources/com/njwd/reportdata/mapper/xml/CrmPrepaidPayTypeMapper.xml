@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportdata.mapper.CrmPrepaidPayTypeMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.CrmPrepaidPayType">
+    <!--@mbg.generated-->
+    <!--@Table crm_prepaid_pay_type-->
+    <id column="prepaid_pay_type_id" jdbcType="VARCHAR" property="prepaidPayTypeId" />
+    <result column="prepaid_id" jdbcType="VARCHAR" property="prepaidId" />
+    <result column="pay_type_id" jdbcType="VARCHAR" property="payTypeId" />
+    <result column="money" jdbcType="NUMERIC" property="money" />
+    <result column="shop_id" jdbcType="VARCHAR" property="shopId" />
+    <result column="app_id" jdbcType="VARCHAR" property="appId" />
+    <result column="ente_id" jdbcType="VARCHAR" property="enteId" />
+    <result column="prepaid_time" jdbcType="TIMESTAMP" property="prepaidTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    prepaid_pay_type_id, prepaid_id, pay_type_id, money, shop_id, app_id, ente_id, prepaid_time
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    <!--@mbg.generated-->
+    select 
+    <include refid="Base_Column_List" />
+    from crm_prepaid_pay_type
+    where prepaid_pay_type_id = #{prepaidPayTypeId,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String">
+    <!--@mbg.generated-->
+    delete from crm_prepaid_pay_type
+    where prepaid_pay_type_id = #{prepaidPayTypeId,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.njwd.entity.reportdata.CrmPrepaidPayType">
+    <!--@mbg.generated-->
+    insert into crm_prepaid_pay_type (prepaid_pay_type_id, prepaid_id, pay_type_id, 
+      money, shop_id, app_id, 
+      ente_id, prepaid_time)
+    values (#{prepaidPayTypeId,jdbcType=VARCHAR}, #{prepaidId,jdbcType=VARCHAR}, #{payTypeId,jdbcType=VARCHAR}, 
+      #{money,jdbcType=NUMERIC}, #{shopId,jdbcType=VARCHAR}, #{appId,jdbcType=VARCHAR}, 
+      #{enteId,jdbcType=VARCHAR}, #{prepaidTime,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" parameterType="com.njwd.entity.reportdata.CrmPrepaidPayType">
+    <!--@mbg.generated-->
+    insert into crm_prepaid_pay_type
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="prepaidPayTypeId != null">
+        prepaid_pay_type_id,
+      </if>
+      <if test="prepaidId != null">
+        prepaid_id,
+      </if>
+      <if test="payTypeId != null">
+        pay_type_id,
+      </if>
+      <if test="money != null">
+        money,
+      </if>
+      <if test="shopId != null">
+        shop_id,
+      </if>
+      <if test="appId != null">
+        app_id,
+      </if>
+      <if test="enteId != null">
+        ente_id,
+      </if>
+      <if test="prepaidTime != null">
+        prepaid_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="prepaidPayTypeId != null">
+        #{prepaidPayTypeId,jdbcType=VARCHAR},
+      </if>
+      <if test="prepaidId != null">
+        #{prepaidId,jdbcType=VARCHAR},
+      </if>
+      <if test="payTypeId != null">
+        #{payTypeId,jdbcType=VARCHAR},
+      </if>
+      <if test="money != null">
+        #{money,jdbcType=NUMERIC},
+      </if>
+      <if test="shopId != null">
+        #{shopId,jdbcType=VARCHAR},
+      </if>
+      <if test="appId != null">
+        #{appId,jdbcType=VARCHAR},
+      </if>
+      <if test="enteId != null">
+        #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="prepaidTime != null">
+        #{prepaidTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.reportdata.CrmPrepaidPayType">
+    <!--@mbg.generated-->
+    update crm_prepaid_pay_type
+    <set>
+      <if test="prepaidId != null">
+        prepaid_id = #{prepaidId,jdbcType=VARCHAR},
+      </if>
+      <if test="payTypeId != null">
+        pay_type_id = #{payTypeId,jdbcType=VARCHAR},
+      </if>
+      <if test="money != null">
+        money = #{money,jdbcType=NUMERIC},
+      </if>
+      <if test="shopId != null">
+        shop_id = #{shopId,jdbcType=VARCHAR},
+      </if>
+      <if test="appId != null">
+        app_id = #{appId,jdbcType=VARCHAR},
+      </if>
+      <if test="enteId != null">
+        ente_id = #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="prepaidTime != null">
+        prepaid_time = #{prepaidTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where prepaid_pay_type_id = #{prepaidPayTypeId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.njwd.entity.reportdata.CrmPrepaidPayType">
+    <!--@mbg.generated-->
+    update crm_prepaid_pay_type
+    set prepaid_id = #{prepaidId,jdbcType=VARCHAR},
+      pay_type_id = #{payTypeId,jdbcType=VARCHAR},
+      money = #{money,jdbcType=NUMERIC},
+      shop_id = #{shopId,jdbcType=VARCHAR},
+      app_id = #{appId,jdbcType=VARCHAR},
+      ente_id = #{enteId,jdbcType=VARCHAR},
+      prepaid_time = #{prepaidTime,jdbcType=TIMESTAMP}
+    where prepaid_pay_type_id = #{prepaidPayTypeId,jdbcType=VARCHAR}
+  </update>
+</mapper>

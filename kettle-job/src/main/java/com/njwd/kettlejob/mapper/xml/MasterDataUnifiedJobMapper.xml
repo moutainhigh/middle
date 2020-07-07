@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.kettlejob.mapper.MasterDataUnifiedJobMapper">
+
+    <!-- 根据数据类型获取企业主数据统一的应用列表 -->
+    <select id="getMasterDataAppList" resultType="com.njwd.entity.admin.vo.MasterDataAppVo">
+        SELECT
+          b.ente_id enterpriseId,
+          a.app_id appId,
+          c.app_name appName,
+          a.data_type dataType,
+          d.source_id sourceId
+        FROM
+        (select t.* from wd_data_app_config t where t.data_type = 'user' and t.type = '0') a
+          left join wd_ente_app b on a.app_id = b.app_id
+          left join wd_app c on c.app_id = b.app_id
+          left join (
+            select
+              ps.source_id,
+              ps.ente_id,
+              ps.app_id
+            from
+              wd_primary_source ps
+            where
+              ps.delete_flag = 0
+            and ps.data_type = #{dataType}
+          ) d on d.ente_id = b.ente_id
+          and d.app_id = a.app_id
+        WHERE
+          a.data_type = #{dataType}
+          AND b.ente_id = #{enterpriseId}
+          <if test="appId != null and appId != ''">
+              and a.app_id = #{appId}
+          </if>
+        order by
+          d.source_id desc
+    </select>
+    
+    <select id="selectColumnByDataType" parameterType="com.njwd.entity.admin.dto.MasterDataUnifiedDto" resultType="String">
+        select
+          GROUP_CONCAT(
+            DISTINCT CONCAT(
+              #{aliasName}, '.', a.column_name, ' ', a.column_alias,
+              "##"
+            ) order by a.display_order asc
+          ) queryColumn
+        from
+          wd_table_attribute a
+        where
+          a.table_name = #{tableName}
+          and a.display_flag = '1'
+          order by a.display_order asc
+    </select>
+    
+    <select id="getMasterDataList" parameterType="com.njwd.entity.admin.dto.MasterDataUnifiedDto" resultType="java.util.LinkedHashMap">
+        SELECT
+          ${selectFields}
+        FROM
+          base_${dataType} Base
+          left JOIN (select t.* from base_${dataType}_rela t where t.app_id = #{masterDataAppId} and t.ente_id = #{enterpriseId}) masterData ON Base.${dataType}_id = masterData.${dataType}_id
+          and Base.ente_id = masterData.ente_id
+          <if test="leftJoinSql != null and leftJoinSql != ''">
+              ${leftJoinSql}
+          </if>
+        WHERE
+           Base.ente_id = #{enterpriseId}
+        order by
+          ${orderByStr}
+    </select>
+
+    <select id="selectPrimaryJointFields" parameterType="String" resultType="com.njwd.entity.admin.vo.TableAttributeVo">
+        select
+          t.table_name tableName,
+          t.column_name columnName,
+          t.column_desc columnDesc,
+          t.column_alias columnAlias,
+          t.display_flag displayFlag,
+          t.display_order displayOrder
+        from
+          wd_table_attribute t
+        where
+          t.table_name = #{tableName}
+          and t.display_flag = '1'
+        order by
+          t.display_order
+    </select>
+
+    <select id="getMasterDataListByPerspective" parameterType="com.njwd.entity.admin.dto.DataMatchDto" resultType="java.util.LinkedHashMap">
+        SELECT
+           ${selectFields}
+        FROM
+            ${masterTableName} Base
+        <if test="leftJoinSql != null and leftJoinSql != ''">
+            ${leftJoinSql}
+        </if>
+        WHERE
+            Base.ente_id = #{enterpriseId}
+            and Rela.app_id = #{appId}
+        order by
+            ${orderByStr}
+    </select>
+
+    <update id="dataMathBatchByMinPlat" parameterType="java.util.List">
+        <foreach collection="list" item="bean" index="index" open="" close="" separator=";">
+            UPDATE base_${bean.dataType}_rela
+            <set>
+                ${bean.dataType}_id = #{bean.midPlatId}
+            </set>
+            <where>
+                third_${bean.dataType}_id = #{bean.thirdId}
+                and app_id = #{bean.appId} and ente_id = #{bean.enterpriseId}
+            </where>
+        </foreach>
+    </update>
+
+    <select id="queryAppNotMatchDataList" parameterType="com.njwd.entity.admin.dto.DataMatchDto" resultType="java.util.LinkedHashMap">
+        select
+          ${selectFields}
+        from
+          base_${dataType}_rela Rela
+        where
+          Rela.${dataType}_id = ''
+          and Rela.app_id = #{appId}
+          and Rela.ente_id = #{enterpriseId}
+        <if test="orderByStr != null and orderByStr != ''">
+            order by
+            ${orderByStr}
+        </if>
+
+    </select>
+
+    <select id="queryMidPlatNotMatchDataList" parameterType="com.njwd.entity.admin.dto.DataMatchDto" resultType="java.util.LinkedHashMap">
+        select
+          ${selectFields}
+        from
+          base_${dataType} Base
+          inner join (select t1.* from base_${dataType}_rela t1 where t1.${dataType}_id = '' and t1.app_id = #{appId} and t1.ente_id = #{enterpriseId}) b on Base.ente_id = b.ente_id
+          left join (select t2.* from base_${dataType}_rela t2 where t2.app_id = #{appId} and t2.ente_id = #{enterpriseId}) c on Base.ente_id = c.ente_id
+          and Base.${dataType}_id = c.${dataType}_id
+        where
+          c.${dataType}_id is null
+          and Base.ente_id = #{enterpriseId}
+        <if test="orderByStr != null and orderByStr != ''">
+            order by
+            ${orderByStr}
+        </if>
+    </select>
+
+    <select id="queryDataUniformField" parameterType="com.njwd.entity.admin.dto.MasterDataUnifiedFieldDto" resultType="String">
+        select
+          GROUP_CONCAT(
+            DISTINCT CONCAT(#{aliasName}, '.', a.column_name)
+            order by
+              a.display_order asc
+          ) queryColumn
+        from
+          wd_table_attribute a
+        where
+          a.table_name = #{tableName}
+          and a.display_flag = '1'
+          and a.column_name != '${dataType}_id'
+        order by
+          a.display_order asc
+    </select>
+
+    <insert id="saveMidPlatDataFromRela" parameterType="com.njwd.entity.admin.dto.MasterDataUnifiedDto">
+        replace INTO ${tableName}
+        (${insertFields})
+        (
+            SELECT
+                ${selectFields}
+            FROM
+                ${relaTableName} Rela
+                where Rela.app_id = #{appId} and Rela.ente_id = #{enterpriseId}  and (Rela.${dataType}_id is null or Rela.${dataType}_id = '')
+        )
+    </insert>
+    
+    <update id="dataWriteBackForId" parameterType="com.njwd.entity.admin.dto.MasterDataUnifiedDto">
+        UPDATE
+          ${relaTableName} r
+          LEFT JOIN (select t.* from ${tableName} t where t.ente_id = #{enterpriseId}) d ON r.ente_id = d.ente_id
+          AND r.third_${dataType}_id = d.third_${dataType}_id
+        SET
+          r.${dataType}_id = d.${dataType}_id
+        where
+          r.ente_id = #{enterpriseId}
+          and r.app_id = #{appId}
+    </update>
+
+    <update id="dataWriteBackForIdMany" parameterType="com.njwd.entity.admin.dto.MasterDataUnifiedDto">
+        UPDATE
+        ${relaTableName} r
+        LEFT JOIN (select t.* from ${tableName} t where t.ente_id = #{enterpriseId}) d ON r.ente_id = d.ente_id
+        AND r.third_${dataType}_id = d.third_${dataType}_id
+        SET
+        r.${dataType}_id = d.${dataType}_id
+        where
+        r.ente_id = #{enterpriseId}
+        <if test="queryConditionStr != null and queryConditionStr != ''">
+            ${queryConditionStr}
+        </if>
+    </update>
+
+    <update id="dataWriteBackForIdManyV2" parameterType="com.njwd.entity.admin.dto.MasterDataUnifiedDto">
+        UPDATE
+        ${relaTableName} r
+        LEFT JOIN (select t.* from base_${dataType}_rela t where t.ente_id = #{enterpriseId}) d ON r.ente_id = d.ente_id
+        AND r.app_id = d.app_id AND r.third_${dataType}_id = d.third_${dataType}_id
+        SET
+        r.${dataType}_id = d.${dataType}_id
+        where
+        r.ente_id = #{enterpriseId}
+    </update>
+    
+    <select id="getDependentInfoByDataType" parameterType="com.njwd.entity.admin.dto.MasterDataUnifiedDto" resultType="com.njwd.entity.admin.vo.PrimaryRelyVo">
+        select
+          t.data_type,
+          t.rely_data,
+          t.rela_table,
+          t.base_table
+        from
+          wd_primary_rely t
+        where
+          t.data_type = #{dataType}
+          and t.base_table != #{tableName}
+          and t.type = 0
+    </select>
+
+    <select id="getBeDependentByRelyData" parameterType="com.njwd.entity.admin.dto.MasterDataUnifiedDto" resultType="com.njwd.entity.admin.vo.PrimaryRelyVo">
+        select
+          t.data_type,
+          t.rely_data,
+          t.rela_table,
+          t.base_table
+        from
+          wd_primary_rely t
+        where
+           t.rely_data = #{dataType}
+           and t.type = 0
+    </select>
+
+    <update id="idWriteBackForManyToMany" parameterType="com.njwd.entity.admin.dto.ManyToManyDataDto" >
+        UPDATE
+          base_${dataTypeFirst}_${dataTypeSecond}_rela r
+        LEFT JOIN (select t1.* from base_${dataTypeFirst}_rela t1 where t1.app_id = #{appId} and t1.ente_id = #{enterpriseId}) d ON r.third_ente_id = d.third_ente_id
+        AND r.third_${dataTypeFirst}_id = d.third_${dataTypeFirst}_id
+        LEFT JOIN (select t2.* from base_${dataTypeSecond}_rela t2 where t2.app_id = #{appId} and t2.ente_id = #{enterpriseId}) e on r.third_ente_id = e.third_ente_id
+        and r.third_${dataTypeSecond}_id = e.third_${dataTypeSecond}_id
+        SET
+          r.${dataTypeFirst}_id = d.${dataTypeFirst}_id,
+          r.${dataTypeSecond}_id = e.${dataTypeSecond}_id
+        where
+          r.ente_id = #{enterpriseId}
+          and r.app_id = #{appId}
+          and d.ente_id = #{enterpriseId}
+          and d.app_id = #{appId}
+          and e.ente_id = #{enterpriseId}
+          and e.app_id = #{appId}
+    </update>
+
+    <update id="dataMathBatchTask" parameterType="java.util.List">
+        <foreach collection="list" item="bean" index="index" open="" close="" separator=";">
+            update
+               ${bean.relaTable} Rela
+            left join (
+                select
+                   ${bean.baseQueryColumn}
+                from
+                   ${bean.baseTable} t
+                where
+                   t.ente_id = #{bean.enterpriseId}
+                   ${bean.baseQueryCondition}
+                ) Base
+            on ${bean.leftJoinOnCondition}
+            set Rela.${bean.dataType}_id = Base.${bean.dataType}_id
+            where
+               Rela.ente_id = #{bean.enterpriseId}
+            and Rela.app_id = #{bean.appId}
+            ${bean.relaQueryCondition}
+        </foreach>
+    </update>
+
+    <select id="getMasterAppData" parameterType="com.njwd.entity.admin.dto.MasterDataUnifiedDto" resultType="String">
+        SELECT
+            t.app_id
+        FROM
+            wd_primary_source t
+        WHERE
+            t.ente_id = #{enterpriseId}
+            AND t.data_type = #{dataType}
+            AND t.delete_flag = '0'
+    </select>
+</mapper>

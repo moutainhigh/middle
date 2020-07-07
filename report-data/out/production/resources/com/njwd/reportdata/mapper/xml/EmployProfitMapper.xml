@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.EmployProfitMapper">
+
+    <!-- 人均创利分析列表查询 -->
+    <select id="findEmployProfitList" resultType="com.njwd.entity.reportdata.vo.EmployeeProfitVo">
+        select s.ente_id,
+        s.brand_id,
+        b.brand_name,
+        s.region_id,
+        r.region_name,
+        s.shop_id,
+        s.shop_no,
+        s.shop_name,
+        s.amount_balance
+        from (
+        select s.ente_id,
+        s.brand_id,
+        s.region_id,
+        s.shop_id,
+        s.shop_no,
+        s.shop_name,
+        coalesce(sum(rt.amount_balance), 0) amount_balance
+        from (
+        select s.ente_id, s.brand_id, s.region_id, s.shop_id, s.shop_no, s.shop_name
+        from base_shop s
+        <where>
+            and s.ente_id = #{param.enteId}
+            <if test="param.shopIdList != null and param.shopIdList.size() > 0 ">
+                and s.shop_id in
+                <foreach
+                        collection="param.shopIdList"
+                        item="shopId"
+                        separator=","
+                        open="("
+                        close=")">
+                    #{shopId}
+                </foreach>
+            </if>
+            <if test="param.shopTypeIdList != null and param.shopTypeIdList.size() > 0 ">
+                and s.shop_type_id in
+                <foreach
+                        collection="param.shopTypeIdList"
+                        item="shopTypeId"
+                        separator=","
+                        open="("
+                        close=")">
+                    #{shopTypeId}
+                </foreach>
+            </if>
+        </where>
+        )s
+        left join fin_report_table rt on s.shop_id = rt.shop_id and rt.report_id = #{param.reportId} and rt.item_name =
+        '七、股东可分配利润' and rt.period_year_num = #{param.periodYearNum}
+        group by s.ente_id, s.brand_id, s.region_id, s.shop_id, s.shop_no, s.shop_name
+        ) s
+        left join base_brand b on s.brand_id = b.brand_id
+        left join base_region r on s.region_id = r.region_id
+        order by b.brand_code, r.region_code, s.shop_no
+    </select>
+
+
+    <!-- 标准工时 -->
+    <select id="findEmployeeNum" resultType="com.njwd.entity.reportdata.vo.EmployeeProfitVo">
+        select s.shop_id,
+        sum(s.hour) employee_num,
+        sum(case when s.type = '0' then s.hour else 0 end) waiter_num,
+        sum(case when s.type = '1' then s.hour else 0 end) kitchen_num
+        from (
+        select s.shop_id, s.type, s.user_id, (s.attend_hour + s.leave_hour + s.overtime_hour) as hour
+        from (
+        select s.shop_id,
+        s.type,
+        s.user_id,
+        s.attend_hour,
+        s.leave_hour,
+        COALESCE(sum(o.hour), 0) overtime_hour
+        from (
+        select s.shop_id, s.type, s.user_id, s.attend_hour, COALESCE(sum(l.leave_hour), 0) leave_hour
+        from (
+        select s.shop_id, s.type, s.user_id, COALESCE(sum(a.attend_hour), 0) attend_hour
+        from (
+        select s.shop_id, s.type, u.user_id
+        from (
+        select s.ente_id, s.shop_id, s2.type, s2.org_id org_id
+        from base_shop s
+        left join
+        (
+        select s.ente_id, s.shop_id, '-1' as type, s.shop_id org_id
+        from base_shop s
+        union all
+        select sd.ente_id,
+        sd.shop_id,
+        sd.shop_dept_no as type,
+        sd.shop_dept_id org_id
+        from base_shop_dept sd
+        ) s2 on s.shop_id = s2.shop_id
+        <where>
+            and s.ente_id = #{param.enteId}
+            <if test="param.shopIdList != null and param.shopIdList.size() > 0 ">
+                and s.shop_id in
+                <foreach
+                        collection="param.shopIdList"
+                        item="shopId"
+                        separator=","
+                        open="("
+                        close=")">
+                    #{shopId}
+                </foreach>
+            </if>
+            <if test="param.shopTypeIdList != null and param.shopTypeIdList.size() > 0 ">
+                and s.shop_type_id in
+                <foreach
+                        collection="param.shopTypeIdList"
+                        item="shopTypeId"
+                        separator=","
+                        open="("
+                        close=")">
+                    #{shopTypeId}
+                </foreach>
+            </if>
+        </where>
+        ) s
+        left join base_user u on s.org_id = u.org_id and s.ente_id = u.ente_id
+        ) s
+        left join hr_attend a on s.user_id = a.user_id and
+        a.attend_date &gt;= #{param.beginDate} and a.attend_date &lt; #{param.endDate}
+        and a.shift_id != '1'
+        where s.user_id is not null
+        group by s.shop_id, s.type, s.user_id1
+        ) s
+        left join hr_leave l on s.user_id = l.user_id
+        and l.start_time &gt;= #{param.beginDate} and l.start_time &lt; #{param.endDate}
+        and l.end_time &gt;= #{param.beginDate} and l.end_time &lt; #{param.endDate}
+        and l.status in (2, 11)
+        and l.leave_type_id in ('1788680','1788669')
+        group by s.shop_id, s.type, s.user_id, s.attend_hour
+        ) s
+        left join hr_overtime o on s.user_id = o.user_id
+        and o.start_time &gt;= #{param.beginDate} and o.start_time &lt; #{param.endDate}
+        and o.end_time &gt;= #{param.beginDate} and o.end_time &lt; #{param.endDate}
+        and o.status in (2, 11)
+        and o.overtime_id = '1788724'
+        group by s.shop_id, s.type, s.user_id, s.attend_hour, s.leave_hour
+        ) s
+        ) s
+        group by  s.shop_id
+    </select>
+</mapper>

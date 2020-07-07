@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.BaseShopMapper">
+
+    <resultMap id="BaseResultMap" type="com.njwd.entity.basedata.vo.BaseShopVo">
+    </resultMap>
+    <select id="findShopInfo" resultMap="BaseResultMap" parameterType="com.njwd.entity.basedata.dto.BaseShopDto">
+        select
+        bs.shop_id ,
+        bs.shop_name ,
+        bs.status ,
+        bb.brand_name ,
+        bs.region_name ,
+        bs.region_id ,
+        bs.brand_id ,
+        bb.brand_code
+        from base_shop bs,base_brand bb
+        where bs.ente_id = #{baseShopDto.enteId}
+        and bs.status = 0
+        <if test="baseShopDto.shopIdList != null and baseShopDto.shopIdList.size() > 0 ">
+            and bs.shop_id in
+            <foreach collection="baseShopDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="baseShopDto.shopTypeIdList!=null and baseShopDto.shopTypeIdList.size()>0">
+            and bs.shop_type_id in
+            <foreach collection="baseShopDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        <if test="baseShopDto.regionIdList!=null and baseShopDto.regionIdList.size()>0">
+            and bs.region_id in
+            <foreach collection="baseShopDto.regionIdList" item="regionId" separator="," open="(" close=")">
+                #{regionId}
+            </foreach>
+        </if>
+        and bb.ente_id = bs.ente_id
+        and bs.brand_id = bb.brand_id
+        order by brand_code,region_name
+    </select>
+
+    <select id="findShopInfoForArea" resultMap="BaseResultMap" parameterType="com.njwd.entity.basedata.dto.BaseShopDto">
+        SELECT
+        bs.shop_id,
+        bs.shop_name,
+        s.opening_date,
+        s.shop_area,
+        bs.status,
+        s.shutdown_date,
+        bb.brand_name,
+        bs.region_name,
+        bs.region_id,
+        bs.brand_id,
+        bb.brand_code,
+        s.add_profit
+        FROM
+        base_shop bs
+        LEFT JOIN base_brand bb ON bs.brand_id = bb.brand_id
+        LEFT JOIN wd_setting_base_shop s ON bs.SHOP_ID = s.shop_ID
+        where bs.ente_id = #{baseShopDto.enteId}
+        and bs.status = 0
+        <if test="baseShopDto.shopIdList != null and baseShopDto.shopIdList.size() > 0 ">
+            and bs.shop_id in
+            <foreach collection="baseShopDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="baseShopDto.shopTypeIdList!=null and baseShopDto.shopTypeIdList.size()>0">
+            and bs.shop_type_id in
+            <foreach collection="baseShopDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        <if test="baseShopDto.regionIdList!=null and baseShopDto.regionIdList.size()>0">
+            and bs.region_id in
+            <foreach collection="baseShopDto.regionIdList" item="regionId" separator="," open="(" close=")">
+                #{regionId}
+            </foreach>
+        </if>
+        order by brand_code,region_name
+    </select>
+
+    <select id="findShopDate" resultMap="BaseResultMap" parameterType="com.njwd.entity.basedata.dto.BaseShopDto">
+        SELECT
+        bs.shop_id,
+        s.opening_date,
+        s.shutdown_date
+        FROM
+        base_shop bs
+        LEFT JOIN wd_setting_base_shop s ON bs.SHOP_ID = s.shop_ID and s.status = 1
+        where bs.ente_id = #{baseShopDto.enteId}
+        and bs.status = 0
+        <if test="baseShopDto.shopIdList != null and baseShopDto.shopIdList.size() > 0 ">
+            and bs.shop_id in
+            <foreach collection="baseShopDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="baseShopDto.shopTypeIdList!=null and baseShopDto.shopTypeIdList.size()>0">
+            and bs.shop_type_id in
+            <foreach collection="baseShopDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+    </select>
+
+    <!-- 查询门店下拉 -->
+    <select id="findShopList"  resultType="com.njwd.entity.basedata.vo.BaseShopVo">
+        SELECT
+            shop_id,
+            shop_name
+        FROM base_shop
+    </select>
+
+    <select id="findShopDetail" resultType="com.njwd.entity.reportdata.vo.MembershipCardAnalysisVo"
+            parameterType="com.njwd.entity.reportdata.dto.MembershipCardAnalysisDto">
+        select
+        bs.ente_id enteId,
+        bs.shop_id shopId,
+        bs.shop_name shopName,
+        bs.brand_name brandName,
+        bs.region_name regionName,
+        bs.region_id regionId,
+        bs.brand_id brandId
+        from base_shop bs
+        where bs.ente_id = #{queryDto.enteId}
+        <if test="queryDto.shopIdList != null and queryDto.shopIdList.size() > 0 ">
+            and bs.shop_id in
+            <foreach collection="queryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="queryDto.shopTypeIdList != null and queryDto.shopTypeIdList.size() > 0 ">
+            and bs.shop_type_id in
+            <foreach collection="queryDto.shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+        order by brandId,regionId
+    </select>
+    <update id="updateShopInfoById">
+    update base_shop
+    set
+      shop_area = #{baseShopDto.shopArea},
+      opening_date = #{baseShopDto.openingDate}
+    where
+      shop_id = #{baseShopDto.shopId}
+  </update>
+
+    <update id="changeShopStatusInfoById">
+    update base_shop
+    set
+      status = #{baseShopDto.status},
+      shutdown_date = #{baseShopDto.shutdownDate}
+    where
+      shop_id = #{baseShopDto.shopId}
+  </update>
+
+    <update id="updateShopInfoList" parameterType="java.util.List">
+        <foreach collection="baseShopVoList" item="item">
+            update base_shop
+            <set>
+                <if test="item.openingDate != null ">
+                    opening_date = #{item.openingDate},
+                </if>
+                <if test="item.shopArea != null">
+                    shop_area = #{item.shopArea},
+                </if>
+                <if test="item.status != null">
+                    status = #{item.status},
+                </if>
+                <if test="item.shutdownDate!= null">
+                    shutdown_date = #{item.shutdownDate}
+                </if>
+            </set>
+            where brand_name = #{item.brandName} and region_name = #{item.regionName} and shop_name = #{item.shopName}
+            and opening_date is null;
+        </foreach>
+    </update>
+
+    <update id="updateShopShutdownDate">
+    update rea_base_shop_opening
+    set
+      shutdown_date = #{baseShopDto.shutdownDate}
+    where
+      shop_id = #{baseShopDto.shopId}
+      and shutdown_date is null
+      order by opening_date
+      limit 1
+  </update>
+
+    <insert id="insertShopOpeningDate">
+    insert into rea_base_shop_opening(
+      opening_date,
+      shop_id,
+      shutdown_date
+    )
+    select
+      #{baseShopDto.openingDate},
+      #{baseShopDto.shopId},
+      #{baseShopDto.shutdownDate}
+    from dual
+    where not exists
+    ( select 1 from rea_base_shop_opening where shop_id = #{baseShopDto.shopId} and shutdown_date is null)
+  </insert>
+
+    <update id="insertReaShopInfoList" parameterType="java.util.List">
+        <foreach collection="baseShopVoList" item="item">
+            insert into rea_base_shop_opening(
+            shop_id,
+            opening_date,
+            shutdown_date
+            )
+            select
+            bs.shop_id,
+            #{item.openingDate},
+            #{item.shutdownDate}
+            from base_shop bs,base_brand bb,base_region br
+            where bb.brand_name = #{item.brandName} and br.region_name = #{item.regionName} and bs.
+            shop_name = #{item.shopName}
+            and bs.brand_id = bb.brand_id and bs.region_id = br.region_id
+            and not exists
+            ( select 1 from rea_base_shop_opening rb where rb.shop_id = bs.shop_id );
+        </foreach>
+    </update>
+
+</mapper>

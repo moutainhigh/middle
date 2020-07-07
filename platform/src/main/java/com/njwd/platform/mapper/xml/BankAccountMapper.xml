@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.platform.mapper.BankAccountMapper">
+  <resultMap id="BaseResultMap" type="com.njwd.entity.platform.vo.BankAccountVo">
+    <id column="bank_account_id" jdbcType="BIGINT" property="bankAccountId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="account_type" jdbcType="BIT" property="accountType" />
+    <result column="account_name" jdbcType="VARCHAR" property="accountName" />
+    <result column="account_number" jdbcType="VARCHAR" property="accountNumber" />
+    <result column="bank_name" jdbcType="VARCHAR" property="bankName" />
+    <result column="linkman" jdbcType="VARCHAR" property="linkman" />
+    <result column="mobile" jdbcType="VARCHAR" property="mobile" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="is_del" jdbcType="BIT" property="isDel" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    bank_account_id, user_id, account_type, account_name, account_number, bank_name, 
+    linkman, mobile, create_time, update_time, is_del
+  </sql>
+  <select id="selectAccount" parameterType="com.njwd.entity.platform.dto.BankAccountDto" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from wd_bank_account
+    where 1=1 and is_del = 0
+    <if test="accountNumber != null and accountNumber !=''">
+      and account_number  = #{accountNumber}
+    </if>
+    <if test="userId != null and userId !=''">
+      and user_id  = #{userId}
+    </if>
+    <if test="bankAccountId != null ">
+      and bank_account_id  != #{bankAccountId}
+    </if>
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from wd_bank_account
+    where bank_account_id = #{bankAccountId,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" keyColumn="bank_account_id" keyProperty="bankAccountId" parameterType="com.njwd.entity.platform.dto.BankAccountDto" useGeneratedKeys="true">
+    insert into wd_bank_account (user_id, account_type, account_name, 
+      account_number, bank_name, linkman, 
+      mobile, create_time, update_time, 
+      is_del)
+    values (#{userId,jdbcType=VARCHAR}, #{accountType,jdbcType=BIT}, #{accountName,jdbcType=VARCHAR}, 
+      #{accountNumber,jdbcType=VARCHAR}, #{bankName,jdbcType=VARCHAR}, #{linkman,jdbcType=VARCHAR}, 
+      #{mobile,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}, 
+      #{isDel,jdbcType=BIT})
+  </insert>
+  <!--添加收款账户持久层-->
+  <insert id="insertBankAccount" keyColumn="bank_account_id" keyProperty="bankAccountId" parameterType="com.njwd.entity.platform.dto.BankAccountDto" useGeneratedKeys="true">
+    insert into wd_bank_account
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="accountType != null">
+        account_type,
+      </if>
+      <if test="accountName != null">
+        account_name,
+      </if>
+      <if test="accountNumber != null">
+        account_number,
+      </if>
+      <if test="bankName != null">
+        bank_name,
+      </if>
+      <if test="linkman != null">
+        linkman,
+      </if>
+      <if test="mobile != null">
+        mobile,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="isDel != null">
+        is_del,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        #{userId,jdbcType=VARCHAR},
+      </if>
+      <if test="accountType != null">
+        #{accountType,jdbcType=BIT},
+      </if>
+      <if test="accountName != null">
+        #{accountName,jdbcType=VARCHAR},
+      </if>
+      <if test="accountNumber != null">
+        #{accountNumber,jdbcType=VARCHAR},
+      </if>
+      <if test="bankName != null">
+        #{bankName,jdbcType=VARCHAR},
+      </if>
+      <if test="linkman != null">
+        #{linkman,jdbcType=VARCHAR},
+      </if>
+      <if test="mobile != null">
+        #{mobile,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isDel != null">
+        #{isDel,jdbcType=BIT},
+      </if>
+    </trim>
+  </insert>
+
+  <!--修改收款账户-->
+  <update id="updateBankAccount" parameterType="com.njwd.entity.platform.dto.BankAccountDto">
+    update wd_bank_account
+    <set>
+      <if test="userId != null">
+        user_id = #{userId,jdbcType=VARCHAR},
+      </if>
+      <if test="accountType != null">
+        account_type = #{accountType,jdbcType=BIT},
+      </if>
+      <if test="accountName != null">
+        account_name = #{accountName,jdbcType=VARCHAR},
+      </if>
+      <if test="accountNumber != null">
+        account_number = #{accountNumber,jdbcType=VARCHAR},
+      </if>
+      <if test="bankName != null">
+        bank_name = #{bankName,jdbcType=VARCHAR},
+      </if>
+      <if test="linkman != null">
+        linkman = #{linkman,jdbcType=VARCHAR},
+      </if>
+      <if test="mobile != null">
+        mobile = #{mobile,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isDel != null">
+        is_del = #{isDel,jdbcType=BIT},
+      </if>
+    </set>
+    where bank_account_id = #{bankAccountId,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.njwd.entity.platform.dto.BankAccountDto">
+    update wd_bank_account
+    set user_id = #{userId,jdbcType=VARCHAR},
+      account_type = #{accountType,jdbcType=BIT},
+      account_name = #{accountName,jdbcType=VARCHAR},
+      account_number = #{accountNumber,jdbcType=VARCHAR},
+      bank_name = #{bankName,jdbcType=VARCHAR},
+      linkman = #{linkman,jdbcType=VARCHAR},
+      mobile = #{mobile,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      is_del = #{isDel,jdbcType=BIT}
+    where bank_account_id = #{bankAccountId,jdbcType=BIGINT}
+  </update>
+
+  <!--逻辑删除收款账户-->
+  <update id="deleteBankAccount" parameterType="com.njwd.entity.platform.dto.BankAccountDto">
+    update wd_bank_account
+    set
+      is_del = 1
+    where bank_account_id = #{bankAccountId,jdbcType=BIGINT}
+  </update>
+</mapper>

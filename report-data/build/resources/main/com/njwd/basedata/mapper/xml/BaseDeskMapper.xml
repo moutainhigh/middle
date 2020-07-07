@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.basedata.mapper.BaseDeskMapper">
+    <select id="findDeskCountByOrgId" parameterType="BaseDeskDto" resultType="int">
+        SELECT
+        count( d.desk_id ) as deskCount
+        FROM
+        base_desk d,
+        base_shop s
+        WHERE
+        d.shop_id = s.shop_id
+        <if test="shopId != null and shopId != ''">
+            and s.shop_id = #{shopId}
+        </if>
+        <if test="brandId != null and brandId != ''">
+            and b.brand_id = #{brandId}
+        </if>
+        <if test="regionId != null and regionId != ''">
+            and r.region_id = #{regionId}
+        </if>
+        and d.ente_id = #{enteId}
+    </select>
+</mapper>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.schedule.mapper.EnteAppMapper" >
+  <resultMap id="BaseResultMap" type="com.njwd.entity.schedule.EnteApp" >
+    <id column="ente_app_id" property="enteAppId" jdbcType="VARCHAR" />
+    <result column="ente_id" property="enteId" jdbcType="VARCHAR" />
+    <result column="app_id" property="appId" jdbcType="VARCHAR" />
+    <result column="is_input" property="isInput" jdbcType="INTEGER" />
+    <result column="is_output" property="isOutput" jdbcType="INTEGER" />
+    <result column="network_type" property="networkType" jdbcType="VARCHAR" />
+    <result column="src_config" property="srcConfig" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="joint_mode" property="jointMode" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    ente_app_id, ente_id, app_id, is_input, is_output, network_type, src_config, create_time
+  </sql>
+
+  <select id="selectByEnteIdAndAppId" resultMap="BaseResultMap" parameterType="com.njwd.entity.schedule.vo.TaskVo" >
+    select
+      t1.ente_app_id,
+      t1.ente_id,
+      t1.app_id,
+      t1.is_input,
+      t1.is_output,
+      t1.network_type,
+      t1.src_config,
+      t1.create_time,
+      t2.joint_mode
+    from wd_ente_app t1, wd_app t2
+    where t1.ente_id = #{enteId,jdbcType=VARCHAR}
+    and t1.app_id=#{appId,jdbcType=VARCHAR}
+    and t2.app_id = t1.app_id
+
+  </select>
+
+  <select id="findNeedTask" resultMap="BaseResultMap"  >
+    select * from wd_data_update
+  </select>
+
+</mapper>

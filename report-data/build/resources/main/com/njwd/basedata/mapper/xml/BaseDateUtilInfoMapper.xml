@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.basedata.mapper.BaseDateUtilInfoMapper">
+    <select id="findBaseUtilInfoByCondition" parameterType="BaseDateUtilInfoDto" resultType="BaseDateUtilInfoVo">
+        SELECT
+            year,month,day,date,dateType
+        FROM
+            base_date_util_info
+        WHERE
+            1 = 1
+        <if test="year != null and year != ''">
+            AND year = #{year}
+        </if>
+        <if test="month != null and month != ''">
+            AND month = #{month}
+        </if>
+        <if test="day != null and day != ''">
+            AND day = #{day}
+        </if>
+        <if test="date != null and date != ''">
+            AND date = #{date}
+        </if>
+        <if test="dateType != null and dateType != ''">
+            AND dateType = #{dateType}
+        </if>
+    </select>
+</mapper>

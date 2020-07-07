@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportdata.mapper.RepPosDetailPayMapper">
+  <select id="findRepPosDetailPayInfoByCondition" resultType="RepPosDetailPayVo" parameterType="RepPosDetailPayDto">
+    SELECT
+    pay_type_code,
+    pay_type_name,
+    sum(money_actual) as moneyActualSum,
+    sum(money) as moneySum
+    FROM
+    rep_pos_detail_pay p
+    WHERE
+    ente_id =#{enteId}
+    AND account_date>= #{beginDate}
+    AND account_date &lt;= #{endDate}
+    <if test="shopIdList != null and shopIdList.size() != 0">
+        AND shop_id in
+        <foreach collection="shopIdList" item="shopItem" separator="," open="(" close=")" >
+            #{shopItem}
+        </foreach>
+    </if>
+    <if test="shopTypeIdList != null and shopTypeIdList.size() != 0">
+        AND shop_type_id IN
+        <foreach collection="shopTypeIdList" close=")" open="(" item="shopTypeItem" separator=",">
+            #{shopTypeItem}
+        </foreach>
+    </if>
+    GROUP BY pay_type_code,pay_type_name
+</select>
+
+
+    <select id="findRepPosPayVoInfoByCondition" resultType="com.njwd.entity.reportdata.vo.fin.FinRentAccountedForVo" parameterType="com.njwd.entity.reportdata.dto.querydto.FinQueryDto">
+        SELECT
+        p.ENTE_ID,p.BRAND_ID,p.REGION_ID,p.SHOP_ID,
+        sum(p.money) as salesVolume,
+        sum(p.money_actual) realSales
+        FROM
+        rep_pos_detail_pay p
+        WHERE
+        ente_id =#{enteId}
+        AND account_date>= TO_DATE (#{beginTime},'yyyy-mm-dd')
+        AND account_date &lt;= TO_DATE (#{endTime},'yyyy-mm-dd')
+        <if test="shopIdList != null and shopIdList.size() != 0">
+            AND shop_id in
+            <foreach collection="shopIdList" item="shopItem" separator="," open="(" close=")" >
+                #{shopItem}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() != 0">
+            AND shop_type_id IN
+            <foreach collection="shopTypeIdList" close=")" open="(" item="shopTypeItem" separator=",">
+                #{shopTypeItem}
+            </foreach>
+        </if>
+        GROUP BY p.ENTE_ID,p.BRAND_ID,p.REGION_ID,p.SHOP_ID
+    </select>
+</mapper>

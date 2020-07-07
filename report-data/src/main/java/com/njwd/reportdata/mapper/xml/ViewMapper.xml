@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.reportdata.mapper.ViewMapper">
+    <!-- 看板（店长视角）线形图分析 按日查询-->
+    <select id="findViewManagerLineGraph" resultType="ViewManagerLineGraphVo">
+
+        <if test="viewManagerDto.xType=='hh24'">
+            SELECT
+            sum(coalesce(c.money_actual,0)) consume,
+            count( o.order_id) order_volume,
+            sum(coalesce(c.money_consume+money_over_charge,0)) amount,
+            sum(coalesce(o.people_num,0)) peopleSum,
+            to_char(c.cash_time,'hh24') moment
+            FROM
+            pos_cash c
+            left join  pos_order o
+            ON o.order_date= c.account_date
+             and o.order_id = c.order_id
+            WHERE
+            o.ente_id = #{viewManagerDto.enteId}
+            AND o.order_date  between #{viewManagerDto.beginDate} and #{viewManagerDto.endDate}
+            <if test="viewManagerDto.shopIdList != null and viewManagerDto.shopIdList.size() != 0">
+                AND o.shop_id IN
+                <foreach collection="viewManagerDto.shopIdList" item="shopId" open="(" close=")" separator=",">
+                    #{shopId}
+                </foreach>
+            </if>
+            GROUP BY to_char(c.cash_time,'hh24')
+            ORDER BY to_char(c.cash_time,'hh24')
+        </if>
+        <if test="viewManagerDto.xType=='DD' || viewManagerDto.xType=='MM'">
+            select
+            sum(coalesce(money_actual,0)) consume,
+            sum(coalesce(desk_count,0)) order_volume,
+            sum(coalesce(client_count,0)) peopleSum,
+            sum(coalesce(amount+money_over_charge,0)) amount,
+            <if test="viewManagerDto.xType=='DD'">
+                to_char(account_date,'DD') moment
+            </if>
+            <if test="viewManagerDto.xType=='MM'">
+                to_char(account_date,'MM') moment
+            </if>
+            from
+            rep_pos_desk
+            WHERE
+            ente_id = #{viewManagerDto.enteId}
+            AND account_date between #{viewManagerDto.beginDate} and #{viewManagerDto.endDate}
+            <if test="viewManagerDto.shopIdList != null and viewManagerDto.shopIdList.size() != 0">
+                AND shop_id IN
+                <foreach collection="viewManagerDto.shopIdList" item="shopId" open="(" close=")" separator=",">
+                    #{shopId}
+                </foreach>
+            </if>
+            <if test="viewManagerDto.shopTypeIdList != null and viewManagerDto.shopTypeIdList.size() > 0">
+                AND shop_type_id in
+                <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                    #{shopTypeId}
+                </foreach>
+            </if>
+            <if test="viewManagerDto.xType=='DD'">
+                GROUP BY to_char(account_date,'DD')
+                ORDER BY to_char(account_date,'DD')
+            </if>
+            <if test="viewManagerDto.xType=='MM'">
+                GROUP BY to_char(account_date,'MM')
+                ORDER BY to_char(account_date,'MM')
+            </if>
+        </if>
+    </select>
+    <!--开台数,客流数,销售额,收款额-->
+    <select id="getViewManagerQuer" resultType="ViewManagerQueryVo">
+    SELECT
+        sum(case when account_date between #{beginDate} and #{endDate} then desk_count else 0 end) as stationsNum,
+        sum(case when account_date between #{lastPeriodBegin} and #{lastPeriodEnd} then desk_count else 0 end) as shangStationsNum,
+        sum(case when account_date between #{lastYearCurrentBegin} and #{lastYearCurrentEnd} then desk_count else 0 end) as tongStationsNum,
+        sum(case when account_date between #{beginDate} and #{endDate} then client_count else 0 end) as customNum,
+        sum(case when account_date between #{lastPeriodBegin} and #{lastPeriodEnd} then client_count else 0 end) as shangCustomNum,
+        sum(case when account_date between #{lastYearCurrentBegin} and #{lastYearCurrentEnd} then client_count else 0 end) as tongCustomNum,
+        sum(case when account_date between #{beginDate} and #{endDate} then  (COALESCE(amount,0)+COALESCE(money_over_charge,0)) else 0 end) as consumeSum,
+        sum(case when account_date between #{lastPeriodBegin} and #{lastPeriodEnd} then (COALESCE(amount,0)+COALESCE(money_over_charge,0)) else 0 end) as shangConsumeSum,
+        sum(case when account_date between #{lastYearCurrentBegin} and #{lastYearCurrentEnd} then (COALESCE(amount,0)+COALESCE(money_over_charge,0)) else 0 end) as tongConsumeSum,
+        sum(case when account_date between #{beginDate} and #{endDate} then money_actual else 0 end) as receivableSum,
+        sum(case when account_date between #{lastPeriodBegin} and #{lastPeriodEnd} then money_actual else 0 end) as shangReceivableSum,
+        sum(case when account_date between #{lastYearCurrentBegin} and #{lastYearCurrentEnd} then money_actual else 0 end) as tongReceivableSum,
+        is_noopentable as noOpenTable,
+        def1,channel_id
+      FROM
+        rep_pos_desk
+      WHERE
+      1=1
+        <if test="shopIdList != null and shopIdList.size() != 0">
+            AND shop_id IN
+            <foreach collection="shopIdList" item="shopId" open="(" close=")" separator=",">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() > 0">
+            AND shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+      GROUP BY
+        is_noopentable,
+        def1,channel_id
+    </select>
+    <!--支付方式中折扣和-->
+    <select id="getViewManagerDiscount" resultType="map">
+        SELECT
+        sum(case when account_date between #{beginDate} and #{endDate} then (COALESCE(money,0) - COALESCE(money_actual,0)) else 0 end) as "actualAmount",
+        sum(case when account_date between #{lastPeriodBegin} and #{lastPeriodEnd} then (COALESCE(money,0) - COALESCE(money_actual,0)) else 0 end) as "shangActualAmount",
+        sum(case when account_date between #{lastYearCurrentBegin} and #{lastYearCurrentEnd} then (COALESCE(money,0) - COALESCE(money_actual,0)) else 0 end) as "tongActualAmount"
+        FROM
+        rep_pos_detail_pay
+        WHERE
+        ente_id =#{enteId}
+        AND money != money_actual
+        <if test="shopIdList != null and shopIdList.size() != 0">
+            AND shop_id IN
+            <foreach collection="shopIdList" item="shopId" open="(" close=")" separator=",">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() > 0">
+            AND shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+    </select>
+    <!--主表中折扣和-->
+    <select id="getViewManagerZhuDiscount" resultType="map">
+        SELECT
+        sum(case when account_date between #{beginDate} and #{endDate} then
+        <include refid="actual_list"/> else 0 end) as "actualAmount",
+        sum(case when account_date between #{lastPeriodBegin} and #{lastPeriodEnd} then <include refid="actual_list"/> else 0 end) as "shangActualAmount",
+        sum(case when account_date between #{lastYearCurrentBegin} and #{lastYearCurrentEnd} then <include refid="actual_list"/> else 0 end) as "tongActualAmount",
+        sum(case when account_date between #{beginDate} and #{endDate} then  (COALESCE(amount,0)+COALESCE(money_over_charge,0)) else 0 end) as "consumeSum",
+        sum(case when account_date between #{lastPeriodBegin} and #{lastPeriodEnd} then (COALESCE(amount,0)+COALESCE(money_over_charge,0)) else 0 end) as "shangConsumeSum",
+        sum(case when account_date between #{lastYearCurrentBegin} and #{lastYearCurrentEnd} then (COALESCE(amount,0)+COALESCE(money_over_charge,0)) else 0 end) as "tongConsumeSum"
+        FROM
+        rep_pos_desk
+        WHERE
+        ente_id =#{enteId}
+        <if test="shopIdList != null and shopIdList.size() != 0">
+            AND shop_id IN
+            <foreach collection="shopIdList" item="shopId" open="(" close=")" separator=",">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() > 0">
+            AND shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+    </select>
+    <!--支付方式中折扣和按照门店分组查询-->
+    <select id="getViewManagerDiscountShop" resultType="map">
+        SELECT
+        brand_id as "brandId",
+        shop_id as "shopId",
+        shop_name as "shopName",
+        sum(case when account_date between #{beginDate} and #{endDate} then (COALESCE(money,0) - COALESCE(money_actual,0)) else 0 end) as "discountAmount"
+        FROM
+        rep_pos_detail_pay
+        where money != money_actual
+        group by brand_id,shop_id, shop_name
+        order by brand_id,shop_id, shop_name
+    </select>
+    <!--主表中折扣和按照门店分组查询-->
+    <select id="getViewManagerZhuDiscountShop" resultType="map">
+        SELECT
+        brand_id as "brandId",
+        shop_id as "shopId",
+        shop_name as "shopName",
+        sum(case when account_date between #{beginDate} and #{endDate} then <include refid="actual_list"/> else 0 end) as "discountAmount",
+        sum(case when account_date between #{beginDate} and #{endDate} then  (COALESCE(amount,0)+COALESCE(money_over_charge,0)) else 0 end) as "consumeSum"
+        FROM
+        rep_pos_desk
+        group by brand_id,shop_id, shop_name
+        order by brand_id,shop_id, shop_name
+    </select>
+    <sql id="actual_list">
+        (COALESCE(MONEY_CHANGE ,0) +
+        COALESCE( MONEY_DISCOUNT ,0) +
+        COALESCE(MONEY_FREEAMOUNT ,0) +
+        COALESCE( MONEY_DAN_DISCOUNT ,0) +
+        COALESCE( MONEY_MEMBER_FAVORABLE ,0) +
+        COALESCE( MONEY_FAVORABLE ,0))
+    </sql>
+    <!--根据条件查询增送合计-->
+    <select id="getViewManagerPosGive" resultType="ViewManagerGiveVo">
+        SELECT
+        sum(case when account_date between #{beginDate} and #{endDate} then sum_price else 0 end) as giveAmount,
+        sum(case when account_date between #{lastPeriodBegin} and #{lastPeriodEnd} then sum_price else 0 end) as shangGiveAmount,
+        sum(case when account_date between #{lastYearCurrentBegin} and #{lastYearCurrentEnd} then sum_price else 0 end) as tongGiveAmount
+        FROM   rep_pos_retreat_give
+        WHERE ente_id =#{enteId}
+        and retreat_give_type = '1'
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and shop_id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() > 0">
+            AND shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+    </select>
+    <!--根据条件查询在职，离职员工合计-->
+    <select id="getViewManagerUser" resultType="ViewManagerUserVo">
+        SELECT
+        sum(case when us.hiredate &lt;= #{endDate} and (us.leavedate is null or us.leavedate > #{endDate}) then 1 else 0 end) as onTheJobSum,
+        sum(case when us.hiredate &lt;= #{lastPeriodEnd} and (us.leavedate is null or us.leavedate > #{lastPeriodEnd}) then 1 else 0 end ) as shangOnTheJobSum,
+        sum(case when us.hiredate &lt;= #{lastYearCurrentEnd} and (us.leavedate is null or us.leavedate > #{lastYearCurrentEnd}) then 1 else 0 end) as tongOnTheJobSum,
+        sum(case when us.leavedate &lt;= #{endDate} then 1 else 0 end) as leaveSum,
+        sum(case when us.leavedate &lt;= #{lastPeriodEnd} then 1 else 0 end ) as shangLeaveSum,
+        sum(case when us.leavedate &lt;= #{lastYearCurrentEnd} then 1 else 0 end) as tongLeaveSum
+        FROM
+        (
+        SELECT
+        bu.user_name,
+        bu.sex,
+        bu.birthday,
+        bu.hiredate,
+        bu.leavedate,
+        bu.ente_id enteId,
+        CASE
+        WHEN bsd.shop_dept_no IS NULL THEN
+        1 ELSE 0
+        END isManager,
+        bu.edu_level eduLevelType,
+        COALESCE ( bsd.shop_id, bs.shop_id ) shopId
+        FROM
+        base_user bu
+        LEFT JOIN base_shop_dept bsd ON bu.org_id = bsd.shop_dept_id
+        LEFT JOIN base_shop bs ON bu.org_id = bs.shop_id
+        where
+        (bsd.shop_id is not null and bsd.shop_id !='') or (bs.shop_id  is not null and bs.shop_id !='')
+        ) us,
+        base_shop bs
+        where us.enteId = #{enteId}
+        and us.shopId = bs.shop_id
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and us.shopId in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        <if test="shopTypeIdList != null and shopTypeIdList.size() > 0 ">
+            and bs.shop_type_id in
+            <foreach collection="shopTypeIdList" item="shopTypeId" separator="," open="(" close=")">
+                #{shopTypeId}
+            </foreach>
+        </if>
+    </select>
+
+
+    <!--           店长视角               -->
+    <!--                           指标完成情况                        -->
+    <!-- 获取门店 收入、客流量、开台数 -->
+    <select id="selectConsumeAndPassengerFlowAndDeskCount"
+            resultType="com.njwd.entity.reportdata.vo.ViewManagerIndicatorRateVo">
+        SELECT
+        brand_id,
+        shop_id,
+        shop_name,
+        sum((COALESCE(amount,0)+COALESCE(money_over_charge,0))) consume,
+        sum(case when  d.def1 = '1' and d.is_noopentable =1 then COALESCE(client_count,0) else 0 end ) passenger_flow,
+        sum(case when  d.def1 = '1' and d.is_noopentable =1 then COALESCE(desk_count,0)  else 0 end) desk_count,
+        case when sum(COALESCE(client_count,0)) =0 then 0 else sum(client_count) end passengerFlowSum
+        FROM
+        rep_pos_desk d
+        WHERE
+        d.ente_id = #{viewManagerDto.enteId}
+        <if test="viewManagerDto.shopIdList != null and viewManagerDto.shopIdList.size() > 0 ">
+            and d.shop_Id in
+            <foreach collection="viewManagerDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        AND d.account_date between #{viewManagerDto.beginDate} and #{viewManagerDto.endDate}
+        GROUP BY brand_id,d.shop_id,d.shop_name
+        order by  brand_id, d.shop_id,  d.shop_name
+    </select>
+
+<!--                                指标                        -->
+    <!--           老板视角               -->
+    <!--  查询 客流量、消费总额 （老板视角）  -->
+    <select id="selectViewBossBusiness" resultType="ViewBossShopSalesVo">
+        SELECT
+        s.shop_name,
+        s.shop_lat,
+        s.shop_lon,
+        s.address,
+        sum(COALESCE(k.amount,0)+coalesce(k.money_over_charge,0)) consume,
+        sum(k.client_count) passenger_flow,
+        sum(case when channel_id ='1' then COALESCE(k.amount,0)+coalesce(k.money_over_charge,0) else 0 end)  consumeDine,
+        sum(case when channel_id ='1' then k.client_count else 0 end)  passengerFlowDine
+        FROM
+        rep_pos_desk k LEFT JOIN base_shop s ON k.shop_id = s.shop_id
+        WHERE
+        k.ente_id = #{viewBossQueryDto.enteId}
+        <if test="viewBossQueryDto.shopIdList != null and viewBossQueryDto.shopIdList.size() > 0 ">
+            and k.shop_Id in
+            <foreach collection="viewBossQueryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        AND k.account_date between #{viewBossQueryDto.beginDate} and #{viewBossQueryDto.endDate}
+        GROUP BY s.shop_id,s.shop_name,s.shop_lat,s.shop_lon,s.address
+    </select>
+    <!--获取有效门店数-->
+    <select id="selectShopCount" resultType="Integer">
+        select
+        count(s.shop_id) shopSum
+        from base_shop s
+        where
+        s.ente_id = #{viewBossQueryDto.enteId}
+        and shop_no is not null
+        and s.status = #{viewBossQueryDto.status}
+    </select>
+
+    <!--  获取看板（老板视角）月度菜品销量分类分析  -->
+    <select id="selectViewBossDishesSalesMonth" resultType="com.njwd.entity.reportdata.vo.ViewBossFoodVo">
+        SELECT
+            k.food_style_name,
+            k.brand_name,
+            sum(food_amount) as foodStyleConsume
+        FROM rep_pos_detail_food k
+        WHERE
+            k.ente_id =#{enteId}
+            and k.account_date between #{beginDate} and #{endDate}
+            <if test="shopIdList != null and shopIdList.size() > 0 ">
+                and k.shop_Id in
+                <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                    #{shopId}
+                </foreach>
+            </if>
+            AND is_package ='0'
+            GROUP BY k.food_style_no,k.food_style_name, k.brand_name
+            order by k.brand_name,sum(food_amount) desc
+    </select>
+
+    <!--  看板（老板视角）销售前五及后五  -->
+    <select id="selectViewBossTopFiveAndLastFive" resultType="ViewBossShopSalesVo">
+            SELECT
+            k.shop_name,
+            sum(coalesce(k.amount,0)+coalesce(k.money_over_charge,0)) consume
+            FROM
+            rep_pos_desk k
+            WHERE
+            k.ente_id = #{viewBossQueryDto.enteId}
+            <if test="viewBossQueryDto.shopIdList != null and viewBossQueryDto.shopIdList.size() > 0 ">
+                and k.shop_Id in
+                <foreach collection="viewBossQueryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                    #{shopId}
+                </foreach>
+            </if>
+            AND k.account_date between #{viewBossQueryDto.beginDate} and #{viewBossQueryDto.endDate}
+            GROUP BY k.shop_id,k.shop_name
+            ORDER BY consume desc
+    </select>
+
+    <!--  看板（老板视角）月度销售额走势  -->
+    <select id="selectViewBossConsumeMonth" resultType="ViewBossShopSalesVo">
+        SELECT
+        to_char(k.account_date,'mm') showMonth,
+        sum(coalesce(k.amount,0)+coalesce(k.money_over_charge,0)) consume
+        FROM
+        rep_pos_desk k
+        WHERE
+        k.ente_id = #{viewBossQueryDto.enteId}
+        <if test="viewBossQueryDto.shopIdList != null and viewBossQueryDto.shopIdList.size() > 0 ">
+            and k.shop_Id in
+            <foreach collection="viewBossQueryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        AND k.account_date between #{viewBossQueryDto.beginDate} and #{viewBossQueryDto.endDate}
+        GROUP BY to_char(k.account_date,'mm')
+        ORDER BY to_char(k.account_date,'mm')
+    </select>
+
+    <!-- 看板 （老板视角）客流量趋势  -->
+    <select id="findViewBossPassengerFlowTrend" resultType="PassengerFlowTrendVo">
+        SELECT
+        to_char(o.open_time,'hh24') moment,
+        sum(o.people_num) peopleSum,
+        sum(case when channel_id='1' then people_num else 0 end ) dinePeople,
+        sum(case when channel_id='2' then people_num else 0 end ) takeAwayPeople,
+        sum(case when channel_id='3' then people_num else 0 end ) tirePeople
+        FROM
+        pos_order o
+        WHERE
+        o.ente_id = #{viewBossQueryDto.enteId}
+        <if test="viewBossQueryDto.shopIdList != null and viewBossQueryDto.shopIdList.size() > 0 ">
+            and o.shop_Id in
+            <foreach collection="viewBossQueryDto.shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        AND o.order_date between #{viewBossQueryDto.beginDate} and #{viewBossQueryDto.endDate}
+        GROUP BY to_char(o.open_time,'hh24')
+        ORDER BY to_char(o.open_time,'hh24')
+    </select>
+    <!--老板视角 概况数据-->
+    <!--根据条件查询当前时间点在职员工人数-->
+    <select id="findViewBossUserNum" resultType="Integer">
+        SELECT
+        sum(case when us.hiredate &lt;= #{endDate} and (us.leavedate is null or us.leavedate > #{endDate})
+        then 1 else 0 end) as userNum
+        from base_user us
+        where ente_Id = #{enteId}
+    </select>
+    <!--根据条件查询当前时间点收入-->
+    <select id="findViewBossIncomeAmount" resultType="Integer">
+         SELECT
+        coalesce( sum(k.money_actual),0) consume
+        FROM
+        rep_pos_desk k
+        WHERE
+        k.ente_id = #{enteId}
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and k.shop_Id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+        AND k.account_date between #{beginDate} and #{endDate}
+    </select>
+    <!--获取会员数量-->
+    <select id="findViewBossMemberNum" resultType="Integer"  >
+        select count(*) as memberNum
+        from crm_member
+        where
+        register_time &lt;=#{endDate}
+        and ente_id = #{enteId}
+    </select>
+    <!--获取会员储值和消费总额-->
+    <select id="findViewBossMemberAmount" resultType="ViewBossEnteVo"  >
+        select sum(coalesce(prepaid_money,0)-coalesce(revoke_prepaid_money,0)) as memberRechargeAmount,
+        sum(coalesce(consume_money,0)) as memberConsumeAmount
+        from rep_crm_turnover_pay_type
+        where
+        account_date between #{beginDate} and #{endDate}
+        and shop_id in
+        <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+        and ente_id = #{enteId}
+    </select>
+    <!--获取供应商数量-->
+    <select id="findViewBossSupplierNum" resultType="Integer" >
+        select  count(distinct supplier_name) supplierNum
+        from base_supplier
+        where
+        create_date &lt;=#{endDate}
+        and forbit_status='A'
+        and document_status ='C'
+        and number like '01%'
+    </select>
+    <!--获取品牌数据-->
+    <select id="getBrandList" resultType="string" >
+       select distinct brand_Id as "brandId"
+       from base_shop
+       where 1=1
+        <if test="shopIdList != null and shopIdList.size() > 0 ">
+            and shop_Id in
+            <foreach collection="shopIdList" item="shopId" separator="," open="(" close=")">
+                #{shopId}
+            </foreach>
+        </if>
+    </select>
+</mapper>

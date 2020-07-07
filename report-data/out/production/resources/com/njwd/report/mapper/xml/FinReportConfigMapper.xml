@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.report.mapper.FinReportConfigMapper">
+
+    <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.vo.fin.FinReportConfigVo">
+    </resultMap>
+
+    <sql id="BaseColumnList">
+        t.id, t.ente_id, t.brand_name, t.fin_group, t.fin_type, t.codes,t.codes_type, t.mem
+    </sql>
+
+    <select id="findConfigByType" resultMap="BaseResultMap">
+        select
+        <include refid="BaseColumnList"/>
+        from
+        fin_report_config t
+        <where>
+            and t.ente_id = #{configQueryDto.enteId,jdbcType=VARCHAR}
+            and t.fin_type = #{configQueryDto.finType,jdbcType=VARCHAR}
+        </where>
+    </select>
+
+    <select id="findConfigByCondition" resultMap="BaseResultMap">
+        select
+        <include refid="BaseColumnList"/>
+        from
+        fin_report_config t
+        <where>
+            <if test="configQueryDto.enteId!=null and configQueryDto.enteId !=''">
+                and t.ente_id = #{configQueryDto.enteId,jdbcType=VARCHAR}
+            </if>
+            <if test="configQueryDto.finGroup!=null and configQueryDto.finGroup!=''">
+                and t.fin_group = #{configQueryDto.finGroup,jdbcType=VARCHAR}
+            </if>
+            <if test="configQueryDto.finType != null and configQueryDto.finType != ''">
+                and t.fin_type = #{configQueryDto.finType,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </select>
+
+    <select id="findFinReportConfigList" parameterType="com.njwd.entity.reportdata.dto.FinReportConfigDto"
+            resultMap="BaseResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM fin_report_config t
+        <where>
+            <if test="param.enteId != null and param.enteId != ''">
+                AND t.ente_id = #{param.enteId}
+            </if>
+            <if test="param.finGroup != null and param.finGroup != ''">
+                AND t.fin_group LIKE '%'||#{param.finGroup}||'%'
+            </if>
+            <if test="param.finType != null and param.finType != ''">
+                AND t.fin_type LIKE '%'||#{param.finType}||'%'
+            </if>
+            <if test="param.mem != null and param.mem != ''">
+                AND t.mem LIKE '%'||#{param.mem}||'%'
+            </if>
+        </where>
+    </select>
+
+    <select id="findFinReportConfigList" parameterType="com.njwd.entity.reportdata.dto.FinReportConfigDto"
+            resultMap="BaseResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM fin_report_config t
+        <where>
+            <if test="param.enteId != null and param.enteId != ''">
+                AND t.ente_id = #{param.enteId}
+            </if>
+            <if test="param.finGroup != null and param.finGroup != ''">
+                AND t.fin_group LIKE '%'||#{param.finGroup}||'%'
+            </if>
+            <if test="param.finType != null and param.finType != ''">
+                AND t.fin_type LIKE '%'||#{param.finType}||'%'
+            </if>
+            <if test="param.mem != null and param.mem != ''">
+                AND t.mem LIKE '%'||#{param.mem}||'%'
+            </if>
+        </where>
+        ORDER BY t.fin_group,t.fin_type
+    </select>
+
+    <select id="findFinReportConfigById" parameterType="com.njwd.entity.reportdata.dto.FinReportConfigDto"
+            resultMap="BaseResultMap">
+        SELECT
+        <include refid="BaseColumnList"/>
+        FROM fin_report_config t
+        <where>
+            <if test="param.id != null and param.id != ''">
+                AND t.id = #{param.id}
+            </if>
+        </where>
+    </select>
+
+    <insert id="addInfo" parameterType="com.njwd.entity.reportdata.dto.FinReportConfigDto">
+        INSERT INTO fin_report_config (ente_id,fin_group,fin_type,codes,codes_type,mem)
+        VALUES
+        <foreach collection="list" index="index" item="item" separator=",">
+            (#{item.enteId},#{item.finGroup},#{item.finType},#{item.codes},#{item.codesType},#{item.mem})
+        </foreach>
+    </insert>
+
+    <update id="updateInfo" parameterType="com.njwd.entity.reportdata.dto.FinReportConfigDto">
+        UPDATE fin_report_config
+        SET ente_id = #{param.enteId},
+            fin_group = #{param.finGroup},
+            fin_type = #{param.finType},
+            codes = #{param.codes},
+            codes_type = #{param.codesType},
+            mem = #{param.mem}
+        WHERE id = #{param.id}
+    </update>
+
+    <delete id="deleteInfo" parameterType="com.njwd.entity.reportdata.dto.FinReportConfigDto">
+        DELETE FROM fin_report_config
+        WHERE id IN
+        <foreach collection="param.idList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="checkIfExist" parameterType="com.njwd.entity.reportdata.dto.FinReportConfigDto" resultType="int">
+        SELECT count(1) FROM fin_report_config t
+        <where>
+            <if test="param.id != null and param.id != ''">
+                AND t.id != #{param.id}
+            </if>
+            <if test="param.enteId != null and param.enteId != ''">
+                AND t.ente_id = #{param.enteId}
+            </if>
+            <if test="param.finGroup != null and param.finGroup != ''">
+                AND t.fin_group = #{param.finGroup}
+            </if>
+            <if test="param.finType != null and param.finType != ''">
+                AND t.fin_type = #{param.finType}
+            </if>
+        </where>
+    </select>
+
+</mapper>

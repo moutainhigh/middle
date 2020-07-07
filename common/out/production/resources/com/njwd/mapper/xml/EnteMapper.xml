@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.mapper.EnteMapper">
+    <resultMap id="BaseResultMap" type="com.njwd.entity.admin.Ente">
+        <!--@mbg.generated-->
+        <result column="ente_id" jdbcType="VARCHAR" property="enteId"/>
+        <result column="ente_name" jdbcType="VARCHAR" property="enteName"/>
+    </resultMap>
+    <!--根据企业ID查询企业信息-->
+    <select id="selectEnteVoById" resultType="com.njwd.entity.admin.vo.EnteVo" parameterType="com.njwd.entity.admin.dto.EnteDto">
+        SELECT
+            ente_id,
+            ente_name
+        FROM
+            base_ente
+        WHERE
+            ente_id = #{enterpriseId}
+    </select>
+</mapper>

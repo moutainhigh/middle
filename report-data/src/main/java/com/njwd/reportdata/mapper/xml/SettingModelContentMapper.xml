@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.reportdata.mapper.SettingModelContentMapper" >
+
+    <resultMap id="BaseResultMap" type="com.njwd.entity.reportdata.SettingModelContent">
+    </resultMap>
+
+    <sql id="SettingModelContent">
+        id,col_name,table_col_name,format,min_length,max_length,decimal,can_update,symbol,symbol_location
+    </sql>
+
+    <!-- 查询简单设置模块内容列表 -->
+    <select id="findSettingModelContentList" resultType="com.njwd.entity.reportdata.vo.SettingModelContentVo">
+        select <include refid="SettingModelContent"/>
+        from base_setting_model_content SMC
+        <where>
+            and smc.setting_model_id = #{param.settingModelId}
+            <if test="param.isShow != null">
+                and smc.is_show = #{param.isShow}
+            </if>
+        </where>
+    </select>
+
+    <!-- 批量新增模块内容列表 -->
+    <insert id="insectBatch">
+        insert into wd_setting_model_content
+        (id,
+        ente_id,
+        setting_model_id,
+        col_name,
+        col_title,
+        table_col_name,
+        format,
+        min_length,
+        max_length,
+        decimal,
+        is_show,
+        can_update,
+        is_query,
+        regular,
+        symbol,
+        symbol_location,
+        sort
+        )
+        values
+        <foreach collection="list" item="list" index="index" separator=",">
+            (#{list.id},
+            #{enteId},
+            #{settingModelId},
+            #{list.colName},
+            #{list.colTitle},
+            #{list.tableColName},
+            #{list.format},
+            #{list.minLength},
+            #{list.maxLength},
+            #{list.decimal},
+            #{list.isShow},
+            #{list.canUpdate},
+            #{list.isQuery},
+            #{list.regular},
+            #{list.symbol},
+            #{list.symbolLocation},
+            #{list.sort})
+        </foreach>
+    </insert>
+
+</mapper>

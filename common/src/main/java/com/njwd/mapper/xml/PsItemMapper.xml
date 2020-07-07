@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.mapper.PsItemMapper">
+    <resultMap id="BaseResultMap" type="com.njwd.entity.kettlejob.PsItem">
+        <!--@mbg.generated-->
+        <id column="item_id" jdbcType="VARCHAR" property="itemId"/>
+        <result column="item_name" jdbcType="VARCHAR" property="itemName"/>
+        <result column="ente_id" jdbcType="VARCHAR" property="enteId"/>
+        
+    </resultMap>
+
+
+    <!--新增-->
+    <insert id="addPsItem" parameterType="com.njwd.entity.kettlejob.dto.PsItemDto" >
+        insert into ps_item(
+        app_id,
+        item_id,
+        item_name,
+        ente_id,
+        update_time,
+        active,
+        type_id,
+        last_update_time
+        )values
+        <foreach collection="list" item="psItemDto" separator=",">
+           (
+            #{psItemDto.appId},
+            #{psItemDto.itemId},
+            #{psItemDto.itemName},
+            #{psItemDto.enteId},
+            #{psItemDto.updateTime},
+            #{psItemDto.active},
+            #{psItemDto.typeId},
+            #{psItemDto.lastUpdateTime}
+        )
+        </foreach>
+    </insert>
+
+
+    <!--新增并修改-->
+    <insert id="replacePsItem" parameterType="com.njwd.entity.kettlejob.dto.PsItemDto" >
+        replace into ps_item(
+        app_id,
+        item_id,
+        item_name,
+        ente_id,
+        active,
+        type_id,
+        last_update_time
+        )values
+        <foreach collection="list" item="psItemDto" separator=",">
+            (
+            #{psItemDto.appId},
+            #{psItemDto.itemId},
+            #{psItemDto.itemName},
+            #{psItemDto.enteId},
+            #{psItemDto.active},
+            #{psItemDto.typeId},
+            #{psItemDto.lastUpdateTime}
+            )
+        </foreach>
+    </insert>
+
+    <!--根据企业ID查询巡店项目-->
+    <select id="findPsItemBatch" resultType="com.njwd.entity.kettlejob.vo.PsItemVo" parameterType="com.njwd.entity.kettlejob.dto.PsItemDto">
+         select
+         item_id,
+         item_name,
+         ente_id,
+         last_update_time
+	     from
+	     ps_item
+	     where
+	     ente_id=#{psItemDto.enteId}
+	     and
+	     app_id=#{psItemDto.appId}
+    </select>
+
+    <select id="findMaxTime" resultType="java.util.Date" parameterType="com.njwd.entity.kettlejob.dto.PsItemDto">
+        select max(last_update_time)
+         from
+	     ps_item
+	     where
+	     ente_id=#{psItemDto.enteId}
+	     and
+	     app_id=#{psItemDto.appId}
+    </select>
+
+    <!--根据企业ID和第三方ID修改巡店项目-->
+    <update id="updatePsItem" parameterType="java.util.List">
+        <foreach collection="list" item="psItemDto" index="index" separator=";">
+        update ps_item
+        set
+        item_name = #{psItemDto.itemName},
+        last_update_time=#{psItemDto.lastUpdateTime},
+        active = #{psItemDto.active},
+        type_id=#{psItemDto.typeId}
+        where
+        item_id=#{psItemDto.projectId}
+	    and
+        ente_id=#{psItemDto.enteId}
+        and
+        app_id=#{psItemDto.appId}
+        </foreach>
+    </update>
+
+</mapper>
