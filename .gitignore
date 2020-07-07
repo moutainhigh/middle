@@ -1,0 +1,61 @@
+.gradle
+/build/
+!gradle/wrapper/gradle-wrapper.jar
+/gradle/
+gradlew
+gradlew.bat
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### 各子模块 ###
+common/out/
+common/build/
+
+### kettle-job ###
+kettle-job/out/
+kettle-job/build/
+
+### schedule ###
+schedule/out/
+schedule/build/
+
+### admin ###
+admin/out/
+admin/build/
+
+### report-data ###
+report-data/out/
+report-data/build/
+
+### report-data-api ###
+report-data-api/out/
+report-data-api/build/
+
+### schedule-api ###
+schedule-api/out/
+schedule-api/build/
+
+### easyexcel ###
+easyexcel/out/
+easyexcel/build/

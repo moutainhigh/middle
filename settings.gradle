@@ -1,0 +1,11 @@
+rootProject.name = 'middle-data'
+include 'common'
+include 'kettle-job'
+include 'schedule'
+include 'admin'
+include 'report-data'
+include 'schedule-api'
+include 'easyexcel'
+include 'report-data-api'
+include 'platform'
+
