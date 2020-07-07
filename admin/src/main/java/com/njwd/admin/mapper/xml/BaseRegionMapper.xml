@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.admin.mapper.BaseRegionMapper" >
+  <select id="getListByEnteId" resultType="com.njwd.entity.admin.vo.OrganRegionVo" parameterType="com.njwd.entity.admin.dto.OrganDataDto" >
+    select
+    region_id as regionId,region_code as regionCode,region_name as regionName
+    from base_region
+    where ente_id=#{enteId}
+  </select>
+</mapper>

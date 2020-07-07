@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.admin.mapper.EnterpriseAppInterfaceMapper">
+
+    <select id="queryList" parameterType="com.njwd.entity.admin.dto.EnterpriseAppInterfaceDto" resultType="com.njwd.entity.admin.vo.EnterpriseAppInterfaceVo">
+        select
+           interface_id,
+           ente_id enterpriseId,
+           app_id,
+           interface_name,
+           interface_config,
+           create_time,
+           update_time,
+           interface_type
+        from
+           wd_ente_app_interface
+        where
+           ente_id = #{enterpriseId}
+        and
+           app_id = #{appId}
+    </select>
+
+    <select id="queryInterfaceById" parameterType="String" resultType="com.njwd.entity.admin.vo.EnterpriseAppInterfaceVo">
+        select
+           interface_id,
+           ente_id enterpriseId,
+           app_id,
+           interface_name,
+           interface_config,
+           create_time,
+           update_time,
+           interface_type
+        from
+           wd_ente_app_interface
+        where
+           interface_id = #{interfaceId}
+    </select>
+
+    <insert id="saveInterface" parameterType="com.njwd.entity.admin.dto.EnterpriseAppInterfaceDto">
+        insert into wd_ente_app_interface
+           (
+               interface_id,
+               ente_id,
+               app_id,
+               interface_name,
+               interface_config,
+               create_time,
+               interface_type
+           )
+        values
+           (
+              #{interfaceId},
+              #{enterpriseId},
+              #{appId},
+              #{interfaceName},
+              #{interfaceConfig},
+              #{createTime},
+              #{interfaceType}
+           )
+    </insert>
+
+    <update id="updateInterface" parameterType="com.njwd.entity.admin.dto.EnterpriseAppInterfaceDto">
+        update
+           wd_ente_app_interface
+        set
+           ente_id = #{enterpriseId},
+           app_id = #{appId},
+           interface_name= #{interfaceName},
+           interface_config = #{interfaceConfig},
+           update_time = #{updateTime},
+           interface_type = #{interfaceType}
+        where
+           interface_id = #{interfaceId}
+    </update>
+
+    <delete id="deleteInterface" parameterType="String">
+        delete from
+           wd_ente_app_interface
+        where interface_id = #{interfaceId}
+    </delete>
+
+</mapper>

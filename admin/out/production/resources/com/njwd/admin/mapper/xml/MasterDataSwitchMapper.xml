@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.admin.mapper.MasterDataSwitchMapper">
+
+    <select id="countDataRelyBase" parameterType="com.njwd.entity.admin.dto.MasterDataSwitchDto" resultType="Integer">
+        select count(0)
+        from ${relyTableName} a
+                 left join ${baseTableName} b on a.${baseId} = b.${relyId}
+        where a.app_id = #{appId}
+          and a.ente_id = #{enteId}
+          and (b.${baseId} is null or b.${baseId} = '')
+    </select>
+    
+    <select id="countDataMappingRelyBase" parameterType="com.njwd.entity.admin.dto.MasterDataSwitchDto" resultType="Integer">
+        select count(0)
+        from ${relyTableName} c
+                 left join ${baseTableName} b on ${onCondition}
+        where c.ente_id = #{enteId}
+          and (b.${baseId} is null or b.${baseId} = '')
+    </select>
+
+    <select id="getRelyData" parameterType="com.njwd.entity.admin.dto.PrimaryRelyDto" resultType="com.njwd.entity.admin.vo.PrimaryRelyVo">
+        select
+          t.data_type,
+          t.rely_data,
+          t.rela_table,
+          t.base_table
+        from
+          wd_primary_rely t
+        where
+           t.rely_data = #{dataType}
+           and t.type = #{type}
+    </select>
+
+    <select id="getDataMapList" parameterType="com.njwd.entity.admin.dto.MasterDataSwitchDto" resultType="com.njwd.entity.admin.DataMap">
+        select t.source_table_key, t.datamap_table
+        from wd_datamap t
+        where t.source_table = #{baseTableName}
+          and t.ente_id = #{enteId};
+    </select>
+
+    <select id="batchUpdateById" parameterType="com.njwd.entity.admin.dto.MasterDataUpdateDto">
+        update ${baseTableName} base
+        inner join
+        (
+            select ${relyColumns} from ${relyTableName} t
+            where t.app_id = #{appId}
+             and t.ente_id = #{enteId}
+             and t.${baseId} != '' and t.${baseId} is not null
+            ) rela
+        set ${updateColumns}
+        where  base.ente_id = rela.ente_id
+        and base.${baseId} = rela.${baseId}
+        and base.${baseId} != '' and base.${baseId} is not null
+    </select>
+
+    <select id="selectRelyColumns" parameterType="com.njwd.entity.admin.dto.MasterDataSwitchDto" resultType="String">
+        select group_concat(concat('t.', t.column_name) order by t.display_order asc)
+        from wd_table_attribute t
+        where t.table_name = #{baseTableName}
+        order by t.display_order asc
+    </select>
+
+    <select id="selectUpdateColumns" parameterType="com.njwd.entity.admin.dto.MasterDataSwitchDto" resultType="String">
+        select group_concat(concat('base.', t.column_name, '=', 'rela.', t.column_name) order by t.display_order asc)
+        from wd_table_attribute t
+        where t.table_name = #{baseTableName}
+          and t.column_name != #{baseId}
+          and t.column_name != 'ente_id'
+        order by t.display_order asc
+    </select>
+    
+    <select id="copyTable" parameterType="com.njwd.entity.admin.dto.TableBackupDto">
+        create table ${backupTableName} like ${sourceTableName}
+    </select>
+
+    <select id="copyData" parameterType="com.njwd.entity.admin.dto.TableBackupDto">
+        insert into ${backupTableName} select * from ${sourceTableName} where ente_id = #{enteId}
+    </select>
+
+</mapper>

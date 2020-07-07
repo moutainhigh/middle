@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.admin.mapper.DataMapMapper" >
+  <resultMap id="BaseResultMap" type="com.njwd.entity.admin.DataMap" >
+    <id column="ente_id" property="enteId" jdbcType="VARCHAR" />
+    <id column="datamap_key" property="datamapKey" jdbcType="VARCHAR" />
+    <result column="source_table" property="sourceTable" jdbcType="VARCHAR" />
+    <result column="target_table" property="targetTable" jdbcType="VARCHAR" />
+    <result column="datamap_table" property="datamapTable" jdbcType="VARCHAR" />
+    <result column="source_table_name" property="sourceTableName" jdbcType="VARCHAR" />
+    <result column="target_table_name" property="targetTableName" jdbcType="VARCHAR" />
+    <result column="source_table_key" property="sourceTableKey" jdbcType="VARCHAR" />
+    <result column="target_table_key" property="targetTableKey" jdbcType="VARCHAR" />
+    <result column="source_table_column" property="sourceTableColumn" jdbcType="VARCHAR" />
+    <result column="target_table_column" property="targetTableColumn" jdbcType="VARCHAR" />
+    <result column="source_table_code" property="sourceTableCode" jdbcType="VARCHAR" />
+    <result column="target_table_code" property="targetTableCode" jdbcType="VARCHAR" />
+    <result column="type" property="type" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    ente_id, datamap_key, source_table, target_table, datamap_table, source_table_name, 
+    target_table_name, source_table_key, target_table_key, source_table_column, target_table_column,source_table_code,target_table_code,type
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="com.njwd.entity.admin.DataMapKey" >
+    select 
+    <include refid="Base_Column_List" />
+    from wd_datamap
+    where ente_id = #{enteId,jdbcType=VARCHAR}
+      and datamap_key = #{datamapKey,jdbcType=VARCHAR}
+  </select>
+
+
+  <select id="selectList" resultMap="BaseResultMap" parameterType="com.njwd.entity.admin.dto.DataMapKeyDto" >
+    select
+      ente_id, datamap_key,
+      source_table_name,
+      target_table_name,
+      type
+    from wd_datamap
+    where ente_id=#{enteId,jdbcType=VARCHAR}
+      <if test="name!=null and name!=''">
+         and (source_table_name like concat('%',#{name},'%') or target_table_name like concat('%',#{name},'%') )
+      </if>
+  </select>
+
+  <select id="selectSourceData" resultType="com.njwd.entity.admin.vo.MapDataVo" parameterType="com.njwd.entity.admin.DataMapSql" >
+   SELECT  ${sql.sourceColumns},
+    GROUP_CONCAT(CONCAT(${sql.targetColumns})) AS maps
+    FROM ${sql.sourceTable} s
+    LEFT JOIN ${sql.mapTable} m ON  ${sql.SMCondition} and m.ente_id=#{sql.enteId}
+    LEFT JOIN ${sql.targetTable} t ON ${sql.TMCondition} and t.ente_id=#{sql.enteId}
+    WHERE
+    ${sql.primrayCondition}
+    and s.ente_id=#{sql.enteId}
+    GROUP BY ${sql.groupBy}
+  </select>
+
+  <select id="selectTargetData" resultType="com.njwd.entity.admin.vo.MapDataVo" parameterType="com.njwd.entity.admin.DataMapSql" >
+    SELECT ${sql.targetColumns},COUNT(${sql.sourceColumns}) AS mapCount
+    FROM ${sql.targetTable} t
+    LEFT JOIN ${sql.mapTable} m ON ${sql.TMCondition} and m.ente_id=#{sql.enteId}
+    WHERE
+    ${sql.primrayCondition}
+    and t.ente_id=#{sql.enteId}
+    GROUP BY ${sql.groupBy}
+  </select>
+
+
+  <select id="selectSourceDataByTarget" resultType="com.njwd.entity.admin.vo.MapDataVo" parameterType="com.njwd.entity.admin.DataMapSql" >
+     SELECT
+    <if test="sourceTable!=null and sourceTable!=''">
+     ${sourceColumns}
+    </if>
+    <if test="targetTable!=null and targetTable!=''">
+      ${targetColumns}
+    </if>
+      FROM ${mapTable} m,
+      <if test="sourceTable!=null and sourceTable!=''">
+        ${sourceTable} s
+      </if>
+      <if test="targetTable!=null and targetTable!=''">
+       ${targetTable} t
+      </if>
+    WHERE ${primrayCondition}  and m.ente_id=#{enteId}
+    <if test="sourceTable!=null and sourceTable!=''">
+      and s.ente_id=#{enteId}
+      and ${SMCondition}
+    </if>
+    <if test="targetTable!=null and targetTable!=''">
+      and t.ente_id=#{enteId}
+      and ${TMCondition}
+    </if>
+
+  </select>
+
+  <delete id="deleteMapData" parameterType="com.njwd.entity.admin.DataMapSql" >
+    delete from ${mapTable} where ente_id=#{enteId} and ${primrayCondition}
+  </delete>
+
+  <delete id="deleteByPrimaryKey" parameterType="com.njwd.entity.admin.DataMapKey" >
+    delete from wd_datamap
+    where ente_id = #{enteId,jdbcType=VARCHAR}
+      and datamap_key = #{datamapKey,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insertMapData" parameterType="com.njwd.entity.admin.DataMapSql" >
+    insert into ${mapTable} (${columns}) values ${values}
+  </insert>
+
+
+  <insert id="insertSelective" parameterType="com.njwd.entity.admin.DataMap" >
+    insert into wd_datamap
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="enteId != null" >
+        ente_id,
+      </if>
+      <if test="datamapKey != null" >
+        datamap_key,
+      </if>
+      <if test="sourceTable != null" >
+        source_table,
+      </if>
+      <if test="targetTable != null" >
+        target_table,
+      </if>
+      <if test="datamapTable != null" >
+        datamap_table,
+      </if>
+      <if test="sourceTableName != null" >
+        source_table_name,
+      </if>
+      <if test="targetTableName != null" >
+        target_table_name,
+      </if>
+      <if test="sourceTableKey != null" >
+        source_table_key,
+      </if>
+      <if test="targetTableKey != null" >
+        target_table_key,
+      </if>
+      <if test="sourceTableColumn != null" >
+        source_table_column,
+      </if>
+      <if test="targetTableColumn != null" >
+        target_table_column,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="enteId != null" >
+        #{enteId,jdbcType=VARCHAR},
+      </if>
+      <if test="datamapKey != null" >
+        #{datamapKey,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceTable != null" >
+        #{sourceTable,jdbcType=VARCHAR},
+      </if>
+      <if test="targetTable != null" >
+        #{targetTable,jdbcType=VARCHAR},
+      </if>
+      <if test="datamapTable != null" >
+        #{datamapTable,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceTableName != null" >
+        #{sourceTableName,jdbcType=VARCHAR},
+      </if>
+      <if test="targetTableName != null" >
+        #{targetTableName,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceTableKey != null" >
+        #{sourceTableKey,jdbcType=VARCHAR},
+      </if>
+      <if test="targetTableKey != null" >
+        #{targetTableKey,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceTableColumn != null" >
+        #{sourceTableColumn,jdbcType=VARCHAR},
+      </if>
+      <if test="targetTableColumn != null" >
+        #{targetTableColumn,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.njwd.entity.admin.DataMap" >
+    update wd_datamap
+    <set >
+      <if test="sourceTable != null" >
+        source_table = #{sourceTable,jdbcType=VARCHAR},
+      </if>
+      <if test="targetTable != null" >
+        target_table = #{targetTable,jdbcType=VARCHAR},
+      </if>
+      <if test="datamapTable != null" >
+        datamap_table = #{datamapTable,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceTableName != null" >
+        source_table_name = #{sourceTableName,jdbcType=VARCHAR},
+      </if>
+      <if test="targetTableName != null" >
+        target_table_name = #{targetTableName,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceTableKey != null" >
+        source_table_key = #{sourceTableKey,jdbcType=VARCHAR},
+      </if>
+      <if test="targetTableKey != null" >
+        target_table_key = #{targetTableKey,jdbcType=VARCHAR},
+      </if>
+      <if test="sourceTableColumn != null" >
+        source_table_column = #{sourceTableColumn,jdbcType=VARCHAR},
+      </if>
+      <if test="targetTableColumn != null" >
+        target_table_column = #{targetTableColumn,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where ente_id = #{enteId,jdbcType=VARCHAR}
+      and datamap_key = #{datamapKey,jdbcType=VARCHAR}
+  </update>
+
+
+
+
+</mapper>

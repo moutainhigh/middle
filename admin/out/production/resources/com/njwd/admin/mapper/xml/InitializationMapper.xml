@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.admin.mapper.InitializationMapper">
+
+    <resultMap type="com.njwd.entity.admin.TableObj" id="tableObjMapper">
+        <id column="table_name" property="tableName"/>
+        <result column="table_desc" property="tableDesc"/>
+        <result column="data_type" property="dataType"/>
+        <collection property="tableAttributeList" ofType="com.njwd.entity.admin.TableAttribute">
+            <id column="column_name" property="columnName"/>
+            <result column="column_desc" property="columnDesc"/>
+            <result column="display_flag" property="displayFlag"/>
+            <result column="display_order" property="displayOrder"/>
+        </collection>
+    </resultMap>
+
+    <select id="getAllTable" parameterType="String" resultType="com.njwd.entity.admin.TableObj">
+        SELECT DISTINCT
+        table_name,
+        table_comment as table_desc
+        FROM
+        information_schema.`TABLES` where table_schema = #{dbName}
+    </select>
+
+    <select id="getCreateSql"  resultType="Map">
+        USE ${dbName};
+        SHOW CREATE TABLE ${tableName};
+    </select>
+
+    <insert id="initPrimaryDataTask" >
+        <foreach collection="dataTypeVoList" item="dataTypeVo">
+            REPLACE INTO `wd_task_base` (`task_key`, `task_name`, `app_id`, `task_type`, `target_excute`, `cron`, `runtime_param`, `job_role`, `max_excute_time`, `business_type`, `data_type`, `open_type`) VALUES
+            (concat(#{dataTypeVo.dataTypeId},#{primarySysSuffix}), concat(#{dataTypeVo.dataTypeName},'主系统设置'), NULL, 'JAVABEAN', 'masterDataUnifiedJobServiceImpl.doDealMinPlatDataFromRelaJob', '0 0 23 * * ?', concat('{\"data_type\":\"',#{dataTypeVo.dataTypeId},'\"}'),
+             'role1', '3600', 'DATA_UNIFY', #{dataTypeVo.dataTypeId}, 'HANDLE');
+
+            REPLACE INTO `wd_task_base` (`task_key`, `task_name`, `app_id`, `task_type`, `target_excute`, `cron`, `runtime_param`, `job_role`, `max_excute_time`, `business_type`, `data_type`, `open_type`) VALUES
+            (concat(#{dataTypeVo.dataTypeId},#{primaryJointSuffix}), concat(#{dataTypeVo.dataTypeName},'数据统一'), NULL, 'JAVABEAN', 'masterDataUnifiedJobServiceImpl.doDealMatchDataBatchJob', '0 0 23 * * ?', concat('{\"data_type\":\"',#{dataTypeVo.dataTypeId},'\"}'),
+            'role1', '3600', 'DATA_UNIFY', #{dataTypeVo.dataTypeId}, 'AUTO');
+
+            REPLACE INTO `wd_task_base` (`task_key`, `task_name`, `app_id`, `task_type`, `target_excute`, `cron`, `runtime_param`, `job_role`, `max_excute_time`, `business_type`, `data_type`, `open_type`) VALUES
+            (concat(#{dataTypeVo.dataTypeId},#{primaryPaddingSuffix}), concat(#{dataTypeVo.dataTypeName},'字段填充'), NULL, 'JAVABEAN', 'primaryPaddingServiceImpl.dealPrimaryPaddingJob', '0 0 23 * * ?', concat('{\"data_type\":\"',#{dataTypeVo.dataTypeId},'\"}'),
+            'role1', '3600', 'DATA_UNIFY', #{dataTypeVo.dataTypeId}, 'AUTO');
+        </foreach>
+    </insert>
+
+    <insert id="initPrimaryDataTaskRely" >
+        <foreach collection="dataTypeVoList" item="dataTypeVo">
+            REPLACE INTO `wd_task_rely_base` (`rely_base_id`, `description`, `source_task_key`, `target_task_key`, `front_expression`, `back_expression`, `max_refuse_count`, `warn_refuse_count`) VALUES
+            (UUID_SHORT(), concat(#{dataTypeVo.dataTypeName},'数据统一依赖'), concat(#{dataTypeVo.dataTypeId},#{primarySysSuffix}), concat(#{dataTypeVo.dataTypeId},#{primaryJointSuffix}), 'true', 'false', '5', '3');
+
+            REPLACE INTO `wd_task_rely_base` (`rely_base_id`, `description`, `source_task_key`, `target_task_key`, `front_expression`, `back_expression`,  `max_refuse_count`, `warn_refuse_count`) VALUES
+            (UUID_SHORT(), concat(#{dataTypeVo.dataTypeName},'字段来源依赖'), concat(#{dataTypeVo.dataTypeId},#{primaryJointSuffix}), concat(#{dataTypeVo.dataTypeId},#{primaryPaddingSuffix}), 'true', 'false', '5', '3');
+        </foreach>
+    </insert>
+
+    <select id="getAllDataTypeTable" parameterType="java.lang.String" resultType="com.njwd.entity.admin.TableObj">
+        SELECT
+            table_name,
+            table_comment,
+            t0.data_type as table_name_data_type,
+            t1.value_id as dict_data_type,
+            t1.value_name as dict_data_name
+        FROM
+            (
+                SELECT
+                    table_name,
+                    Concat(replace(REPLACE (
+                        REPLACE (table_comment, '信息', ''),
+                        '表',
+                        ''
+                    ),' ',''),'主数据') as table_comment,
+                    REPLACE (
+                        REPLACE (table_name, 'base_', ''),
+                        '_rela',
+                        ''
+                    ) AS data_type
+                FROM
+                    information_schema. TABLES
+                WHERE
+                    table_schema = #{dbName}
+                AND table_name LIKE 'base_%'
+            AND INSTR(table_name, 'bak' )=0
+            ) t0
+        LEFT JOIN (
+            SELECT
+                b.value_id,
+                b.value_name
+            FROM
+                wd_dict a,
+                wd_dict_value b
+            WHERE
+                a.code_id = 'data_type'
+            AND a.code_id = b.code_id
+        ) t1 ON t0.data_type = t1.value_id
+    </select>
+
+    <delete id="deleteTableObj">
+        delete from wd_table_obj where table_name like 'base_%'
+    </delete>
+
+    <delete id="deleteTableAttr">
+        delete from wd_table_attribute where table_name like 'base_%'
+    </delete>
+
+    <select id="getAllDataTypeTableObjAndAttr" parameterType="java.lang.String" resultMap="tableObjMapper">
+        SELECT
+            t0.table_name,
+            t0.table_comment AS table_desc,
+            t0.data_type AS data_type,
+            t1.value_id AS dict_data_type,
+            t1.value_name AS dict_data_name,
+            column_name,
+            substring_index(column_comment,' ',1) AS column_desc,
+            '1' AS display_flag,
+            CASE
+        WHEN column_name = Concat(data_type, '_id') THEN
+            1
+        WHEN column_name = Concat(data_type, '_name') THEN
+            2
+        WHEN column_name = 'mobile' THEN
+            3
+        WHEN column_name = Concat('third_', data_type, '_id') THEN
+            4
+        ELSE
+            5
+        END AS display_order
+        FROM
+            (
+                SELECT
+                    table_name,
+                    Concat(
+                        REPLACE (
+                            REPLACE (
+                                REPLACE (table_comment, '信息', ''),
+                                '表',
+                                ''
+                            ),
+                            ' ',
+                            ''
+                        ),
+                        '主数据'
+                    ) AS table_comment,
+                    REPLACE (
+                        REPLACE (table_name, 'base_', ''),
+                        '_rela',
+                        ''
+                    ) AS data_type
+                FROM
+                    information_schema. TABLES
+                WHERE
+                    table_schema = #{dbName}
+                AND table_name LIKE 'base_%'
+                AND INSTR(table_name, 'bak') = 0
+            ) t0
+        LEFT JOIN (
+            SELECT
+                b.value_id,
+                b.value_name
+            FROM
+                wd_dict a,
+                wd_dict_value b
+            WHERE
+                a.code_id = 'data_type'
+            AND a.code_id = b.code_id
+        ) t1 ON t0.data_type = t1.value_id
+        INNER JOIN (
+            SELECT
+                table_name,
+                column_name,
+                column_comment
+            FROM
+                information_schema. COLUMNS
+            WHERE
+                table_schema = #{dbName}
+            AND table_name LIKE 'base_%'
+            AND INSTR(table_name, 'bak') = 0
+        ) t2 ON t0.table_name = t2.table_name
+        ORDER BY
+            t0.table_name,
+            display_order
+    </select>
+    
+    <insert id="insertTableObj" parameterType="com.njwd.entity.admin.TableObj">
+        <foreach collection="list" item="table" separator=";">
+            INSERT INTO `wd_table_obj` (`table_name`, `table_desc`, `data_type`) VALUES
+            (#{table.tableName}, #{table.tableDesc}, #{table.dataType})
+        </foreach>
+    </insert>
+
+    <insert id="insertTableAttr" parameterType="com.njwd.entity.admin.TableObj">
+        <foreach collection="list" item="table">
+            <foreach collection="table.tableAttributeList" item="attr">
+                INSERT INTO `wd_table_attribute` (`table_name`, `column_name`, `column_desc`, `column_alias`, `display_flag`, `display_order`)
+                VALUES (#{table.tableName}, #{attr.columnName}, #{attr.columnDesc}, #{attr.columnAlias}, #{attr.displayFlag}, #{attr.displayOrder});
+            </foreach>
+        </foreach>
+    </insert>
+
+</mapper>

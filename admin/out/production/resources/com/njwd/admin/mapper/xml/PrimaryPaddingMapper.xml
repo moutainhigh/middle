@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.admin.mapper.PrimaryPaddingMapper">
+    <select id="getModifiableField" resultType="com.njwd.entity.admin.vo.PrimaryPaddingVo">
+        SELECT
+            t.`column_name` AS base_column,
+            t.`column_desc` AS base_column_desc,
+            app_id as sourceAppId,
+            app_name as sourceAppName,
+            t1.`column_name` AS source_column,
+            t1.`column_desc` AS source_column_desc,
+            t.`table_name` as target_table,
+        IF (ISNULL(t2.`column_name`), 0, 1) AS fixed_flag,
+        0 as joint_flag
+        FROM
+            (
+                SELECT
+                    `column_name`,
+                    substring_index(`column_desc`, ' ', 1) AS `column_desc`,`table_name`
+                FROM
+                    wd_table_attribute
+                WHERE
+                    `table_name` = #{baseTableName}
+            ) t
+        INNER JOIN (
+            SELECT
+                `column_name`,
+                substring_index(`column_desc`, ' ', 1) AS `column_desc`,`table_name`
+            FROM
+                wd_table_attribute
+            WHERE
+                `table_name` = #{relaTableName}
+        ) t1 ON t.`column_name` = t1.`column_name`
+        LEFT JOIN (
+            SELECT
+                `column_name`
+            FROM
+                wd_primary_fixed_column
+            WHERE
+                data_type = #{dataType}
+        ) t2 ON t.`column_name` = t2.`column_name`,
+         (
+            SELECT
+                b.app_id,
+                b.app_name
+            FROM
+                wd_primary_source a,
+                wd_app b
+            WHERE
+                a.app_id = b.app_id
+            AND a.ente_id = #{enterpriseId}
+            AND data_type = #{dataType}
+            AND a.delete_flag = 0
+        ) t3
+    </select>
+
+    <select id="getAllRelyBaseTableName" parameterType="String" resultType="String">
+        SELECT DISTINCT
+            base_table
+        FROM
+            wd_primary_rely a,
+            wd_table_obj b
+        WHERE
+            a.base_table = b.table_name
+        AND a.data_type = #{dataType}
+        and a.type = 0
+    </select>
+
+    <select id="getJointRuleByEnteDataType" parameterType="com.njwd.entity.admin.dto.EnterpriseDataTypeDto" resultType="String">
+        SELECT
+            expression
+        FROM
+            wd_primary_joint
+        WHERE
+            ente_id = #{enterpriseId}
+        AND data_type = #{dataType}
+    </select>
+
+    <select id="getJointAppByDataType" parameterType="com.njwd.entity.admin.dto.EnterpriseDataTypeDto" resultType="com.njwd.entity.admin.App">
+        SELECT
+            t2.app_id,
+            t2.app_name
+        FROM
+            wd_primary_joint t1
+        INNER JOIN wd_app t2 ON t1.app_id = t2.app_id
+        INNER JOIN wd_ente_app t3 ON t1.ente_id = t3.ente_id
+        AND t1.app_id = t3.app_id
+        WHERE
+            t1.ente_id = #{enterpriseId}
+        AND t1.data_type = #{dataType}
+        UNION ALL
+        SELECT
+                t2.app_id,
+                t2.app_name
+            FROM
+                wd_primary_source t1
+            INNER JOIN
+                wd_app t2
+                    ON t1.app_id = t2.app_id
+            INNER JOIN
+                wd_ente_app t3
+                    ON t1.ente_id = t3.ente_id
+                    AND t1.app_id = t3.app_id
+            WHERE
+                t1.ente_id = #{enterpriseId}
+                AND t1.data_type = #{dataType}
+                AND t1.delete_flag = 0
+    </select>
+
+    <select id="getTableAllAttribute" resultType="com.njwd.entity.admin.TableAttribute">
+        SELECT
+            b.table_name,
+            b.column_name,
+            b.column_desc
+        FROM
+            wd_table_obj a,
+            wd_table_attribute b
+        WHERE
+            a.table_name = b.table_name
+        AND a.table_name in
+        <foreach collection="list" item="item"  open="(" close=")" separator=",">
+            #{item.tableName}
+        </foreach>
+
+    </select>
+    <select id="getTableAllAttributeVo" resultType="com.njwd.entity.admin.vo.TableAttributeVo">
+        SELECT
+        b.table_name,
+        b.column_name,
+        b.column_desc,
+        a.data_type
+        FROM
+        wd_table_obj a,
+        wd_table_attribute b
+        WHERE
+        a.table_name = b.table_name
+        AND a.table_name in
+        <foreach collection="list" item="item"  open="(" close=")" separator=",">
+            #{item.tableName}
+        </foreach>
+
+    </select>
+
+    <select id="getPrimayPadding" resultType="com.njwd.entity.admin.vo.PrimaryPaddingVo">
+        SELECT
+            a.padding_id,
+            source_col AS source_column,
+            c.column_desc as source_column_desc,
+            target_col AS base_column,
+            target_table,
+            a.app_id as source_app_id,
+            b.app_name as source_app_name,
+            0 AS joint_flag,
+            0 AS fixed_flag
+        FROM
+            wd_primary_padding a,
+            wd_app b,
+            wd_table_attribute c
+        WHERE
+            a.app_id = b.app_id
+        AND a.target_table = c.table_name AND a.source_col = c.column_name
+        AND ente_id = #{enterpriseId}
+        AND data_type = #{dataType}
+    </select>
+
+    <update id="delPaddingRule">
+        DELETE
+        FROM
+            wd_primary_padding
+        WHERE
+            ente_id = #{enterpriseId}
+        AND data_type = #{dataType}
+    </update>
+
+    <update id="insertPaddingRule" parameterType="com.njwd.entity.admin.dto.EntePrimaryPaddingDto">
+        INSERT INTO wd_primary_padding (
+        padding_id,
+        ente_id,
+        data_type,
+        app_id,
+        source_col,
+        target_col,
+        target_table,
+        create_time
+        )
+        VALUES
+        <foreach collection="primaryPaddingVoList" item="item"  separator=",">
+            (
+            #{item.paddingId}, #{enterpriseId}, #{dataType}, #{item.sourceAppId}, #{item.sourceColumn},
+            #{item.baseColumn}, #{item.targetTable}, now()
+            )
+        </foreach>
+    </update>
+
+    <update id="executeOneToOnePadding" parameterType="map">
+        <foreach collection="_parameter.entrySet()" item="value"  index="key" separator=";">
+            update ${key} table0
+            ${value}
+        </foreach>
+    </update>
+
+    <delete id="executeOneToManyDelete" parameterType="map">
+        <foreach collection="_parameter.entrySet()" item="value"  index="key" separator=";">
+            delete table0 from  ${key} table0
+            ${value.deleteSql}
+        </foreach>
+    </delete>
+
+    <select id="executeOneToManyInsert" parameterType="map">
+        <foreach collection="_parameter.entrySet()" item="value"  index="key" separator=";">
+            insert into ${key}
+            ${value.insertSql}
+        </foreach>
+    </select>
+
+    <select id="getPrimayPaddingRuleByApp" parameterType="com.njwd.entity.admin.dto.EnterpriseAppDataTypeDto" resultType="com.njwd.entity.admin.vo.PrimaryPaddingVo">
+        SELECT
+            a.padding_id,
+            source_col AS source_column,
+            c.column_desc as source_column_desc,
+            target_col AS base_column,
+            target_table,
+            a.app_id as source_app_id,
+            b.app_name as source_app_name,
+            0 AS joint_flag,
+            0 AS fixed_flag
+        FROM
+            wd_primary_padding a,
+            wd_app b,
+            wd_table_attribute c
+        WHERE
+            a.app_id = b.app_id
+        AND a.target_table = c.table_name AND a.source_col = c.column_name
+        AND a.app_id = #{appId}
+        AND ente_id = #{enterpriseId}
+        AND data_type = #{dataType}
+    </select>
+</mapper>

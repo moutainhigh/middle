@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.admin.mapper.DataMaintenanceMapper">
+
+    <resultMap type="com.njwd.entity.admin.vo.ControlPropertyVo" id="controlPropertyMapper">
+        <id column="data_control_id" property="dataControlId"/>
+        <result column="ente_id" property="enterpriseId"/>
+        <result column="data_type" property="dataType"/>
+        <result column="control_code" property="controlCode"/>
+        <result column="control_name" property="controlName"/>
+        <result column="user_control_name" property="userControlName"/>
+        <result column="format_code" property="formatCode"/>
+        <result column="format_name" property="formatName"/>
+        <result column="required_flag" property="requiredFlag"/>
+        <result column="target_table" property="targetTable"/>
+        <result column="target_column" property="targetColumn"/>
+        <result column="remark" property="remark"/>
+        <result column="display_order" property="displayOrder"/>
+        <collection property="controlValueList" ofType="com.njwd.entity.admin.ControlValue">
+            <id column="value_id" property="valueId"/>
+            <result column="data_control_id" property="dataControlId"/>
+            <result column="control_value" property="controlValue"/>
+            <result column="defalue_flag" property="defalueFlag"/>
+        </collection>
+    </resultMap>
+
+    <select id="getAllControl" resultType="com.njwd.entity.admin.vo.ControlVo">
+        SELECT control_code,control_name,up_control_code,control_level
+        FROM wd_control_type where is_del=0
+        order by control_level
+    </select>
+
+    <select id="getChildControlByCode" resultType="com.njwd.entity.admin.vo.ControlVo" parameterType="com.njwd.entity.admin.dto.ControlDto">
+        SELECT control_code,control_name,up_control_code,control_level
+        FROM wd_control_type where is_del=0 and up_control_code=#{controlDto.controlCode}
+        order by control_level
+    </select>
+    <select id="getFormatByControlCode" parameterType="java.lang.String" resultType="com.njwd.entity.admin.vo.ControlFormatVo">
+        SELECT
+            control_code,
+            format_code,
+            format_name
+        FROM
+            wd_control_format
+        WHERE
+            control_code = #{controlCode}
+    </select>
+
+    <select id="getLinkedFields" resultType="com.njwd.entity.admin.TableAttribute">
+        SELECT
+            target_table as tableName,target_column as columnName
+        FROM
+            wd_data_control_rela
+        WHERE
+            ente_id = #{enterpriseId}
+        AND data_type = #{dataType}
+    </select>
+
+    <insert id="insertControlProperty" parameterType="com.njwd.entity.admin.ControlProperty">
+        INSERT INTO wd_data_control_rela (data_control_id, ente_id, data_type, control_code, user_control_name,
+            format_code, required_flag, target_table, target_column, remark, display_order)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.dataControlId}, #{item.enterpriseId}, #{item.dataType}, #{item.controlCode}, #{item.userControlName},
+            #{item.formatCode}, #{item.requiredFlag}, #{item.targetTable}, #{item.targetColumn}, #{item.remark},#{item.displayOrder})
+        </foreach>
+    </insert>
+
+    <update id="updateControlProperty" parameterType="com.njwd.entity.admin.ControlProperty">
+        <foreach collection="list" item="item" separator=";">
+            update wd_data_control_rela
+            <set >
+                control_code = #{item.controlCode},
+                user_control_name = #{item.userControlName},
+                format_code = #{item.formatCode},
+                required_flag = #{item.requiredFlag},
+                target_table = #{item.targetTable},
+                target_column = #{item.targetColumn},
+                remark = #{item.remark},
+                display_order = #{item.displayOrder}
+            </set>
+            where data_control_id = #{item.dataControlId}
+
+        </foreach>
+    </update>
+
+    <delete id="deleteControlProperty" parameterType="com.njwd.entity.admin.ControlProperty">
+        delete from wd_data_control_rela where data_control_id in
+        <foreach collection="list" item="item" open="(" close=")" separator=",">
+            #{item.dataControlId}
+        </foreach>
+    </delete>
+
+    <insert id="insertControlValue" parameterType="com.njwd.entity.admin.ControlValue">
+        INSERT INTO wd_control_value (value_id, data_control_id, control_value, defalue_flag) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.valueId}, #{item.dataControlId}, #{item.controlValue}, #{item.defalueFlag})
+        </foreach>
+    </insert>
+
+    <insert id="updateControlValue" parameterType="com.njwd.entity.admin.ControlValue">
+        <foreach collection="list" item="item" separator=";">
+            update wd_control_value
+            <set >
+                control_value = #{item.controlValue},
+                defalue_flag = #{item.defalueFlag},
+            </set>
+            where value_id = #{item.valueId}
+        </foreach>
+    </insert>
+
+    <delete id="deleteControlValue" parameterType="com.njwd.entity.admin.ControlValue">
+        delete from wd_control_value where value_id in
+        <foreach collection="list" item="item" open="(" close=")" separator=",">
+            #{item.valueId}
+        </foreach>
+    </delete>
+
+    <select id="getControlAndProperty" resultMap="controlPropertyMapper">
+        SELECT
+            a.data_control_id,ente_id,data_type,a.control_code,control_name,user_control_name,
+			a.format_code,format_name,required_flag,target_table,target_column,remark,
+			d.value_id,d.control_value,d.defalue_flag,a.display_order
+        FROM
+            wd_data_control_rela a
+            left join wd_control_type b on
+            a.control_code = b.control_code
+            left join wd_control_format c on
+            a.format_code = c.format_code
+			left join wd_control_value d on
+			a.data_control_id = d.data_control_id
+        WHERE
+            ente_id = #{enterpriseId}
+        AND data_type = #{dataType}
+    </select>
+
+    <select id="executeSql">
+        ${sql}
+    </select>
+
+    <select id="getTotalSyncCount" resultType="int">
+        SELECT
+            count(0)
+        FROM
+            wd_data_maintenance_record
+        WHERE
+            ente_id = #{enterpriseId}
+        AND data_type = #{dataType}
+        AND sync_type = 'total'
+    </select>
+
+    <insert id="addTotalMaintenceRecord" parameterType="com.njwd.entity.admin.dto.EnterpriseAppDataTypeDto">
+        INSERT INTO wd_data_maintenance_record (
+            id,
+            ente_id,
+            data_type,
+            source_app_id,
+            sync_type
+        )
+        VALUES
+            (
+                #{id},
+                #{enterpriseAppDataTypeDto.enterpriseId},
+                #{enterpriseAppDataTypeDto.dataType},
+                #{enterpriseAppDataTypeDto.appId},
+                'total'
+            )
+    </insert>
+    
+    <select id="getThirdDataForSelect" resultType="java.util.LinkedHashMap">
+        select ${sql},${enterpriseAppListDataTypeDto.dataType}_id,app_name from base_${enterpriseAppListDataTypeDto.dataType}_rela r
+        ,wd_app a
+        where r.app_id=a.app_id
+        and ente_id = #{enterpriseAppListDataTypeDto.enterpriseId}
+        and r.app_id in
+        <foreach collection="enterpriseAppListDataTypeDto.appIdList" item="app"
+                 open="(" close=")" separator=",">
+          #{app}
+        </foreach>
+        <!--and (
+        ${enterpriseAppListDataTypeDto.dataType}_id = ''
+        or ${enterpriseAppListDataTypeDto.dataType}_id is null)-->
+        <if test="enterpriseAppListDataTypeDto.searchContentList != null ">
+            ${searchSql}
+        </if>
+        <if test="enterpriseAppListDataTypeDto.appIdList != null ">
+            <foreach collection="enterpriseAppListDataTypeDto.appIdList" item="app" >
+                and CONCAT(#{app},'_',third_${enterpriseAppListDataTypeDto.dataType}_id) not in (select third_${enterpriseAppListDataTypeDto.dataType}_id
+                from base_${enterpriseAppListDataTypeDto.dataType}_rela where ente_id=#{enterpriseAppListDataTypeDto.enterpriseId} and app_id='midPlat')
+            </foreach>
+        </if>
+        order by r.create_time desc
+    </select>
+
+    <insert id="addThirdDataToMidPlatIncremental">
+        insert into base_${dataMaintenceDto.dataType}_rela
+        <foreach collection="controlPropertyList" item="controlProperty1"
+                 open="(" close=")" separator=",">
+            ${controlProperty1.targetColumn}
+        </foreach>
+        values
+        <foreach collection="dataMaintenceDto.dataList" item="dataMap" separator=",">
+            <foreach collection="controlPropertyList" item="controlProperty2"
+                     open="(" close=")" separator=",">
+                <if test="controlProperty2.targetColumn == 'app_id' ">
+                    #{dataMaintenceDto.appId}
+                </if>
+                <if test="controlProperty2.targetColumn == 'third_'+dataMaintenceDto.dataType+'_id' ">
+                    concat(#{dataMap.app_id},'_',#{dataMap.${controlProperty2.targetColumn}})
+                </if>
+                <if test="controlProperty2.targetColumn != 'app_id' and controlProperty2.targetColumn != 'third_'+dataMaintenceDto.dataType+'_id'">
+                    #{dataMap.${controlProperty2.targetColumn}}
+                </if>
+            </foreach>
+        </foreach>
+    </insert>
+
+    <insert id="addDataToMidPlatManual">
+        insert into base_${dataMap.dataType}_rela
+        <foreach collection="controlPropertyList" item="controlProperty1"
+                 open="(" close=")" separator=",">
+            ${controlProperty1.targetColumn}
+        </foreach>
+        values
+        <foreach collection="controlPropertyList" item="controlProperty2"
+                 open="(" close=")" separator=",">
+            <if test="controlProperty2.targetColumn == 'third_'+dataMap.dataType+'_id' ">
+                concat('manual_',#{dataMap.${controlProperty2.targetColumn}})
+            </if>
+            <if test="controlProperty2.targetColumn != 'third_'+dataMap.dataType+'_id'">
+                #{dataMap.${controlProperty2.targetColumn}}
+            </if>
+        </foreach>
+    </insert>
+
+    <update id="updateMidPlatDataManual">
+        update base_${dataMap.dataType}_rela
+        set
+        <foreach collection="controlPropertyList" item="controlProperty" separator=",">
+            ${controlProperty.targetColumn} = #{dataMap.${controlProperty.targetColumn}}
+        </foreach>
+        where
+        ente_id = #{dataMap.enterpriseId}
+        and app_id = #{dataMap.appId}
+        and third_${dataMap.dataType}_id = #{dataMap.third_${dataMap.dataType}_id}
+    </update>
+
+    <delete id="deleteMidPlatDataManual">
+        delete from base_${dataType}_rela
+        where ente_id = #{enterpriseId}
+        and app_id = #{appId}
+        and third_${dataType}_id = #{third_${dataType}_id}
+    </delete>
+
+    <select id="getDataMaintenanceByDataType" resultType="com.njwd.entity.admin.vo.DataMaintenanceRecordVo" parameterType="com.njwd.entity.admin.dto.DataMaintenanceRecordDto">
+        SELECT id,ente_id,data_type,source_app_id,sync_type,create_time,update_time
+        FROM wd_data_maintenance_record
+        WHERE ente_id = #{dataMaintenanceRecordDto.enteId}
+        AND data_type = #{dataMaintenanceRecordDto.dataType} AND sync_type = #{dataMaintenanceRecordDto.syncType}
+    </select>
+
+</mapper>

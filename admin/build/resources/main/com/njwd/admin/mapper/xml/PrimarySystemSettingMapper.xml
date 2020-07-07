@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.admin.mapper.PrimarySystemSettingMapper">
+    <select id="getAllDataType"  parameterType="String" resultType="com.njwd.entity.admin.vo.DataTypeVo">
+        SELECT
+            value_id as data_type_id,
+	        value_name as data_type_name
+        FROM
+            wd_dict a,
+            wd_dict_value b
+        WHERE
+            a.code_id = b.code_id
+        AND a.code_id = 'data_type'
+        ORDER BY
+            order_id
+    </select>
+
+    <select id="getAppListByDataType"  parameterType="com.njwd.entity.admin.dto.EnterpriseDataTypeDto" resultType="com.njwd.entity.admin.App">
+        SELECT
+            t1.app_id,
+            t1.app_name
+        FROM
+            wd_app t1
+        INNER JOIN wd_ente_app t2 ON t1.app_id = t2.app_id
+        INNER JOIN wd_app_primary_data t3 ON t1.app_id = t3.app_id
+        WHERE
+            t2.ente_id = #{enterpriseId}
+        AND t3.data_type = #{dataType}
+    </select>
+
+    <select id="getPrimarySystem"  parameterType="com.njwd.entity.admin.dto.EnterpriseDataTypeDto" resultType="com.njwd.entity.admin.dto.PrimarySystemDto">
+        SELECT
+            t2.source_id sourceId,
+            t1.app_id appId,
+            t1.app_name appName
+        FROM
+            wd_app t1
+        INNER JOIN wd_primary_source t2 ON t1.app_id = t2.app_id
+        WHERE
+            t2.ente_id = #{enterpriseId}
+        AND t2.data_type = #{dataType}
+        AND delete_flag = 0
+    </select>
+
+    <select id="getRelierDataType"  parameterType="String" resultType="com.njwd.entity.admin.vo.PrimaryRelyVo">
+        SELECT
+            t1.data_type, t1.rely_data, t2.data_type_name as rely_data_desc, t1.base_table, t1.rela_table
+        FROM
+            wd_primary_rely t1
+        INNER JOIN (
+            SELECT
+                value_id AS data_type_id,
+                value_name AS data_type_name
+            FROM
+                wd_dict a,
+                wd_dict_value b
+            WHERE
+                a.code_id = b.code_id
+            AND a.code_id = 'data_type'
+        ) t2 ON t1.rely_data = t2.data_type_id
+        WHERE
+            t1.data_type = #{dataType}
+    </select>
+
+    <select id="getDependantDataType"  parameterType="String" resultType="com.njwd.entity.admin.vo.PrimaryRelyVo">
+        SELECT
+            t1.data_type, t1.rely_data, t1.base_table, t1.rela_table
+        FROM
+            wd_primary_rely t1
+        INNER JOIN (
+            SELECT
+                value_id AS data_type_id,
+                value_name AS data_type_name
+            FROM
+                wd_dict a,
+                wd_dict_value b
+            WHERE
+                a.code_id = b.code_id
+            AND a.code_id = 'data_type'
+        ) t2 ON t1.data_type = t2.data_type_id
+        WHERE
+            t1.rely_data = #{dataType}
+    </select>
+
+    <select id="getDistinctRelyValue" resultType="String">
+        SELECT DISTINCT
+            ${column}
+        FROM
+            ${table}
+        WHERE
+            ente_id = #{primarySystemDto.enterpriseId}
+        AND app_id = #{primarySystemDto.appId}
+        LIMIT ${limit}
+    </select>
+
+    <select id="addPrimarySystem"  parameterType="com.njwd.entity.admin.dto.PrimarySystemDto">
+        insert into wd_primary_source
+        (
+          source_id,
+          ente_id,
+          data_type,
+          app_id
+        )
+        values(
+          #{sourceId},
+          #{enterpriseId},
+          #{dataType},
+          #{appId}
+        )
+    </select>
+
+    <!--    获取所有数据统一的任务，包括主系统数据同步、数据融合、数据填充    -->
+    <select id="getDataUnificationTask"  resultType="com.njwd.entity.admin.dto.TaskDto">
+        SELECT
+            task_key,task_name,task_status,switch_status
+        FROM
+            wd_task
+        WHERE
+            ente_id = #{enterpriseId}
+        AND task_key IN
+        <foreach collection="taskKeys" item="taskKey" open="(" close=")" separator="," >
+            #{taskKey}
+        </foreach>
+    </select>
+
+    <resultMap type="com.njwd.entity.admin.TableObj" id="tableObjMapper">
+        <id column="table_name" property="tableName"/>
+        <result column="table_desc" property="tableDesc"/>
+        <result column="data_type" property="dataType"/>
+        <collection property="tableAttributeList" ofType="com.njwd.entity.admin.TableAttribute">
+            <id column="column_name" property="columnName"/>
+            <result column="column_desc" property="columnDesc"/>
+            <result column="display_flag" property="displayFlag"/>
+        </collection>
+    </resultMap>
+
+    <select id="getTableByDataType" parameterType="com.njwd.entity.admin.vo.DataTypeVo" resultType="com.njwd.entity.admin.TableObj">
+        SELECT DISTINCT
+            a.table_name,
+            table_desc,
+            data_type
+        FROM
+            wd_table_obj a,
+            wd_table_attribute b
+        WHERE
+            a.table_name = b.table_name
+        AND data_type IN
+        <foreach collection="list" item="item" open="(" close=")" separator="," >
+            #{item.dataTypeId}
+        </foreach>
+    </select>
+
+    <update id="setEmptyByTableCol" parameterType="com.njwd.entity.admin.TableObj">
+        <foreach collection="tableObjList" item="tableObj" separator=";" >
+            update ${tableObj.tableName} set
+                ${column} = ''
+        </foreach>
+
+    </update>
+
+    <update id="deleteTable" parameterType="String">
+        <foreach collection="list" item="table" separator=";" >
+            delete from ${table.tableName}
+        </foreach>
+    </update>
+
+    <update id="deletePrimarySystem" parameterType="com.njwd.entity.admin.dto.EnterpriseDataTypeDto">
+       update
+           wd_primary_source set delete_flag = 1,update_time = now()
+       where
+           ente_id = #{enterpriseId} and data_type = #{dataType}
+    </update>
+
+    <update id="updateTaskSwitch" parameterType="com.njwd.entity.admin.dto.SwitchTaskDto">
+        <foreach collection="taskList" item="task"  separator=";" >
+            update wd_task set switch_status = #{task.switchStatus} where
+            ente_id = #{enterpriseId} and task_key = #{task.taskKey}
+        </foreach>
+    </update>
+
+    <select id="getTaskSwitchByDataType" resultType="com.njwd.entity.admin.vo.TaskVo">
+        SELECT
+        ente_id,
+        task_key,
+        task_name,
+        switch_status,
+        CASE
+        WHEN INSTR(task_key, 'primary_source') > 0 THEN
+        '1'
+        WHEN INSTR(task_key, 'primary_padding') > 0 THEN
+        '2'
+        WHEN INSTR(task_key, 'primary_joint') > 0 THEN
+        '3'
+        END AS order_id,
+        CASE
+        WHEN INSTR(task_key, 'primary_source') > 0 THEN
+        '来源主系统设置'
+        WHEN INSTR(task_key, 'primary_padding') > 0 THEN
+        '来源字段设置'
+        WHEN INSTR(task_key, 'primary_joint') > 0 THEN
+        '数据融合规则'
+        END AS task_tag
+        FROM
+        wd_task
+        WHERE
+        ente_id = #{enterpriseId}
+        AND task_key IN
+        <foreach collection="taskKeyList" open="(" close=")" item="taskKey" separator=",">
+            #{taskKey}
+        </foreach>
+        ORDER BY
+        order_id
+    </select>
+
+</mapper>

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.admin.mapper.BenchmarkSettingMapper">
+
+    <select id="testSql" parameterType="map" resultType="String">
+        ${sql}
+    </select>
+
+    <resultMap id="BenchmarkResultMap" type="com.njwd.entity.admin.vo.BenchmarkVo">
+        <result column="benchmark_id" property="benchmarkId" />
+        <result column="benchmark_code" property="benchmarkCode" />
+        <result column="benchmark_name" property="benchmarkName" />
+        <result column="ente_id" property="enterpriseId" />
+        <result column="expression" property="expression" />
+        <result column="expression_desc" property="expressionDesc" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+    <sql id="Benchmark_Column_List">
+        `benchmark_id`,
+          `benchmark_code`,
+          `benchmark_name`,
+          `ente_id`,
+          `expression`,
+          `expression_desc`,
+          `create_time`,
+          `update_time`
+    </sql>
+
+
+    <select id="getAllBenchmark" parameterType="com.njwd.entity.admin.dto.BenchmarkDto" resultMap="BenchmarkResultMap">
+       select
+        <include refid="Benchmark_Column_List"/>
+        from
+            wd_benchmark
+        <where>
+            <if test="benchmarkDto.enterpriseId != null and benchmarkDto.enterpriseId != ''">
+                and ente_id = #{benchmarkDto.enterpriseId}
+            </if>
+            <if test="benchmarkDto.searchContent != null and benchmarkDto.searchContent != ''">
+                and (benchmark_code like concat('%',#{benchmarkDto.searchContent},'%') or benchmark_name like concat('%',#{benchmarkDto.searchContent},'%'))
+            </if>
+        </where>
+    </select>
+
+    <select id="getBenchmarkConfigList" parameterType="com.njwd.entity.admin.dto.BenchmarkDto" resultType="com.njwd.entity.admin.vo.BenchmarkConfigVo">
+        SELECT
+            t2.`ente_id` as enterpriseId,
+            `config_code`,
+            `config_name`,
+            t2.`metrics_code`,
+            t2.`metrics_name`,
+            `category_code`,
+            `category_name`,
+            `config_sql`,
+            t2.`create_time`,
+            t2.`update_time`
+        FROM
+            wd_benchmark_config_rela t1
+        INNER JOIN wd_benchmark_config t2 ON t1.metrics_code = t2.metrics_code and t1.ente_id = t2.ente_id
+        AND t1.benchmark_code = #{benchmarkDto.benchmarkCode}
+        <where>
+            <if test="benchmarkDto.enterpriseId != null and benchmarkDto.enterpriseId != ''">
+                and t1.ente_id = #{benchmarkDto.enterpriseId}
+            </if>
+            <if test="benchmarkDto.searchContent != null and benchmarkDto.searchContent != ''">
+                and (config_code like concat('%',#{benchmarkDto.searchContent},'%') or config_name like concat('%',#{benchmarkDto.searchContent},'%'))
+            </if>
+        </where>
+    </select>
+
+    <insert id="saveBenchmark" parameterType="com.njwd.entity.admin.vo.BenchmarkVo">
+        REPLACE INTO `wd_benchmark` (
+            `benchmark_id`,
+            `ente_id`,
+            `benchmark_code`,
+            `benchmark_name`,
+            `expression`
+        )
+        VALUES
+            (
+                #{benchmarkId},
+                #{enterpriseId},
+                #{benchmarkCode},
+                #{benchmarkName},
+                #{expression}
+            );
+    </insert>
+
+    <select id="getBenchmarkById" parameterType="string" resultMap="BenchmarkResultMap">
+        select
+        <include refid="Benchmark_Column_List"/>
+        from
+        wd_benchmark
+        <where>
+            <if test="benchmarkId != null and benchmarkId != ''">
+                and benchmark_id = #{benchmarkId}
+            </if>
+        </where>
+    </select>
+
+    <delete id="deleteBenchmarkById" parameterType="string">
+        delete from wd_benchmark where benchmark_id = #{benchmarkId}
+    </delete>
+
+    <select id="getBenchmarkByCode" resultMap="BenchmarkResultMap">
+        select
+        <include refid="Benchmark_Column_List"/>
+        from
+        wd_benchmark
+        <where>
+            <if test="enterpriseId != null and enterpriseId != ''">
+                and ente_id = #{enterpriseId}
+            </if>
+            <if test="benchmarkCode != null and benchmarkCode != ''">
+                and benchmark_code = #{benchmarkCode}
+            </if>
+        </where>
+    </select>
+
+    <select id="getConfigListByEnterpriseConfig" resultType="com.njwd.entity.admin.vo.BenchmarkConfigVo">
+        SELECT
+            `ente_id`,
+            `config_code`,
+            `config_name`,
+            `metrics_code`,
+            `metrics_name`,
+            `category_code`,
+            `category_name`,
+            `config_sql`,
+            `create_time`,
+            `update_time`
+        FROM
+            wd_benchmark_config
+        WHERE ente_id = #{enterpriseId}
+        AND config_code = #{configCodes}
+    </select>
+
+    <!--    ${sql}自带参数ente_id month person_id-->
+    <update id="updateActualSalary">
+        update person set actual_salary =
+        (
+            select actual_salary from
+                (select ${sql} as actual_salary) t
+        )
+        where id = #{paramMap.person_id}
+    </update>
+
+</mapper>

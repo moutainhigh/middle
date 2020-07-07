@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.admin.mapper.AppMapper">
+    <resultMap id="BaseResultMap" type="com.njwd.entity.admin.App">
+        <result column="app_id" property="appId" />
+        <result column="app_name" property="appName" />
+        <result column="app_type" property="appType" />
+        <result column="icon" property="icon" />
+        <result column="joint_mode" property="jointMode" />
+        <result column="joint_param" property="jointParam" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+    <sql id="Base_Column_List">
+        `app_id`,
+        `app_name`,
+        `app_type`,
+        `icon`,
+        `joint_mode`,
+        `joint_param`,
+        `create_time`
+    </sql>
+
+    <select id="selectAppListForDict" resultType="com.njwd.entity.admin.vo.AppVo" parameterType="com.njwd.entity.admin.dto.EnterpriseInstallAppDto">
+        SELECT
+           app.app_id appId
+         , app.app_name appName
+         , app.app_type appType
+         , app.joint_mode jointMode
+         , d1.value_name appTypeName
+         , d2.value_name jointModeName
+        FROM
+           wd_app app
+        left join
+           wd_dict_value d1
+        on d1.value_id = app.app_type and d1.code_id = 'app_type'
+        left join
+           wd_dict_value d2
+        on d2.value_id = app.joint_mode and d2.code_id = 'joint_mode'
+        <if test="appName!=null and appName!=''">
+            where app.app_name like concat('%',#{appName},'%')
+        </if>
+    </select>
+
+    <select id="selectAppById" parameterType="String" resultMap="BaseResultMap">
+        select
+           <include refid="Base_Column_List"/>
+        from
+           wd_app
+        where
+           app_id = #{appId}
+    </select>
+
+</mapper>

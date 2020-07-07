@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.admin.mapper.TagMapper">
+    <resultMap id="BaseResultMap" type="com.njwd.entity.admin.Tag">
+        <result column="tag_id" property="tagId" />
+        <result column="up_tag_id" property="upTagId" />
+        <result column="tag_type_name" property="tagTypeName" />
+        <result column="tag_name" property="tagName" />
+        <result column="tag_obj" property="tagObj" />
+        <result column="path" property="path" />
+    </resultMap>
+    <sql id="Base_Column_List">
+        `tag_id`,
+        `up_tag_id`,
+        `tag_type_name`,
+        `tag_name`,
+        `tag_obj`,
+        `path`
+    </sql>
+
+    <select id="selectTagListForDict" resultType="com.njwd.entity.admin.vo.TagVo">
+        SELECT
+           tag.tag_id tagId
+         , tag.tag_name tagName
+        FROM
+           middle_db.wd_tag tag
+    </select>
+
+    <select id="selectTagByEnteAppId" parameterType="String" resultType="com.njwd.entity.admin.vo.TagVo">
+        select
+           a.tag_id
+         , c.tag_name
+        from
+           middle_db.wd_app_tag_rela a
+        left join
+           middle_db.wd_ente_app b
+        on a.ente_app_id = b.ente_app_id
+        left join
+           middle_db.wd_tag c
+        on c.tag_id = a.tag_id
+        where
+           a.ente_app_id = #{enterpriseAppId}
+    </select>
+
+    <delete id="deleteEnteTagByEnteAppId" parameterType="String">
+        delete from
+           middle_db.wd_app_tag_rela
+        where
+           ente_app_id = #{enterpriseAppId}
+    </delete>
+
+</mapper>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.admin.mapper.BaseBrandMapper" >
+  <select id="getListByEnteId" resultType="com.njwd.entity.admin.vo.OrganBrandVo" parameterType="com.njwd.entity.admin.dto.OrganDataDto" >
+    select 
+    brand_id as brandId,brand_code as brandCode,brand_name as brandName
+    from base_brand
+    where ente_id=#{enteId}
+  </select>
+</mapper>

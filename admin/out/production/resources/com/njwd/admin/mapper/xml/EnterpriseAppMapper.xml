@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.admin.mapper.EnterpriseAppMapper">
+
+    <!-- 根据企业id查询企业安装的第三方应用 -->
+    <select id="selectInstallAppByEnterpriseId" parameterType="String"
+            resultType="com.njwd.entity.admin.vo.EnterpriseInstallAppVo">
+        select
+           ea.ente_id enterpriseId
+         , ea.ente_app_id as enterpriseAppId
+         , app.app_id appId
+         , app.app_name appName
+         , app.icon icon
+         , ea.src_config srcConfig
+        from
+           wd_ente_app ea
+        join
+           wd_app app
+        on ea.app_id = app.app_id
+        where
+           ea.ente_id = #{enterpriseId}
+           order by app.app_id
+    </select>
+
+    <!-- 根据企业id查询企业安装的中台服务 -->
+    <select id="selectServiceListByEnterpriseId" parameterType="String"
+            resultType="com.njwd.entity.admin.vo.EnterpriseInstallServiceVo">
+        select
+           ss.service_id serviceId
+         , sd.service_name serviceName
+         , sd.db_source dbSource
+         , sd.icon
+        from
+           wd_server_service ss
+        join
+           wd_service_database sd
+        on ss.service_id = sd.service_id
+        where
+           ss.install_value = '100'
+        and
+           ss.config_id
+        in
+           (select
+              es.config_id
+            from
+               wd_ente_server es
+            where
+               es.ente_id = #{enterpriseId}
+           )
+    </select>
+
+    <!-- 根据企业id查询企业安装应用信息列表 -->
+    <select id="selectAppInfoListByEnterpriseId" parameterType="String" resultType="com.njwd.entity.admin.vo.EnterpriseAppInfoVo">
+        select
+              ea.ente_app_id enterpriseAppId
+            , ea.ente_id enterpriseId <!-- 企业id -->
+            , app.app_id appId <!-- appid -->
+            , app.app_name appName <!-- 应用名称 -->
+            , app.joint_mode jointMode <!-- 对接方式 -->
+            , d2.value_name jointModeName <!-- 对接方式名称 -->
+            , app.app_type appType <!-- 应用类型 -->
+            , d1.value_name appTypeName <!-- 应用类型名称 -->
+            , app.joint_param jointParam <!-- 参数格式 -->
+            , tags.tagNames <!-- 标签 -->
+            , ea.network_type networkType
+            , ea.src_config srcConfig
+        from
+            wd_ente_app ea
+        left join
+            wd_app app
+        on ea.app_id = app.app_id
+        left join
+            wd_dict_value d1
+        on d1.value_id = app.app_type and d1.code_id = 'app_type'
+        left join
+            wd_dict_value d2
+        on d2.value_id = app.joint_mode and d2.code_id = 'joint_mode'
+        left join
+        (
+            select
+               a.ente_app_id tag_ente_id
+             , GROUP_CONCAT(b.tag_name) AS tagNames
+            from
+               wd_app_tag_rela a
+            left join
+               wd_tag b
+            on a.tag_id = b.tag_id
+            group by a.ente_app_id
+        ) tags
+        on ea.ente_app_id = tags.tag_ente_id
+        where
+           ea.ente_id = #{enterpriseId}
+           order by app.app_id
+    </select>
+
+    <select id="selectByCondition" parameterType="com.njwd.entity.admin.dto.EnterpriseAppInfoDto"
+            resultType="com.njwd.entity.admin.EnterpriseApp">
+        select
+           ente_app_id enterpriseAppId
+         , ente_id enterpriseId
+         , app_id appId
+         , is_input isInput
+         , is_output isOutput
+         , network_type networkType
+         , src_config srcConfig
+         , create_time createTime
+        from
+           wd_ente_app
+        <where>
+            <if test="appId != null and appId != ''">
+                and app_id = #{appId}
+            </if>
+            <if test="enterpriseId != null and enterpriseId != ''">
+                and ente_id = #{enterpriseId}
+            </if>
+            <if test="enterpriseAppId != null and enterpriseAppId != ''">
+                and ente_app_id = #{enterpriseAppId}
+            </if>
+        </where>
+
+    </select>
+
+    <insert id="insertEnterpriseApp" parameterType="com.njwd.entity.admin.EnterpriseApp">
+        insert
+           into wd_ente_app (
+              ente_app_id
+            , ente_id
+            , app_id
+            , is_input
+            , is_output
+            , create_time
+         ) values (
+              #{enterpriseAppId}
+            , #{enterpriseId}
+            , #{appId}
+            , #{isInput}
+            , #{isOutput}
+            , #{createTime}
+        )
+    </insert>
+
+    <!-- 批量添加标签关联关系 -->
+    <insert id="addBatchAppTag" parameterType="com.njwd.entity.admin.AppTagRela">
+        insert ignore into wd_app_tag_rela
+        (
+        ente_app_id,
+        tag_id
+        )
+        values
+        <foreach collection="list" item="appTagRela" separator=",">
+            (
+            #{appTagRela.enteAppId},
+            #{appTagRela.tagId}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateEnterpriseApp" parameterType="com.njwd.entity.admin.EnterpriseApp">
+        update wd_ente_app
+        <trim prefix="set" suffixOverrides=",">
+            <if test="enterpriseId != null and enterpriseId != ''">
+                ente_id = #{enterpriseId},
+            </if>
+            <if test="appId != null and appId != ''">
+                app_id = #{appId},
+            </if>
+            <if test="isInput != null and isInput != ''">
+                is_input = #{isInput},
+            </if>
+            <if test="isOutput != null and isOutput != ''">
+                is_output = #{isOutput},
+            </if>
+            <if test="networkType != null and networkType != ''">
+                network_type = #{networkType},
+            </if>
+            <if test="srcConfig != null and srcConfig != ''">
+                src_config = #{srcConfig},
+            </if>
+        </trim>
+        where
+           ente_app_id = #{enterpriseAppId}
+    </update>
+
+    <delete id="deleteEnterpriseAppById" parameterType="String">
+        delete from
+           wd_ente_app
+        where
+           ente_app_id = #{enterpriseAppId}
+    </delete>
+
+    <delete id="deleteEnteTagById" parameterType="String">
+        delete from
+           wd_app_tag_rela
+        where
+           ente_app_id = #{enterpriseAppId}
+    </delete>
+
+</mapper>

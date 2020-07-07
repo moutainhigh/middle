@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.admin.mapper.DataAppConfigMapper">
+
+    <select id="getDataAppList" parameterType="String" resultType="com.njwd.entity.admin.vo.AppForEnterpriseVo">
+        SELECT DISTINCT
+            app.app_id,
+            app.app_name
+        FROM
+            wd_ente_app ea
+            LEFT JOIN wd_app app ON ea.app_id = app.app_id
+        WHERE
+            ea.ente_id = #{enteId}
+        ORDER BY
+            app.app_id ASC;
+    </select>
+    
+    <select id="getDataCategoryList" parameterType="String" resultType="com.njwd.entity.admin.vo.DataCategoryVo">
+        SELECT
+            #{enteId} ente_id,
+            #{appId} app_id,
+            t.value_id data_type,
+            t.value_id type_code,
+            t.value_name,
+        CASE
+                WHEN config.type_code IS NOT NULL THEN
+                1 ELSE 0
+            END selected
+        FROM
+            wd_dict_value t
+            LEFT JOIN ( SELECT c.ente_id,c.app_id,c.data_type,c.type_code,c.type FROM wd_data_app_config c WHERE c.type = #{type} AND c.app_id = #{appId} and ente_id = #{enteId} ) config ON config.type_code = t.value_id
+        WHERE
+            t.code_id = #{dataType}
+    </select>
+
+    <select id="getDataAppConfig" parameterType="com.njwd.entity.admin.dto.DataAppConfigDto" resultType="com.njwd.entity.admin.vo.DataAppConfigVo">
+        select
+        t.id,
+        t.ente_id,
+        t.app_id,
+        t.data_type,
+        t.type_code,
+        t.type,
+        t.create_time,
+        t.update_time
+        from
+           wd_data_app_config t
+        where
+           t.ente_id = #{enteId}
+        and t.app_id = #{appId}
+        limit 0,1
+    </select>
+
+    <select id="getDataAppConfigList" parameterType="com.njwd.entity.admin.dto.DataAppConfigDto" resultType="com.njwd.entity.admin.vo.AppDataObjectVo">
+        select
+        t.app_id,
+        t.type_code objectId,
+        t.type objectType,
+        case when t.type = '0' then 'PULL_PRI' ELSE 'PULL_BUS' end taskType
+        from
+           wd_data_app_config t
+        where
+           t.ente_id = #{enteId}
+    </select>
+
+    <insert id="saveDataAppConfig" parameterType="com.njwd.entity.admin.dto.DataAppConfigDto">
+        insert into wd_data_app_config
+        (
+           id,
+           ente_id,
+           app_id,
+           data_type,
+           type,
+           type_code,
+           create_time
+        ) values
+        (
+           #{id},
+           #{enteId},
+           #{appId},
+           #{dataType},
+           #{type},
+           #{typeCode},
+           #{createTime}
+        )
+    </insert>
+
+    <insert id="batchSaveData" parameterType="com.njwd.entity.admin.dto.DataAppConfigDto">
+        insert ignore into wd_data_app_config
+        (id, ente_id,app_id,data_type,type_code,type,create_time)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.id},
+            #{item.enteId},
+            #{item.appId},
+            #{item.dataType},
+            #{item.typeCode},
+            #{item.type},
+            now()
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateDataAppConfig" parameterType="com.njwd.entity.admin.dto.DataAppConfigDto">
+        update wd_data_app_config
+        set
+           data_type = #{dataType},
+           type = #{type},
+           type_code = #{typeCode},
+           update_time = #{updateTime}
+        where
+           id = #{id}
+    </update>
+
+    <delete id="deleteByAppIdEnterpriseId" parameterType="com.njwd.entity.admin.dto.DataAppConfigDto">
+        delete from wd_data_app_config where ente_id = #{enteId} and app_id = #{appId}
+    </delete>
+
+    <delete id="deleteByEnterpriseId" parameterType="com.njwd.entity.admin.dto.DataAppConfigDto">
+        delete from wd_data_app_config where ente_id = #{enteId}
+    </delete>
+
+    <update id="batchUpdateTaskStatus" parameterType="java.util.List">
+        <foreach collection="list" item="bean" index="index" open="" close="" separator=";">
+            UPDATE wd_task
+            <set>
+                switch_status=#{bean.switchStatus},
+                next_excute_time = now()
+            </set>
+            <where>
+                ente_id = #{bean.enteId}
+                and app_id = #{bean.appId}
+                and data_type = #{bean.dataType}
+                and business_type = #{bean.businessType}
+            </where>
+        </foreach>
+    </update>
+
+    <select id="selectDataObjectList" parameterType="com.njwd.entity.admin.dto.AppDataObjectDto" resultType="com.njwd.entity.admin.vo.DataObjectVo">
+        SELECT
+            t.code_id objectType,
+            t.value_id objectId,
+            t.value_name objectName,
+            t.description objectDesc,
+            case when t.code_id = 'data_type' then 0
+            else 1 end type
+        FROM
+            wd_dict_value t
+        WHERE
+            t.code_id IN ( 'data_type', 'business_type' )
+        <if test="queryCondition != '' and queryCondition != null">
+            and t.value_name = #{queryCondition}
+        </if>
+        ORDER BY
+            t.order_id ASC
+    </select>
+
+    <select id="queryAppDataObject" parameterType="com.njwd.entity.admin.dto.AppDataObjectDto" resultType="com.njwd.entity.admin.vo.AppDataObjectVo">
+        SELECT DISTINCT
+            app.app_id appId,
+            app.app_name appName,
+            #{objectId} objectId,
+            #{objectType} objectType,
+          case when config.app_id is not null then 1
+          else 0 end selected
+        FROM
+            wd_ente_app ea
+            LEFT JOIN wd_app app ON ea.app_id = app.app_id
+            left join (SELECT c.ente_id,c.app_id,c.data_type,c.type_code,c.type FROM wd_data_app_config c where c.type_code = #{objectId} and c.type = #{type} ) config
+            on config.app_id = app.app_id
+        WHERE
+            ea.ente_id = #{enteId}
+        ORDER BY
+            app.app_id ASC
+    </select>
+
+    <select id="selectTaskKeyList" parameterType="String" resultType="String">
+        SELECT DISTINCT a.task_key
+         FROM wd_task a
+                  LEFT JOIN wd_data_app_config b
+                            ON b.`ente_id` = #{enteId} AND a.app_id = b.app_id AND a.data_type = b.data_type
+         WHERE a.business_type = 'PULL_PRI'
+           AND a.`ente_id` = #{enteId}
+           AND b.id IS NOT NULL
+        union all
+        SELECT DISTINCT a.task_key
+                  FROM wd_task a
+                  LEFT JOIN wd_data_app_config b ON b.`ente_id`=#{enteId} AND a.`data_type`=b.`data_type` AND b.type=0
+                  WHERE a.business_type='DATA_UNIFY'
+                  AND a.ente_id=#{enteId}
+                  AND b.`id` IS NOT NULL
+    </select>
+
+</mapper>

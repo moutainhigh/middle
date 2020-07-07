@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.admin.mapper.RecordChangeMapper">
+
+    <select id="getRecordChangeInfo" parameterType="com.njwd.entity.admin.dto.RecordChangeDto" resultType="com.njwd.entity.admin.vo.RecordChangeVo">
+        select
+               t.id,
+               t.app_id,
+               t.data_type,
+               t.ente_id,
+               t.base_id_new,
+               t.base_id_old,
+               t.deal_flag,
+               t.operator_id,
+               t.operator_type,
+               t.create_time,
+               t.update_time
+        from wd_record_change t
+        where
+              t.base_id_old = #{baseIdOld}
+          and t.deal_flag = '0'
+          and t.ente_id = #{enteId}
+          and t.app_id = #{appId}
+          limit 0,1
+    </select>
+
+    <select id="saveRecordChangeBatch" parameterType="com.njwd.entity.admin.dto.RecordChangeDto">
+        insert into wd_record_change
+        (
+           id,
+           app_id,
+           data_type,
+           ente_id,
+           base_id_new,
+           base_id_old,
+           deal_flag,
+           operator_id,
+           operator_type,
+           create_time
+        )
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.id},
+            #{item.appId},
+            #{item.dataType},
+            #{item.enteId},
+            #{item.baseIdNew},
+            #{item.baseIdOld},
+            0,
+            #{item.operatorId},
+            #{item.operatorType},
+            now()
+            )
+        </foreach>
+    </select>
+
+    <update id="updateRecordChangeBatch" parameterType="com.njwd.entity.admin.dto.RecordChangeDto">
+        <foreach collection="list" item="item" index="index" separator=",">
+            update wd_record_change
+            set base_id_new = #{item.baseIdNew},deal_flag = #{item.dealFlag},update_time = now()
+            where id = #{item.id}
+        </foreach>
+    </update>
+    
+    <select id="selectRelyDataByThirdId" parameterType="com.njwd.entity.admin.dto.RecordChangeDto" resultType="com.njwd.entity.admin.dto.RecordChangeDto">
+        select
+        distinct t.${dataType}_id baseIdOld,
+        #{baseIdNew} baseIdNew,
+        #{dataType} dataType,
+        #{enteId} enteId,
+        #{appId} appId,
+        #{operatorId} operatorId
+        from base_${dataType}_rela t
+        where
+        t.ente_id = #{enteId}
+        and t.app_id = #{appId}
+        and t.${dataType}_id is not null
+        and t.${dataType}_id != ''
+        and t.third_${dataType}_id = #{thirdId}
+        limit 0,1
+    </select>
+
+
+</mapper>

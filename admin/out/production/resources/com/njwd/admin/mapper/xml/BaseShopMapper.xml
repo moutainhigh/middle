@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.njwd.admin.mapper.BaseShopMapper" >
+  <select id="getListByOrganParam" resultType="com.njwd.entity.admin.vo.OrganShopVo" parameterType="com.njwd.entity.admin.dto.OrganDataDto" >
+    select
+    shop_id as shopId,shop_no as shopNo,shop_name as shopName
+    from base_shop
+    where ente_id=#{enteId}
+    <if test="regions!=null">
+      and region_id in
+      <foreach collection="regions" index="index" item="item" open="(" separator="," close=")">#{item}</foreach>
+    </if>
+    <if test="brands!=null">
+      and brand_id in
+      <foreach collection="brands" index="index" item="item" open="(" separator="," close=")">#{item}</foreach>
+    </if>
+    order by shop_name
+  </select>
+
+
+
+  <select id="getListByEnteId" resultType="com.njwd.entity.admin.vo.OrganShopVo" parameterType="com.njwd.entity.admin.dto.OrganDataDto" >
+    select
+    shop_id as shopId,shop_no as shopNo,shop_name as shopName
+    from base_shop
+    where ente_id=#{enteId}
+    order by shop_name
+  </select>
+
+</mapper>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njwd.admin.mapper.PrimaryJointMapper">
+    <resultMap id="BaseResultMap" type="com.njwd.entity.admin.PrimaryJoint">
+        <result column="joint_id" property="jointId" />
+        <result column="ente_id" property="enterpriseId" />
+        <result column="data_type" property="dataType" />
+        <result column="app_id" property="appId" />
+        <result column="expression" property="expression" />
+        <result column="creator_id" property="creatorId" />
+        <result column="creator_name" property="creatorName" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+    <sql id="Base_Column_List">
+        `joint_id`,
+        `ente_id`,
+        `data_type`,
+        `app_id`,
+        `expression`,
+        `creator_id`,
+        `creator_name`,
+        `create_time`
+    </sql>
+
+    <select id="selectPrimaryJoint" parameterType="com.njwd.entity.admin.dto.PrimaryJointDto" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from
+        wd_primary_joint
+        <where>
+            <if test="enterpriseId != null and enterpriseId != ''">
+                and ente_id = #{enterpriseId}
+            </if>
+            <if test="dataType != null and dataType != ''">
+                and data_type = #{dataType}
+            </if>
+            <if test="appId != null and appId != ''">
+                and app_id = #{appId}
+            </if>
+            <if test="jointId != null and jointId != ''">
+                and joint_id = #{jointId}
+            </if>
+        </where>
+        limit 0,1
+    </select>
+
+    <select id="selectPrimaryJointList" parameterType="com.njwd.entity.admin.dto.PrimaryJointDto" resultType="com.njwd.entity.admin.vo.PrimaryJointVo">
+        select
+        <include refid="Base_Column_List"/>
+        from
+        wd_primary_joint
+        <where>
+            <if test="enterpriseId != null and enterpriseId != ''">
+                and ente_id = #{enterpriseId}
+            </if>
+            <if test="dataType != null and dataType != ''">
+                and data_type = #{dataType}
+            </if>
+            <if test="appId != null and appId != ''">
+                and app_id = #{appId}
+            </if>
+            <if test="jointId != null and jointId != ''">
+                and joint_id = #{jointId}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertPrimaryJoint" parameterType="com.njwd.entity.admin.dto.PrimaryJointDto">
+        insert
+           into wd_primary_joint (
+              joint_id
+            , ente_id
+            , data_type
+            , app_id
+            , expression
+            , creator_id
+            , creator_name
+            , create_time
+         ) values (
+              #{jointId}
+            , #{enterpriseId}
+            , #{dataType}
+            , #{appId}
+            , #{expression}
+            , #{creatorId}
+            , #{creatorName}
+            , #{createTime}
+        )
+    </insert>
+
+    <update id="updatePrimaryJoint" parameterType="com.njwd.entity.admin.dto.PrimaryJointDto">
+        update wd_primary_joint
+        <trim prefix="set" suffixOverrides=",">
+            <if test="expression != null and expression != ''">
+                expression = #{expression},
+            </if>
+        </trim>
+        where
+        joint_id = #{jointId}
+        and ente_id = #{enterpriseId}
+        and app_id = #{appId}
+        and data_type = #{dataType}
+    </update>
+
+</mapper>
